@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Administrations/">
+    <Project Path="Administrations/CADR.Administrations.Entities/CADR.Administrations.Entities.csproj" />
+  </Folder>
+  <Folder Name="/Common/">
+    <Project Path="Common/CADR.Common.Core.Contracts/CADR.Common.Core.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/DataAccess/">
+    <Project Path="DataAccess/CADR.Context.Contracts/CADR.Context.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Project Path="CADR.Api/CADR.Api.csproj" />
+</Solution>

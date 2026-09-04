@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <Copyright>2023 NG Software</Copyright>
+    <Authors>NG Software Specular</Authors>
+    <Company>NG Software</Company>
+    <Copyright>NG Software</Copyright>
+    <!-- Pack everything with embedded .pdb -->
+    <EmbedAllSources>true</EmbedAllSources>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
+  <ItemGroup Condition=" $(MSBuildProjectName.EndsWith('.Tests')) ">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Ahatornn.TestGenerator" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+</Project>
