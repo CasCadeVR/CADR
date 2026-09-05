@@ -7,8 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\CADR.Common.Core.Contracts\CADR.Common.Core.Contracts.csproj" />
-    <ProjectReference Include="..\CADR.Context.Entities.Contracts\CADR.Context.Entities.Contracts.csproj" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\CADR.Common.Mvc\CADR.Common.Mvc.csproj" />
   </ItemGroup>
 
 </Project>

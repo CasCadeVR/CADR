@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\CADR.Common.Core.Contracts\CADR.Common.Core.Contracts.csproj" />
-    <ProjectReference Include="..\CADR.Context.Entities.Contracts\CADR.Context.Entities.Contracts.csproj" />
+    <ProjectReference Include="..\..\Common\CADR.Common.Repositories.Contracts\CADR.Common.Repositories.Contracts.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Entities\CADR.Administrations.Entities.csproj" />
   </ItemGroup>
 
 </Project>

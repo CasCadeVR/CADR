@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\CADR.Common.Core.Contracts\CADR.Common.Core.Contracts.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CADR.Context.Entities.Contracts\CADR.Context.Entities.Contracts.csproj" />
   </ItemGroup>
 

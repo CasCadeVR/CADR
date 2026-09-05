@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\DataAccess\CADR.Context.Contracts\CADR.Context.Contracts.csproj" />
-  </ItemGroup>
-
 </Project>
