@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cadr.Context.Extensions;
+namespace CADR.Context.Extensions;
 
 /// <summary>
 /// Методы расширения для <see cref="ModelBuilder"/>

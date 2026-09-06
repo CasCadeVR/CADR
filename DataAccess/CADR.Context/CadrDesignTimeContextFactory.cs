@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Cadr.Context;
+namespace CADR.Context;
 
 /// <summary>
 /// Фабрика для создания контекста в DesignTime

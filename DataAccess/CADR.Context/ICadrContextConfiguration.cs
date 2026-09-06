@@ -1,4 +1,4 @@
-﻿namespace Cadr.Context;
+﻿namespace CADR.Context;
 
 /// <summary>
 /// Конфигурирование контекста

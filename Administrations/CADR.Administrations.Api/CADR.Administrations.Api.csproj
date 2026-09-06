@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Administrations.Api</RootNamespace>
+    <AssemblyName>CADR.Administrations.Api</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Http" />
+    <PackageReference Include="Newtonsoft.Json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\CADR.Common.Mvc\CADR.Common.Mvc.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Repositories\CADR.Administrations.Repositories.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Services\CADR.Administrations.Services.csproj" />
+  </ItemGroup>
+</Project>

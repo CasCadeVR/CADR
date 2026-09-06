@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Cadr.Context.Extensions;
+using CADR.Context.Extensions;
 using CADR.Administrations.Entities.Configurations;
 using CADR.Context.Contracts;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cadr.Context;
+namespace CADR.Context;
 
 /// <summary>
 /// Контекст базы данных Cadr

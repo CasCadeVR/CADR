@@ -1,4 +1,4 @@
-﻿using Cadr.Common.Repositories;
+﻿using CADR.Common.Repositories;
 using CADR.Administrations.Entities;
 using CADR.Administrations.Repositories.Contracts;
 using CADR.Context.Contracts;

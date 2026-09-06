@@ -1,4 +1,4 @@
-﻿namespace CADR.Common.Core;
+﻿namespace CADR.Common.Core.Extensions;
 
 /// <summary>
 /// Методы расширения для тасков

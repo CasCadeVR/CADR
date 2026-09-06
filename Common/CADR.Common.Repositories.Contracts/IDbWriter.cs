@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Cadr.Common.Repositories.Contracts;
+namespace CADR.Common.Repositories.Contracts;
 
 /// <summary>
 /// Интерфейс создания и модификации записей в хранилище

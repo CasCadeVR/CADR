@@ -3,7 +3,7 @@ using CADR.Common.Core.Contracts.Pagination;
 using CADR.Context.Entities.Contracts.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cadr.Common.Repositories;
+namespace CADR.Common.Repositories;
 
 /// <summary>
 /// Общие спецификации чтения

@@ -1,10 +1,15 @@
 <Solution>
   <Folder Name="/Administrations/">
+    <Project Path="Administrations/CADR.Administrations.Api/CADR.Administrations.Api.csproj" Id="dc57d8b2-b6b8-49ed-965a-16981fde0f64" />
     <Project Path="Administrations/CADR.Administrations.Entities.Configurations/CADR.Administrations.Entities.Configurations.csproj" Id="3adf92bd-6b1e-4d7f-b14d-9b0ee377913d" />
     <Project Path="Administrations/CADR.Administrations.Entities/CADR.Administrations.Entities.csproj" />
+    <Project Path="Administrations/CADR.Administrations.Pages/CADR.Administrations.Pages.csproj" Id="79c955ff-411a-4517-8cec-5c4980d0d07b" />
     <Project Path="Administrations/CADR.Administrations.Repositories.Contracts/CADR.Administrations.Repositories.Contracts.csproj" Id="bc6d584f-0cac-4167-bf20-24f45b585d1e" />
     <Project Path="Administrations/CADR.Administrations.Repositories.Tests/CADR.Administrations.Repositories.Tests.csproj" Id="a7a4019e-5757-4589-aca9-f8eaef73c1e3" />
     <Project Path="Administrations/CADR.Administrations.Repositories/CADR.Administrations.Repositories.csproj" Id="d4355725-5ac3-49fe-be1b-b0e6755ec452" />
+    <Project Path="Administrations/CADR.Administrations.Services.Contracts/CADR.Administrations.Services.Contracts.csproj" Id="39a1557f-4a61-4ca2-9bd9-d77bc163750c" />
+    <Project Path="Administrations/CADR.Administrations.Services.Tests/CADR.Administrations.Services.Tests.csproj" Id="cc9a5aee-4219-4c7a-80c0-6a3f6322b6cb" />
+    <Project Path="Administrations/CADR.Administrations.Services/CADR.Administrations.Services.csproj" Id="ffc714a7-b640-47b1-a159-e3892665451d" />
   </Folder>
   <Folder Name="/Common/">
     <Project Path="Common/CADR.Common.Core.Contracts/CADR.Common.Core.Contracts.csproj" />
@@ -27,5 +32,7 @@
     <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="CADR.Api.Client/CADR.Api.Client.csproj" Id="b6fff804-83ed-4e04-b38e-82525e3e54d6" />
+  <Project Path="CADR.Api.Tests/CADR.Api.Tests.csproj" Id="6336f95c-9de1-427a-8a8c-49e98693af5c" />
   <Project Path="CADR.Api/CADR.Api.csproj" />
 </Solution>

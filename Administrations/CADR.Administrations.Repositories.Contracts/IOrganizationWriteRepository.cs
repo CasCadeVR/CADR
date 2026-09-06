@@ -1,5 +1,5 @@
-﻿using Cadr.Common.Repositories.Contracts;
-using CADR.Administrations.Entities;
+﻿using CADR.Administrations.Entities;
+using CADR.Common.Repositories.Contracts;
 
 namespace CADR.Administrations.Repositories.Contracts;
 

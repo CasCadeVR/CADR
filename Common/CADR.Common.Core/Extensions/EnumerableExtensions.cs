@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace CADR.Common.Core;
+namespace CADR.Common.Core.Extensions;
 
 /// <summary>
 /// Расширения для работы с перечислениями

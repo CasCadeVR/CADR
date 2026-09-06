@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Cadr.Common.Repositories.Contracts;
+using CADR.Common.Repositories.Contracts;
 using CADR.Context.Contracts;
 using CADR.Context.Entities.Contracts.Interfaces;
 
-namespace Cadr.Common.Repositories;
+namespace CADR.Common.Repositories;
 
 /// <summary>
 /// Базовый класс репозитория записи данных

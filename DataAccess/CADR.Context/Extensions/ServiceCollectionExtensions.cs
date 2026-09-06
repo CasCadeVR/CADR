@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Cadr.Context.Extensions;
+namespace CADR.Context.Extensions;
 
 /// <summary>
 /// Методы расширения для <see cref="IServiceCollection"/>

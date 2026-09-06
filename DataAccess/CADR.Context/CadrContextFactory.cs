@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CADR.Context;
+using Microsoft.EntityFrameworkCore;
 
-namespace Cadr.Context;
+namespace CADR.Context;
 
 /// <summary>
 /// Фабрика для контекста <see cref="CadrContext"/>

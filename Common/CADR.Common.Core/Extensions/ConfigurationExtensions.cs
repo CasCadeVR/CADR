@@ -1,7 +1,7 @@
 ﻿using CADR.Common.Mvc.Models;
 using Microsoft.Extensions.Configuration;
 
-namespace CADR.Common.Core;
+namespace CADR.Common.Core.Extensions;
 
 /// <summary>
 /// Методы расширения для <see cref="IConfiguration"/>
