@@ -1,0 +1,54 @@
+﻿@using CADR.Portal.Contracts.Interfaces
+@attribute [Route(Routes.Base)]
+@layout AnonymousLayout
+@inject IPortalIdentity PortalIdentity
+
+<PageTitle>Главная</PageTitle>
+<Container Size="Containers.Default" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+    <Row FlexDirection="FlexDirections.RowReverseLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+        <Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
+            <Image Src="/images/sprint-scaled.jpg" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
+        </Panel>
+        <Panel ColumnLarge="Columns.Template6">
+            <Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
+                Lorem ipsum dolor
+            </Header>
+            <Paragraph IsLead="true">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer venenatis augue elit. Duis iaculis sed ante in rhoncus. Nam a tellus id massa malesuada fringilla et sit amet arcu. Praesent lacinia, metus sed hendrerit viverra, mi nunc viverra risus, dignissim porttitor nisl leo a sapien. In tellus est, elementum quis vehicula vel, sollicitudin auctor lorem.
+            </Paragraph>
+            <Panel Display="Displays.Grid" DisplayMedium="Displays.Flex" FlexContentJustify="FlexJustify.StartMedium" Gap="2">
+                <Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *" Margin="md:* * 2 *" AsLink="true" Url="@Routes.Administration.Account.Login">Войти</Button>
+                <Button Color="ThemeColors.Secondary" IsOutline="true" Size="ButtonSize.Large" Padding="4 *" AsLink="true" Url="@Routes.Administration.Account.Registration">Регистрация</Button>
+            </Panel>
+        </Panel>
+    </Row>
+</Container>
+<Panel Background="ThemeColors.Light" Display="Displays.Block" Border="* 1" Shadow="Shadows.Small" style="height: 3rem"></Panel>
+<Panel Padding="4 5 4 *" Margin="* 5" TextAlignment="TextAlignments.Center" Border="* * * 1">
+    <Header Level="1" FontHeader="FontDisplays.Display4" FontStyle="FontStyles.Bold" Foreground="ThemeColors.BodyEmphasis">
+        Lorem ipsum dolor sit amet
+    </Header>
+    <Panel ColumnLarge="Columns.Template6" Margin="a *">
+        <Paragraph IsLead="true" Margin="* * * 4">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer venenatis augue elit. Duis iaculis sed ante in rhoncus. Nam a tellus id massa malesuada fringilla et sit amet arcu. Praesent lacinia, metus sed hendrerit viverra, mi nunc viverra risus, dignissim porttitor nisl leo a sapien. In tellus est, elementum quis vehicula vel, sollicitudin auctor lorem.
+        </Paragraph>
+        <Panel Display="Displays.Grid" Gap="2" DisplaySmall="Displays.Flex" FlexContentJustify="FlexJustify.CenterSmall" Margin="* * * 5">
+            <Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *">Узнать больше</Button>
+        </Panel>
+    </Panel>
+    <Panel Overflow="Overflows.Hidden" style="max-height: 30vh;">
+        <Container Padding="5 *" Size="Containers.Default">
+            <Image Src="/images/sprint-scaled.jpg" Appearances="ImageAppearances.Fluid" Border="1" RoundedSize="RoundedSizes.Rounded3" Shadow="Shadows.Large" Margin="* * * 4" Loading="ImageLoading.Lazy" alt="Example image" width="700" height="500" />
+        </Container>
+    </Panel>
+</Panel>
+
+@code {
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await PortalIdentity.TryAuthenticate(cancellationTokenSource.Token);
+		await base.OnInitializedAsync();
+	}
+}

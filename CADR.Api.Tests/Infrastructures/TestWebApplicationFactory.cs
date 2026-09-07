@@ -27,7 +27,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            services.AddSingleton<DbContextOptions<CadrContext>>(provider =>
+            services.AddSingleton(provider =>
             {
                 var configuration = provider.GetRequiredService<ICadrContextConfiguration>();
                 var dbContextOptions = new DbContextOptions<CadrContext>(new Dictionary<Type, IDbContextOptionsExtension>());

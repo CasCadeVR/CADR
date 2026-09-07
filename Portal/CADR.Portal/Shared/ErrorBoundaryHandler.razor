@@ -1,0 +1,114 @@
+﻿@using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Models.Enums
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Api.Client
+
+@inherits ErrorBoundary
+@inject NavigationManager NavigationManager
+@inject IPortalIdentity PortalIdentity
+
+@if (ChildContent is not null)
+{
+	@ChildContent
+	<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+		@foreach (var toast in toasts)
+		{
+			<div class="toast show align-items-center @GetTextCssClass(toast.ToastType) @GetBackgroundCssClass(toast.ToastType) border-0" role="alert" aria-live="assertive" aria-atomic="true">
+				<Panel Display="Displays.Flex">
+					<div class="toast-body">
+						@toast.Message
+						@if (toast.Count > 1)
+						{
+							<Badge Background="ThemeColors.Light" Foreground="ThemeColors.Dark" Margin="2 * * *">@toast.Count</Badge>
+						}
+					</div>
+					<Button ButtonClose="ButtonCloseType.White" Margin="a a 2 a" Click="() => RemoveItem(toast)"></Button>
+				</Panel>
+			</div>
+		}
+	</div>
+}
+
+@code {
+	private const int NotAuthorized = 401;
+	private readonly HashSet<Toast> toasts = new();
+
+	/// <inheritdoc />
+	protected override Task OnErrorAsync(Exception exception)
+	{
+		switch (exception)
+		{
+			case ApiException<ApiExceptionDetail> ex:
+				if (ex.StatusCode == NotAuthorized)
+				{
+					PortalIdentity.InvalidateCache();
+					NavigationManager.NavigateTo(Routes.Base);
+				}
+				else
+				{
+					TryAddToast(new Toast(ToastTypes.Warning, ex.Result.Message));
+				}
+
+				break;
+
+			case ApiException<ApiValidationExceptionDetail> ex:
+				TryAddToast(new Toast(ToastTypes.Light, string.Join(Environment.NewLine, ex.Result.Errors)));
+				break;
+
+			case ApiException ex:
+				if (ex.StatusCode == NotAuthorized)
+                {
+					PortalIdentity.InvalidateCache();
+                    NavigationManager.NavigateTo(Routes.Base);
+                }
+                else
+                {
+                    TryAddToast(new Toast(ToastTypes.Danger, ex.Message));
+                }
+
+                break;
+
+            default:
+				NavigationManager.NavigateTo(Routes.ErrorPage);
+                break;
+        }
+
+        return base.OnErrorAsync(exception);
+    }
+
+    private void TryAddToast(Toast target)
+    {
+        if (toasts.TryGetValue(target, out var existedToast))
+        {
+            existedToast.Count++;
+        }
+
+        toasts.Add(target);
+    }
+
+    private string GetTextCssClass(ToastTypes toastType)
+        => toastType switch
+        {
+            ToastTypes.Warning => "bg-primary",
+            ToastTypes.Info => "text-dark",
+            ToastTypes.Light => "text-dark",
+            _ => "text-white",
+        };
+
+    private string GetBackgroundCssClass(ToastTypes toastType)
+        => toastType switch
+        {
+            ToastTypes.Warning => "bg-warning",
+            ToastTypes.Info => "bg-info",
+            ToastTypes.Light => "bg-light",
+            ToastTypes.Secondary => "bg-secondary",
+            ToastTypes.Success => "bg-success",
+            ToastTypes.Danger => "bg-danger",
+            ToastTypes.Dark => "bg-dark",
+            _ => "bg-primary",
+
+        };
+
+    private void RemoveItem(Toast targetToast)
+        => toasts.Remove(targetToast);
+}

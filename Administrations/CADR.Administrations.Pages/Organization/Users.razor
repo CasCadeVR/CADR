@@ -1,0 +1,208 @@
+﻿@page "/organization/{organizationId:guid}/users"
+
+@using CADR.Portal.Contracts.Interfaces
+@using System.Collections.ObjectModel
+@using AutoMapper
+@using CADR.Administrations.Pages.Models.Organization
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Models.Enums
+@using CADR.Portal.Contracts.Exceptions
+@using CADR.Administrations.Pages.Controls.Organization
+@using CADR.Portal.Components.Controls.Organization
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
+@inject IMapper Mapper
+
+<PageTitle>Пользователи организации</PageTitle>
+<OrganizationTab TItem="UserOrganizationApiModel"
+				 OrganizationId="OrganizationId"
+				 Organization="currentOrganization"
+                 ActiveTable="OrganizationTableItem.Users"
+                 ItemsSource="sourceOrganizationUsers"
+                 FilteredItems="organizationUsers"
+                 OnSearch="SearchChangeEventHandler"
+                 OnButtonsClick="OnClickHandler"
+                 ButtonItems="items"
+                 EmptyTableMessage="Пользователи не найдены"
+                 IsLoaded="isLoaded">
+    <TableHeader>
+        <th>Имя</th>
+        <th>Почта</th>
+        <th>Роль</th>
+        <th>Заблокирован</th>
+        <th>&nbsp;</th>
+    </TableHeader>
+    <RowTemplate>
+        <td>
+            @context.Name
+            @if (context.Id == currentUser?.Id)
+            {
+                <Badge Background="ThemeColors.Secondary"
+                       Foreground="ThemeColors.White"
+                       RoundedSize="RoundedSizes.Rounded3"
+                       Margin="2 * * *">
+                    Это вы
+                </Badge>
+            }
+        </td>
+        <td>@context.Email</td>
+        <td>@context.Role</td>
+        <td>@(context.Blocked ? "Да" : string.Empty)</td>
+        <td>
+            <Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
+                <DropDownItem IconType="IconTypes.Key"
+                              Click="() => OnChangeUserRoleClick(context)"
+                              Disabled="@(currentUser?.Role != UserRoleApi.Admin || context.Id == currentUser?.Id)">
+                    Сменить роль
+                </DropDownItem>
+                <DropdownDivider/>
+                <DropDownItem IconType="IconTypes.Trash"
+                              Disabled="@(currentUser?.Role != UserRoleApi.Admin || context.Id == currentUser?.Id)"
+                              Click="() => deleteUserModalDialog?.Open(context)">
+                    Удалить
+                </DropDownItem>
+            </Dropdown>
+        </td>
+    </RowTemplate>
+</OrganizationTab>
+<ContextModalDialog TItem="UserOrganizationApiModel" @ref="deleteUserModalDialog" Title="Удаление пользователя">
+    <ModalBody>
+        Вы действительно желаете удалить <b>@context?.Name</b> из организации?
+    </ModalBody>
+    <ModalFooter>
+        <Button Color="ThemeColors.Primary" Click="() => DeleteUser(context)">Да</Button>
+        <Button Color="ThemeColors.Secondary" Click="() => deleteUserModalDialog?.Close()">Нет</Button>
+    </ModalFooter>
+</ContextModalDialog>
+<ContextModalDialog TItem="OrganizationChangeUserRoleModel" @ref="changeUserRoleModalDialogPrompt" Title="Изменение роли">
+    <ModalBody>
+        Пользователю <b>@context?.UserOrganization?.Name</b> успешно изменена роль
+        с <Badge Background="ThemeColors.Secondary" IsPill="true">@context?.UserOrganization?.Role</Badge>
+        на <Badge Background="ThemeColors.Secondary" IsPill="true">@context?.NewRole</Badge>
+    </ModalBody>
+</ContextModalDialog>
+<OffcanvasChangeUserRole @ref="offcanvasChangeUserRole"/>
+<OffcanvasInvite @ref="offcanvasInvite"/>
+
+@code {
+
+    /// <summary>
+    /// Идентификатор организации
+    /// </summary>
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    private string? SearchValue { get; set; }
+    private OrganizationApiModel? currentOrganization;
+    private UserOrganizationApiModel? currentUser;
+    private IReadOnlyCollection<UserOrganizationApiModel>? sourceOrganizationUsers;
+    private IReadOnlyCollection<UserOrganizationApiModel>? organizationUsers;
+    private bool isLoaded;
+    private ContextModalDialog<UserOrganizationApiModel>? deleteUserModalDialog;
+    private OffcanvasInvite? offcanvasInvite;
+    private OffcanvasChangeUserRole? offcanvasChangeUserRole;
+    private ContextModalDialog<OrganizationChangeUserRoleModel>? changeUserRoleModalDialogPrompt;
+
+    private readonly IReadOnlyCollection<ButtonGroupItem<CommonAction>> items =
+        new List<ButtonGroupItem<CommonAction>>()
+        {
+            new() { Text = "Пригласить", Color = ThemeColors.Secondary, Value = CommonAction.Append, IconType = IconTypes.Plus, },
+            new() { Color = ThemeColors.Secondary, Value = CommonAction.Refresh, IconType = IconTypes.Reload, },
+        };
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadItemsAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        isLoaded = false;
+        StateHasChanged();
+        currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+        var result = await ApiClient.OrganizationUsersAsync(OrganizationId, TokenSource.Token);
+        sourceOrganizationUsers = new ReadOnlyCollection<UserOrganizationApiModel>(result.ToList());
+        organizationUsers = new ReadOnlyCollection<UserOrganizationApiModel>(sourceOrganizationUsers
+            .Where(UserOrganizationFilter(SearchValue))
+            .ToList());
+        currentUser = sourceOrganizationUsers.First(u => u.Id == PortalIdentity.UserId);
+        isLoaded = true;
+        StateHasChanged();
+    }
+
+    private void SearchChangeEventHandler(string value)
+    {
+        SearchValue = value;
+        organizationUsers = sourceOrganizationUsers == null
+            ? Array.Empty<UserOrganizationApiModel>()
+            : new ReadOnlyCollection<UserOrganizationApiModel>(sourceOrganizationUsers
+                .Where(UserOrganizationFilter(SearchValue))
+                .ToList());
+        StateHasChanged();
+    }
+
+    private static Func<UserOrganizationApiModel, bool> UserOrganizationFilter(string? filterValue)
+        => x => string.IsNullOrWhiteSpace(filterValue) ||
+                x.Name.Contains(filterValue, StringComparison.InvariantCultureIgnoreCase) ||
+                x.Email.Contains(filterValue, StringComparison.InvariantCultureIgnoreCase);
+
+    private async Task OnClickHandler(CommonAction value)
+    {
+        switch (value)
+        {
+            case CommonAction.Append:
+                if (currentUser != null && offcanvasInvite != null)
+                {
+                    offcanvasInvite.Action = (model, token) =>
+                    {
+                        var inviteRequest = Mapper.Map<InviteApiModel>(model);
+                        return ApiClient.InviteAddAsync(OrganizationId, inviteRequest, token);
+                    };
+                    await offcanvasInvite.ShowPanelAsync(currentUser.Role, TokenSource.Token);
+                }
+                break;
+            case CommonAction.Refresh:
+                await LoadItemsAsync();
+                break;
+        }
+    }
+
+    private async Task DeleteUser(UserOrganizationApiModel? userToDelete)
+    {
+        if (userToDelete is not null)
+        {
+            await ApiClient.OrganizationDeleteUserAsync(userToDelete.Id, OrganizationId);
+            await LoadItemsAsync();
+        }
+
+        deleteUserModalDialog?.Close();
+    }
+
+
+    private async Task OnChangeUserRoleClick(UserOrganizationApiModel userOrganization)
+    {
+        if (offcanvasChangeUserRole is not null)
+        {
+            offcanvasChangeUserRole.Action = async (model, token) =>
+            {
+                if (model.UserOrganization is not null)
+                {
+                    if (model.UserOrganization.Role != model.NewRole)
+                    {
+                        await ApiClient.OrganizationChangeUserRoleAsync(OrganizationId, model.UserOrganization.Id, model.NewRole, token);
+                        changeUserRoleModalDialogPrompt?.Open(model);
+                        await LoadItemsAsync();
+                        return;
+                    }
+
+                    throw new PortalInvalidOperationException("У пользователя уже есть эта роль");
+                }
+            };
+            await offcanvasChangeUserRole.ShowPanelAsync(userOrganization, TokenSource.Token);
+        }
+    }
+}

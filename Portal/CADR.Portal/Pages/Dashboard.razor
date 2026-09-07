@@ -1,0 +1,77 @@
+﻿@attribute [Route(Routes.Dashboard)]
+
+@using CADR.Api.Client
+@using CADR.Portal.Contracts.Interfaces
+@using System.Collections.ObjectModel
+
+@implements IDisposable
+@inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
+
+@if (isLoaded)
+{
+	if (invites?.FirstOrDefault() != null)
+	{
+		<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+			<Alert Color="ThemeColors.Primary" Header="Приглашение к организации">
+				<BodyContent>
+					<Paragraph>
+						У вас есть <Badge Background="ThemeColors.Secondary" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+							@invites.Count</Badge> приглашений в организацию.
+						Для того, что бы узнать детали приглашений необходимо перейти в раздел "Организации". Там же можно принять
+						или оклонить приглашение. Что бы запретить отправлять вам приглашения, установите запрет в своём профиле
+					</Paragraph>
+				</BodyContent>
+				<FooterContent>
+					<Button type="button" Color="ThemeColors.Primary"
+					Url="@(Routes.Administration.Organization.List)"
+					AsLink="true">
+						В Организации
+					</Button>
+					<Button type="button" Color="ThemeColors.Primary" IsOutline="true"
+					Url="@(Routes.Administration.Account.Profile)"
+					AsLink="true">
+						В профиль
+					</Button>
+				</FooterContent>
+			</Alert>
+		</Container>
+	}
+}
+
+@code {
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+	private IReadOnlyCollection<InviteForUserApiResponse>? invites;
+	private bool isLoaded = false;
+	private bool hasOrganizations;
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		if (invites?.FirstOrDefault() is null)
+		{
+			//await TryRedirectToTeamDashboard();
+		}
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		var invitesCollection = await ApiClient.InviteGetByUserIdAsync(cancellationTokenSource.Token);
+		invites = new ReadOnlyCollection<InviteForUserApiResponse>(invitesCollection.ToList());
+		var organizations = await ApiClient.OrganizationGetAsync(cancellationTokenSource.Token);
+		hasOrganizations = organizations.Count != 0;
+		isLoaded = true;
+		StateHasChanged();
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+	}
+}

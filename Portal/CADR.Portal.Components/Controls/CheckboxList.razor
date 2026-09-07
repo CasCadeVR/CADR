@@ -1,0 +1,47 @@
+﻿@using CADR.Portal.Components.Models
+@typeparam TItem where TItem : class
+<div class="list-group">
+    @foreach (var item in internalItems)
+    {
+        <label class="list-group-item">
+            <input class="form-check-input me-1" type="checkbox" value="@Guid.NewGuid()" @bind="@item.Checked" disabled="@Disabled">
+            @DisplayFor(item.Value)
+        </label>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Делегат, возвращающий отображаемое значение для объекта
+    /// </summary>
+    [Parameter]
+    public Func<TItem, string> DisplayFor { get; set; } = null!;
+
+    /// <summary>
+    /// Компонент недоступен для взаимодействия
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Возвращает или задаёт элементы списка
+    /// </summary>
+    public IReadOnlyCollection<TItem>? Items
+    {
+        get => internalItems.Select(x => x.Value).ToArray();
+        set => internalItems = (value ?? Array.Empty<TItem>()).Select(x => new CheckBoxListItem<TItem>(x)).ToArray();
+    }
+
+    /// <summary>
+    /// Возвращает список выбранных элементов
+    /// </summary>
+    public IReadOnlyCollection<TItem> CheckedItems => internalItems.Where(x => x.Checked).Select(x => x.Value).ToArray();
+
+    private IReadOnlyCollection<CheckBoxListItem<TItem>> internalItems = Array.Empty<CheckBoxListItem<TItem>>();
+
+    /// <summary>
+    /// Задаёт значение выбора для указанного элемента
+    /// </summary>
+    public void SetCheckedFor(TItem item, bool checkedValue = true)
+        => internalItems.Single(x => x.Value == item).Checked = checkedValue;
+}

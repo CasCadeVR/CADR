@@ -1,0 +1,106 @@
+﻿@using AutoMapper
+@using Microsoft.JSInterop
+@using CADR.Administrations.Pages.Models.Account
+@using CADR.Portal.Contracts.Interfaces
+
+@attribute [Route(Routes.Administration.Account.Registration)]
+@layout AnonymousLayout
+
+@inject NavigationManager NavigationManager
+@inject IMapper Mapper
+@inject IPortalCadrApiClient ApiClient
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Регистрация в CADR</PageTitle>
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+    <Row FlexItemsAlign="FlexAlign.Center" Padding="* 5" Gutter="lg: 5">
+        <Welcome />
+        <Panel ColumnMedium="Columns.Template10" ColumnLarge="Columns.Template5" Margin="a *">
+            <CommonEditForm Model="registerModel"
+                            Handler="FormHandler"
+                            LongWidth="true"
+                            SubmitText="Регистрация">
+                <ChildContent>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="registerModel.Login" class="form-control" id="form_login" />
+                        <label for="form_login">Имя входа</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => registerModel.Login"/>
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="registerModel.Password" type="password" id="form_password" class="form-control" aria-describedby="passwordHelp"/>
+                        <label for="form_password">Пароль</label>
+                        <FormHint id="passwordHelp">Укажите от 6 символов, используя буквы и цифры</FormHint>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => registerModel.Password"/>
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="registerModel.PasswordAgain" type="password" id="form_passwordAgain" class="form-control"/>
+                        <label for="form_passwordAgain">Повторный пароль</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => registerModel.PasswordAgain"/>
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="registerModel.Name" class="form-control" id="form_name"/>
+                        <label for="form_name">Ваше имя</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => registerModel.Name"/>
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="registerModel.Email" type="email" id="form_email" class="form-control"/>
+                        <label for="form_email">Электронная почта</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => registerModel.Email"/>
+                        </FormInvalidFeedback>
+                    </FormRow>
+                </ChildContent>
+                <FooterContent>
+                    <HorizontalLine Margin="* 4"/>
+                    <TextElement Foreground="ThemeColors.Muted">
+                        <small>Нажимая <em>Регистрация</em> Вы принимаете условия Лицензионного соглашения и даёте согласие на обработку предоставленных персональных данных в соответствии с №152-ФЗ «О персональных данных» от 27.07.2006 и Политикой конфиденциальности</small>
+                    </TextElement>
+                    <HorizontalLine Margin="* 4"/>
+                    <Button Color="ThemeColors.Link" Click="BackToPreviousPage">Назад</Button>
+                </FooterContent>
+            </CommonEditForm>
+        </Panel>
+    </Row>
+</Container>
+
+@code
+{
+	private readonly RegisterRequestModel registerModel = new();
+
+	/// <summary>
+	/// Адрес, на который необходимо отправить пользователя после авторизации
+	/// </summary>
+	[Parameter, SupplyParameterFromQuery] public string ReturnUrl { get; set; } = string.Empty;
+
+	private async Task FormHandler(CancellationToken cancellationToken)
+	{
+		var request = Mapper.Map<CreateUserApiRequest>(registerModel);
+		await ApiClient.AllowAnonymous().AccountCreateUserAsync(request, cancellationToken);
+		var requestLogin = new LoginApiRequest()
+		{
+			Login = request.Login,
+			Password = request.Password,
+			IsRemember = true,
+		};
+		var responseLogin = await ApiClient.AllowAnonymous().AccountLoginAsync(requestLogin, cancellationToken);
+		RedirectAfterLogin();
+	}
+
+	private void RedirectAfterLogin()
+		=> NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl)
+			? Routes.Dashboard
+			: ReturnUrl);
+
+    private async Task BackToPreviousPage()
+    {
+        await JsRuntime.InvokeVoidAsync("history.back");
+    }
+}

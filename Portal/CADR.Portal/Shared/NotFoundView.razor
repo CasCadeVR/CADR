@@ -1,0 +1,21 @@
+﻿@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Страница не найдена</PageTitle>
+<Panel Padding="4 5" Margin="* 5" TextAlignment="TextAlignments.Center">
+    <Image Src="images/404.svg" Width="174" Height="96" Margin="a * a 4" Display="Displays.Block"/>
+    <Header Level="1" FontSize="FontSizes.Size5" FontStyle="FontStyles.Bold">Страница не найдена</Header>
+    <Panel ColumnLarge="Columns.Template6" Margin="a *">
+        <Paragraph IsLead="true" Margin="* * * 4">Запрашиваемая вами страница <TextElement Background="ThemeColors.Warning">@NavigationManager.Uri</TextElement> не найдена. Возможно её больше не существует или вы ошиблись в написании адреса страницы. Проверьте адрес запрашиваемой страницы ещё раз.</Paragraph>
+    </Panel>
+    <Panel Display="Displays.Grid" Gap="2" DisplaySmall="Displays.Flex" FlexContentJustify="FlexJustify.CenterSmall" Margin="* * * 5">
+        <Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *" Margin="sm:* * 3 *" Click="BackToPreviousPage">Вернуться назад</Button>
+    </Panel>
+</Panel>
+
+@code {
+    private async Task BackToPreviousPage()
+    {
+        await JsRuntime.InvokeVoidAsync("history.back");
+    }
+}

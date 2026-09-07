@@ -12,7 +12,7 @@ namespace CADR.Api.Tests.Infrastructures;
 /// </summary>
 public class CadrApiFixture : IAsyncLifetime
 {
-    private CadrContext? specularContext;
+    private CadrContext? cadrContext;
     readonly protected TestWebApplicationFactory Factory;
 
     public IUnitOfWork UnitOfWork => CadrContext;
@@ -29,14 +29,14 @@ public class CadrApiFixture : IAsyncLifetime
     {
         get
         {
-            if (specularContext != null)
+            if (cadrContext != null)
             {
-                return specularContext;
+                return cadrContext;
             }
 
             var scope = Factory.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
-            specularContext = scope.ServiceProvider.GetRequiredService<CadrContext>();
-            return specularContext;
+            cadrContext = scope.ServiceProvider.GetRequiredService<CadrContext>();
+            return cadrContext;
         }
     }
 

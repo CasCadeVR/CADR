@@ -1,0 +1,57 @@
+﻿@using Microsoft.JSInterop
+@using CADR.Portal.Contracts.Interfaces.JSEventHandlers
+
+@inject IJsDropdownEventHandler jsDropdownEventHandler
+@inject IJSRuntime jSRuntime
+
+<li class="nav-item dropdown">
+	<a class="nav-link dropdown-toggle" href="#" id="@id" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+		@if (IconType.HasValue)
+		{
+			<Icon IconType="@IconType.Value"/><text>&nbsp;</text>
+		}
+		@Caption
+	</a>
+	<ul class="dropdown-menu" aria-labelledby="@id">
+		@ChildContent
+	</ul>
+</li>
+
+@code {
+	/// <summary>
+	/// Заголовок меню
+	/// </summary>
+	[Parameter]
+	public string? Caption { get; set; }
+
+	/// <inheritdoc cref="IconTypes"/>
+	[Parameter]
+	public IconTypes? IconType { get; set; }
+
+	/// <see cref="RenderFragment"/>
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	/// Обработчик открытия dropdown компонента
+	[Parameter]
+	public Func<Task>? OnOpenHandlerAsync { get; set; }
+
+	private readonly string id = "auid_" + Guid.NewGuid().ToString("N");
+
+	/// <inheritdoc/>
+	protected override void OnInitialized()
+	{
+		jsDropdownEventHandler.OnOpenHandlerAsync += OnOpenHandlerAsync;
+		base.OnInitialized();
+	}
+
+	/// <inheritdoc/>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await jsDropdownEventHandler.InitializeAsync(id, jSRuntime);
+		}
+		await base.OnAfterRenderAsync(firstRender);
+	}
+}

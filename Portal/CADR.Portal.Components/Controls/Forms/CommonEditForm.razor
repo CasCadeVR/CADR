@@ -1,0 +1,116 @@
+﻿@using System.Linq.Expressions
+@using CADR.Portal.Components.Infrastructures
+@using CADR.Portal.Components.Infrastructures.Handlers
+@inherits DisposableBootstrapComponentBase
+
+@typeparam TFormModel
+
+<EditForm EditContext="@editContext"
+          OnSubmit="@HandleSubmit"
+          class="@BaseCssClass"
+          @attributes="@CapturedAttributes">
+    <DataAnnotationsValidator />
+    <BootstrapValidation />
+    <fieldset>
+        @if (!string.IsNullOrEmpty(Legend))
+        {
+            <legend>@Legend</legend>
+        }
+        @ChildContent
+    </fieldset>
+    <ValidationModelSummary @ref="modelSummary" />
+	<Button IsDisabled="IsDisabledSubmit" Size="ButtonSize.Large" ButtonType="ButtonTypes.Submit" Color="ThemeColors.Primary" LongWidth="@LongWidth" IsSpinner="@isLoading">@SubmitText</Button>
+    @FooterContent
+</EditForm>
+
+@code {
+	private EditContext editContext = default!;
+	private ValidationMessageStore validationMessageStore = default!;
+	private ValidationModelSummary modelSummary = default!;
+	private bool isLoading = false;
+
+	/// <summary>Тело формы</summary>
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+
+	/// <summary>
+	/// Подвал формы
+	/// </summary>
+	[Parameter] public RenderFragment? FooterContent { get; set; }
+
+	/// <summary>Модель формы</summary>
+	[Parameter] public TFormModel? Model { get; set; }
+
+	/// <summary>Обработчик отправки формы</summary>
+	[Parameter] public Func<CancellationToken, Task> Handler { get; set; } = default!;
+
+	/// <summary>
+	/// Текст кнопки отправки формы
+	/// </summary>
+	[Parameter] public string SubmitText { get; set; } = "Сохранить";
+
+	/// <summary>
+	/// Делает кнопку отправки не доступной к выбору
+	/// </summary>
+	[Parameter] public bool IsDisabledSubmit { get; set; } = false;
+
+	/// <summary>
+	/// Кнопка на всю длину
+	/// </summary>
+	[Parameter] public bool LongWidth { get; set; }
+
+	/// <summary>
+	/// Легенда формы
+	/// </summary>
+	[Parameter] public string? Legend { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Padding = "4, md: 5";
+        Border = "1";
+        RoundedSize = RoundedSizes.Rounded3;
+        Background = ThemeColors.Light;
+        if (Model != null)
+        {
+            editContext = new EditContext(Model);
+            validationMessageStore = new ValidationMessageStore(editContext);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        validationMessageStore.Clear();
+        Console.WriteLine(string.Join(", ", editContext.GetValidationMessages()));
+        if (!editContext.Validate())
+        {
+            return;
+        }
+
+        if (isLoading)
+        {
+            return;
+        }
+        modelSummary.Clear();
+        isLoading = true;
+        await FormHandler.Create()
+            .WithValidation(editContext.UseValidationMessageStore(validationMessageStore))
+            .WithExceptions(args => modelSummary.SetMessage(args.Message))
+            .WithFinally(() => isLoading = false)
+            .ExecuteAsync(cancellationToken => Handler(cancellationToken), TokenSource.Token);
+    }
+
+    private static string GetMemberName<TItem, TMember>(Expression<Func<TItem, TMember>> targetMember)
+    {
+        if (targetMember.Body is MemberExpression memberExpression)
+        {
+            return memberExpression.Member.Name;
+        }
+        if (targetMember.Body is UnaryExpression unaryExpression)
+        {
+            var op = unaryExpression.Operand;
+            return ((MemberExpression)op).Member.Name;
+        }
+        throw new ArgumentException("Expression must be a member of unary expression");
+    }
+}

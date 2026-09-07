@@ -1,0 +1,38 @@
+﻿@inherits BootstrapComponentBase
+
+@if (Level == 2)
+{
+    <h2 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h2>
+}
+else if(Level == 3)
+{
+    <h3 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h3>
+}
+else if (Level == 4)
+{
+    <h4 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h4>
+}
+else if (Level == 5)
+{
+    <h5 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h5>
+}
+else if (Level == 6)
+{
+    <h6 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h6>
+}
+else
+{
+    <h1 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h1>
+}
+
+@code {
+    /// <summary>
+    /// Уровень заголовка (1 - 6)
+    /// </summary>
+    [Parameter]
+    public byte Level { get; set; } = 1;
+
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

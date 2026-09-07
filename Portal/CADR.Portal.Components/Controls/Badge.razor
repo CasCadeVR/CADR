@@ -1,0 +1,35 @@
+﻿@inherits BootstrapComponentBase
+
+<span class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</span>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Перемещает элемент в правый верхний угол
+    /// </summary>
+    [Parameter] public bool Positioned { get; set; } = false;
+
+    /// <summary>
+    /// Делает бейдж круглым
+    /// </summary>
+    [Parameter] public bool IsPill { get; set; } = false;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("badge");
+        if (Positioned)
+        {
+            InheritCss.Add("position-absolute top-0 start-100 translate-middle");
+        }
+        if (IsPill)
+        {
+            InheritCss.Add("rounded-pill");
+        }
+        await base.OnParametersSetAsync();
+    }
+}

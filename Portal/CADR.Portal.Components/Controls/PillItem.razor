@@ -1,0 +1,64 @@
+﻿@inherits BootstrapComponentBase
+
+<li class="nav-item">
+    <a class="@BaseCssClass" @attributes="@CapturedAttributes" href="@Url">
+        @if (IconType.HasValue)
+        {
+            <Icon IconType="@IconType.Value"/>
+            @if (ChildContent != null)
+            {
+                <text>&nbsp;</text>
+            }
+        }
+        @ChildContent
+    </a>
+</li>
+
+@code {
+    /// <summary>
+    /// Делает элемент 
+    /// </summary>
+    [Parameter] public bool IsActive { get; set; } = false;
+
+    /// <summary>
+    /// Делает не доступный к выбору
+    /// </summary>
+    [Parameter] public bool IsDisabled { get; set; } = false;
+
+    /// <summary>Адрес перехода</summary>
+    [Parameter] public string Url { get; set; } = string.Empty;
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter] public IconTypes? IconType { get; set; }
+
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("nav-link");
+        if (IsActive)
+        {
+            InheritCss.Add("active");
+            if (CapturedAttributes == null)
+            {
+                CapturedAttributes = new Dictionary<string, object>();
+            }
+            CapturedAttributes.TryAdd("aria-current", "page");
+        }
+        if (IsDisabled)
+        {
+            InheritCss.Add("disabled");
+            if (CapturedAttributes == null)
+            {
+                CapturedAttributes = new Dictionary<string, object>();
+            }
+            CapturedAttributes.TryAdd("tabindex", "-1");
+            CapturedAttributes.TryAdd("aria-disabled", "true");
+        }
+        await base.OnParametersSetAsync();
+    }
+}

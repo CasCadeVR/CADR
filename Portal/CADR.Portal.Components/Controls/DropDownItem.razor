@@ -1,0 +1,60 @@
+﻿@inherits BootstrapComponentBase
+
+<li>
+    <a class="@BaseCssClass" href="@(string.IsNullOrWhiteSpace(Url) ? "#" : Url)"
+       @onclick="Click"
+       @onclick:preventDefault="@isPreventDefault"
+       @attributes="@CapturedAttributes">
+    @if (IconType.HasValue)
+    {
+        <Icon IconType="@IconType.Value"/>
+        @if (ChildContent != null)
+        {
+            <text>&nbsp;</text>
+        }
+    }
+    @ChildContent
+</a></li>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter] public IconTypes? IconType { get; set; }
+
+    /// <summary>
+    /// Обработчик нажатия на кнопку
+    /// </summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> Click { get; set; }
+
+    /// <summary>Адрес перехода</summary>
+    [Parameter] public string Url { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Блокирует элемент для выбора
+    /// </summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    private bool isPreventDefault = false;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("dropdown-item");
+        if (Disabled)
+        {
+            InheritCss.Add("disabled");
+            if (CapturedAttributes == null)
+            {
+                CapturedAttributes = new Dictionary<string, object>();
+            }
+            CapturedAttributes.TryAdd("tabindex", -1);
+            CapturedAttributes.TryAdd("aria-disabled", "true");
+        }
+        isPreventDefault = string.IsNullOrWhiteSpace(Url);
+        base.OnParametersSet();
+    }
+}

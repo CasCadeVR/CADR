@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Cadr.Portal</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-reboot.min.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-grid.min.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-utilities.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">
+        <div class="px-4 py-5 my-5 text-center">
+            <img class="d-block mx-auto mb-4" src="images/cadr.svg" alt="" width="128" height="128">
+            <h1 class="display-5 fw-bold">Идёт загрузка CADR</h1>
+            <div class="col-lg-6 mx-auto">
+                <p class="lead mb-4">Вы сможете начать работать сразу же как только мы загрузим и инициализируем все необходимые для работы компоненты. Если загрузка не удалась, вероятно вам необходимо обновить свой браузер до последней версии.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="toast show align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        В процессе работы произошла непредвиденная ошибка. Попробуйте повторить действие ещё раз или свяжитесь с администратором
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

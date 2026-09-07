@@ -1,0 +1,26 @@
+﻿@using CADR.Portal.Components.Resources
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<BaseLayoutContent>
+    @Body
+</BaseLayoutContent>
+
+@code {
+
+    /// <summary>
+    /// Информация о текущем пользователе
+    /// </summary>
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthenticationState { get; set; } = null!;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationState;
+        if (!state.User.Identity!.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"{Routes.Administration.Account.Login}?returnUrl={Uri.EscapeDataString(NavigationManager.Uri ?? string.Empty)}");
+        }
+    }
+}

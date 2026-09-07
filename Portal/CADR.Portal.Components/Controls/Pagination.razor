@@ -1,0 +1,212 @@
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Contracts.Exceptions
+
+@implements IDisposable
+
+@if(TotalPages() > 1)
+{
+    <Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8">
+        <ul class="pagination">
+            <li class="page-item @(IsFirstPage() ? "disabled" : string.Empty)">
+                <Button class="page-link" Click="() => SetPage(paginationModel.PageNum - 1)">Назад</Button>
+            </li>
+            @if (TotalPages() < PagesThreshold)
+            {
+                for (var i = 1; i <= TotalPages(); i++)
+                {
+                    var copy = i;
+                    <li class="page-item @(copy == paginationModel.PageNum ? "active" : string.Empty)">
+                        <Button class="page-link" Click="() => SetPage(copy)">@copy</Button>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="page-item @(IsFirstPage() ? "active" : string.Empty)">
+                    <Button class="page-link" Click="() => SetPage(1)">1</Button>
+                </li>
+
+                if (StartPoint() > 2)
+                {
+                    <li class="page-item disabled">
+                        <Button class="page-link">...</Button>
+                    </li>
+                }
+
+                for (var i = StartPoint(); i <= EndPoint(); i++)
+                {
+                    var copy = i;
+                    <li class="page-item @(copy == paginationModel.PageNum ? "active" : string.Empty)">
+                        <Button class="page-link" Click="() => SetPage(copy)">
+                            @copy
+                        </Button>
+                    </li>
+                }
+
+
+                if (EndPoint() < TotalPages() - 1)
+                {
+                    <li class="page-item disabled">
+                        <Button class="page-link">...</Button>
+                    </li>
+                }
+
+                <li class="page-item @(IsLastPage() ? "active" : string.Empty)">
+                    <Button class="page-link" Click="() => SetPage(TotalPages())">@TotalPages()</Button>
+                </li>
+            }
+            <li class="page-item @(IsLastPage() ? "disabled" : string.Empty)">
+                <Button class="page-link" Click="() => SetPage(paginationModel.PageNum + 1)">Вперёд</Button>
+            </li>
+        </ul>
+    </Container>
+}
+
+@code {
+    /// <summary>
+    /// Сколько максимально должно быть страниц, чтобы отображать их все
+    /// </summary>
+    private const int PagesThreshold = PagesAround * 3 + 1;
+
+    /// <summary>
+    /// Сколько соседних страниц от выбранной нужно показывать
+    /// </summary>
+    private const int PagesAround = 2;
+    private PaginationModel paginationModel = new();
+    private int totalCount;
+    private CancellationTokenSource tokenSource = new();
+    private bool disposed;
+
+    /// <summary>
+    /// Действие, которое нужно выполнить при изменении страницы
+    /// </summary>
+    /// <remarks>
+    /// Должно принимать <see cref="PaginationModel"/> и возвращать полное количество элементов исходного списка
+    /// </remarks>
+    [Parameter]
+    public Func<PaginationModel, CancellationToken, Task<int>>? OnPageChange { get; set; }
+
+    /// <summary>
+    /// Задать номер страницы
+    /// </summary>
+    public async Task SetPage(int num, bool forced = false)
+    {
+        if (disposed)
+        {
+            throw new PortalObjectDisposedException(this);
+        }
+
+        if (!forced && (num == paginationModel.PageNum || num > TotalPages()))
+        {
+            return;
+        }
+
+        paginationModel = paginationModel with { PageNum = num };
+        await LoadPage();
+    }
+
+    /// <summary>
+    /// Обновить страницу
+    /// </summary>
+    public Task ReloadPage()
+    {
+        if (disposed)
+        {
+            throw new PortalObjectDisposedException(this);
+        }
+        return LoadPage();
+    }
+
+    /// <summary>
+    /// Задать новый размер страницы
+    /// </summary>
+    public void SetPageSize(int value)
+    {
+        if (disposed)
+        {
+            throw new PortalObjectDisposedException(this);
+        }
+
+        paginationModel = paginationModel with { PageSize = value };
+    }
+
+    private async Task LoadPage()
+    {
+        if (OnPageChange != null)
+        {
+            await tokenSource.CancelAsync();
+            tokenSource.Dispose();
+            tokenSource = new();
+
+            try
+            {
+                totalCount = await OnPageChange(paginationModel, tokenSource.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private int TotalPages() => (int)Math.Ceiling((double)totalCount / paginationModel.PageSize);
+
+    private bool IsLastPage() => TotalPages() == paginationModel.PageNum;
+
+    private bool IsFirstPage() => paginationModel.PageNum == 1;
+
+    /// <summary>
+    /// Считает, какая страница будет крайней слева от текущей страницы, если нужно сложно отобразить пагинацию
+    /// </summary>
+    private int StartPoint()
+    {
+        // Если близко к началу, то показывать все страницы со второй до текущей (первую видно всегда)
+        if (paginationModel.PageNum <= PagesAround + 2) // не скрывая одну страницу за многоточием
+        {
+            return 2;
+        }
+
+        // Если текущая страница не близко к концу
+        if (paginationModel.PageNum < TotalPages() - PagesAround)
+        {
+            // Просто показывать n страниц слева от текущей
+            return paginationModel.PageNum - PagesAround;
+        }
+
+        // Иначе показывать последние страницы
+        return TotalPages() - PagesAround * 2;
+
+    }
+
+    private int EndPoint()
+    {
+        // Если близко к концу, показывать много страниц в конце
+        if (TotalPages() - paginationModel.PageNum <= PagesAround + 2) // не скрывая одну страницу за многоточием
+        {
+            return TotalPages() - 1;
+        }
+
+        // Если текущая страница не близко к началу
+        if (paginationModel.PageNum > PagesAround)
+        {
+            // Просто показывать n страниц справа от текущей
+            return paginationModel.PageNum + PagesAround;
+        }
+
+        // Иначе показывать первые страницы
+        return PagesAround * 2 + 1;
+
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (!disposed)
+        {
+            tokenSource.Dispose();
+            disposed = true;
+        }
+    }
+
+}

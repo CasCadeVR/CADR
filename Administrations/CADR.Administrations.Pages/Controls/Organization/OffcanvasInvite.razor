@@ -1,0 +1,67 @@
+@using CADR.Administrations.Pages.Models.Organization
+
+<Offcanvas Caption="Пригласить пользователя" @ref="self">
+    <CommonEditForm SubmitText="Пригласить"
+                    Model="model"
+                    Handler="FormHandler">
+        <ChildContent>
+            <Paragraph>Укажите email пользователя, которого необходимо пригласить в организацию. После того, как пользователь примет приглашение, у вас будет возможность администрировать приглашенного пользователя</Paragraph>
+            <FormRow IsFloating="true">
+                <InputText @bind-Value="model.UserMail" class="form-control" id="inputLogin" type="text"/>
+                <label for="inputLogin">Почтовый адрес</label>
+                <FormInvalidFeedback>
+                    <ValidationMessage For="() => model.UserMail"/>
+                </FormInvalidFeedback>
+            </FormRow>
+            <FormRow IsFloating="true">
+                <InputSelect @bind-Value="model.UserRole" class="form-select" id="inputUserRole">
+                    @foreach (var item in roleForSelect.Take(maximumRoleIndex + 1))
+                    {
+                        <option value="@item.Key">@item.Value</option>
+                    }
+                </InputSelect>
+                <label for="inputUserRole">Роль</label>
+            </FormRow>
+        </ChildContent>
+    </CommonEditForm>
+</Offcanvas>
+
+@code
+{
+    private readonly IDictionary<UserRoleApi, string> roleForSelect = new Dictionary<UserRoleApi, string>()
+    {
+        { UserRoleApi.User, "Участник" },
+        { UserRoleApi.Admin, "Администратор" },
+    };
+
+    private int maximumRoleIndex = 0;
+
+    /// <summary>
+    /// Необходимое для выполнения действие
+    /// </summary>
+    public Func<OrganizationInviteModel, CancellationToken, Task>? Action { get; set; }
+
+    private Offcanvas? self;
+    private readonly OrganizationInviteModel model = new();
+
+    /// <summary>
+    /// Показывает боковую панель
+    /// </summary>
+    public async Task ShowPanelAsync(UserRoleApi maximumRole, CancellationToken cancellationToken)
+    {
+        model.UserMail = string.Empty;
+        model.UserRole = UserRoleApi.User;
+        maximumRoleIndex = (int)maximumRole;
+        StateHasChanged();
+        await self!.ShowAsync(cancellationToken);
+    }
+
+    private async Task FormHandler(CancellationToken cancellationToken)
+    {
+        if (Action != null)
+        {
+            await Action.Invoke(model, cancellationToken);
+            await self!.HideAsync(cancellationToken);
+        }
+    }
+}

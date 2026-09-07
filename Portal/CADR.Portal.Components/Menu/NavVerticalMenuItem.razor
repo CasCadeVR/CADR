@@ -1,0 +1,58 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager NavigationManager
+
+<li class="nav-item">
+    <NavLink href="@Url" class="@navCssClass" @onclick="Click">
+        <Icon IconType="@IconType" /> <span class="ms-1 d-none d-sm-inline">@Caption</span>
+    </NavLink>
+</li>
+
+@code {
+    /// <summary>
+    /// Заголовок меню
+    /// </summary>
+    [Parameter]
+    public string? Caption { get; set; }
+
+    /// <summary>
+    /// Ссылка меню
+    /// </summary>
+    [Parameter]
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Элемент не доступен для выбора пользователем
+    /// </summary>
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter]
+    public IconTypes IconType { get; set; }
+
+    /// <summary>
+    /// Действие по нажатию на кнопку
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OnClickAction { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (string.IsNullOrWhiteSpace(Url))
+        {
+            Url = $"{NavigationManager.Uri}#";
+        }
+        if (IsDisabled)
+        {
+            navCssClass = "nav-link align-middle px-0 disabled";
+        }
+    }
+
+    private Task Click() => OnClickAction != null
+        ? OnClickAction.Invoke()
+        : Task.CompletedTask;
+
+    private string navCssClass = "nav-link align-middle px-0";
+}

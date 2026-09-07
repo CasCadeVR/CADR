@@ -1,0 +1,20 @@
+﻿@attribute [Route(Routes.ErrorPage)]
+
+<PageTitle>Ошибка</PageTitle>
+<Container class="px-4 pt-5 my-5 text-center border-bottom">
+	<Header FontStyle="FontStyles.Bold" Level="1">Упс! Что-то пошло не так…</Header>
+	<Container ColumnLarge="Columns.Template6" Margin="a * a *" TextAlignment="TextAlignments.Center">
+		<Paragraph IsLead="true">
+			Приносим извинения, но в работе сайта произошла ошибка. Мы уже знаем о проблеме и работаем над ее решением.<br/>
+			Рекомендуем повторить попытку через некоторое время.
+		</Paragraph>
+		<Container Display="Displays.Grid" Flex="Flexes.FlexSmall" Margin="* * * 5" FlexContentJustify="FlexJustify.CenterSmall">
+			<Button Color="ThemeColors.Primary" Padding="4 * 4 *" Size="ButtonSize.Large" Url="@Routes.Base" AsLink="true" FontSize="FontSizes.Size5">Вернуться на главную</Button>
+		</Container>
+		<Container Overflow="Overflows.Hidden">
+			<Container>
+				<Image Appearances="ImageAppearances.Fluid" width="700" height="500" Margin="* * * 4" RoundedSize="RoundedSizes.Rounded3" Shadow="Shadows.Large" Border="1" Src="/images/sprint-scaled.jpg" />
+			</Container>
+		</Container>
+	</Container>
+</Container>

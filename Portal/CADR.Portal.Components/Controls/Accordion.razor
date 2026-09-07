@@ -1,0 +1,23 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" id="@Id" @attributes="@CapturedAttributes">
+	<CascadingValue Value="this">
+		@ChildContent
+	</CascadingValue>
+</div>
+
+@code {
+	public readonly string Id = "accid_" + Guid.NewGuid().ToString("N");
+
+	/// <inheritdoc cref="RenderFragment"/>
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		InheritCss.Clear();
+		InheritCss.Add("accordion");
+
+		await base.OnParametersSetAsync();
+	}
+}

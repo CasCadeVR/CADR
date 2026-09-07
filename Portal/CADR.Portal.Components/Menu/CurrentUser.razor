@@ -1,0 +1,60 @@
+﻿@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Resources
+@using Microsoft.JSInterop
+
+@inject IPortalIdentity PortalIdentity
+@inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+@implements IDisposable
+
+<li class="nav-item dropdown d-md-flex">
+    <a href="#" class="nav-link d-md-flex align-items-center" id="currentUserAreaMenu" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+        <div class="rounded-circle bg-secondary text-center" style="width: 32px; height: 32px;">
+            <span class="text-light align-middle"><Icon IconType="IconTypes.Person" /></span>
+        </div>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="currentUserAreaMenu">
+        <li>
+            <a class="dropdown-item" href="#">
+                <div><strong>@PortalIdentity.Name</strong></div>
+                <div class="text-muted"><small>@@@PortalIdentity.Login</small></div>
+            </a>
+        </li>
+        <DropdownDivider />
+        <NavDropdownItem Caption="Профиль" IconType="IconTypes.Person" Url="@Routes.Administration.Account.Profile"/>
+        <NavDropdownItem Caption="Организации" IconType="IconTypes.Folder" Url="@Routes.Administration.Organization.List" />
+        <DropdownDivider />
+        <NavDropdownItem Caption="Выход" IconType="IconTypes.AccountLogout" OnClickAction="LogOffHandler"/>
+    </ul>
+</li>
+
+@code {
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	/// <inheritdoc />
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+		await JSRuntime.InvokeVoidAsync("console.log", $"PortalIdentity.Name {PortalIdentity.Name}");
+		await JSRuntime.InvokeVoidAsync("console.log", $"PortalIdentity.Login {PortalIdentity.Login}");
+	}
+
+	private async Task LogOffHandler()
+	{
+		if (PortalIdentity.IsAuthenticated)
+		{
+			await ApiClient.AccountLogoffAsync(cancellationTokenSource.Token);
+			PortalIdentity.InvalidateCache();
+		}
+        NavigationManager.NavigateTo(Routes.Administration.Account.Login);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
+    }
+}

@@ -134,8 +134,8 @@ public class AccountControllerTests
 
         // Assert
         var setCookieHeaders = apiClient.GetCookieHeadersFromLastResponse();
-        setCookieHeaders.Should().Contain(cookie => cookie.StartsWith("specular_auth="));
-        setCookieHeaders.Should().Contain(cookie => cookie.StartsWith("specular_refresh="));
+        setCookieHeaders.Should().Contain(cookie => cookie.StartsWith("cadr_auth="));
+        setCookieHeaders.Should().Contain(cookie => cookie.StartsWith("cadr_refresh="));
     }
 
     /// <summary>

@@ -18,7 +18,7 @@ namespace CADR.Api.Tests.Infrastructures;
 public class MockedIntegrationFixture : IAsyncLifetime
 {
     private readonly TestWebApplicationFactory factory;
-    private CadrContext? specularContext;
+    private CadrContext? cadrContext;
 
     internal PersonalOptions PersonalOptions { get; } = new()
     {
@@ -42,14 +42,14 @@ public class MockedIntegrationFixture : IAsyncLifetime
     {
         get
         {
-            if (specularContext != null)
+            if (cadrContext != null)
             {
-                return specularContext;
+                return cadrContext;
             }
 
             var scope = factory.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
-            specularContext = scope.ServiceProvider.GetRequiredService<CadrContext>();
-            return specularContext;
+            cadrContext = scope.ServiceProvider.GetRequiredService<CadrContext>();
+            return cadrContext;
         }
     }
 

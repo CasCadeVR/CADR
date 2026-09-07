@@ -1,0 +1,51 @@
+@using CADR.Administrations.Pages.Models.Organization
+
+<Offcanvas Caption="Изменение роли" @ref="self">
+    <CommonEditForm SubmitText="Изменить роль"
+                    Model="model"
+                    Handler="FormHandler">
+        <ChildContent>
+            <Paragraph>Вы можете изменить роль пользователя <b>@model.UserOrganization?.Name</b> на любую, но не выше своей собственной.</Paragraph>
+            <FormRow IsFloating="true">
+                <InputSelect @bind-Value="model.NewRole" class="form-select" id="inputUserRole">
+                    @foreach (var item in Enum.GetValues<UserRoleApi>())
+                    {
+                        <option value="@item">@item.ToString()</option>
+                    }
+                </InputSelect>
+                <label for="inputUserRole">Роль</label>
+            </FormRow>
+        </ChildContent>
+    </CommonEditForm>
+</Offcanvas>
+
+@code
+{
+    /// <summary>
+    /// Необходимое для выполнения действие
+    /// </summary>
+    public Func<OrganizationChangeUserRoleModel, CancellationToken, Task>? Action { get; set; }
+
+    private Offcanvas? self;
+    private readonly OrganizationChangeUserRoleModel model = new();
+
+    /// <summary>
+    /// Показывает боковую панель
+    /// </summary>
+    public async Task ShowPanelAsync(UserOrganizationApiModel userOrganization, CancellationToken cancellationToken)
+    {
+        model.UserOrganization = userOrganization;
+        model.NewRole = userOrganization.Role;
+        StateHasChanged();
+        await self!.ShowAsync(cancellationToken);
+    }
+
+    private async Task FormHandler(CancellationToken cancellationToken)
+    {
+        if (Action != null)
+        {
+            await Action.Invoke(model, cancellationToken);
+            await self!.HideAsync(cancellationToken);
+        }
+    }
+}

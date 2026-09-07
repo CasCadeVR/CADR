@@ -1,0 +1,38 @@
+﻿@attribute [Route(Routes.Administration.Account.Profile)]
+@implements IDisposable
+
+@using AutoMapper
+@using CADR.Portal.Components.Infrastructures
+@using CADR.Portal.Contracts.Interfaces
+
+@inject IMapper Mapper
+@inject IPortalCadrApiClient ApiClient
+@inject IMessageBox MessageBox
+
+<PageTitle>Профиль пользователя</PageTitle>
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+	
+</Container>
+
+@code {
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	/// <inheritdoc/>
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		StateHasChanged();
+	}
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
+    }
+}

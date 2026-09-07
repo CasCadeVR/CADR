@@ -1,0 +1,143 @@
+﻿@page "/organization/{organizationId:guid}/invites"
+
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Models.Enums
+@using System.Collections.ObjectModel
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Controls.Organization
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+
+<PageTitle>Приглашения организации</PageTitle>
+<OrganizationTab TItem="InviteOrganizationApiModel"
+				 OrganizationId="OrganizationId"
+                 Organization="currentOrganization"
+                 ActiveTable="OrganizationTableItem.Invites"
+                 ItemsSource="sourceOrganizationInvites"
+                 FilteredItems="organizationInvites"
+                 OnSearch="SearchChangeEventHandler"
+                 OnButtonsClick="OnClickHandler"
+                 ButtonItems="items"
+                 EmptyTableMessage="Приглашения не найдены"
+                 IsLoaded="isLoaded">
+    <TableHeader>
+        <th>Имя пользователя</th>
+        <th>Почта</th>
+        <th>Роль</th>
+        <th>Добавлен</th>
+        <th>Дата</th>
+        <th>&nbsp;</th>
+    </TableHeader>
+    <RowTemplate>
+        <td>@context.UserName</td>
+        <td>@context.UserMail</td>
+        <td>@context.Role</td>
+        <td>@context.CreatedBy</td>
+        <td>@context.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+        <td>
+            <Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
+                <DropDownItem IconType="IconTypes.Trash"
+                              Click="@(() => DeleteInvitePrompt(context))"
+                              Disabled="!currentOrganization?.UserIsAdmin is true">
+                    Удалить
+                </DropDownItem>
+            </Dropdown>
+        </td>
+    </RowTemplate>
+</OrganizationTab>
+<ModalDialog @ref="modalDialogPrompt" Title="Удаление приглашения">
+    <ModalBody>
+        Вы действительно желаете удалить приглашение для пользователя @($"{inviteTargetItem?.UserMail} ({inviteTargetItem?.UserName})")?
+    </ModalBody>
+    <ModalFooter>
+        <Button Color="ThemeColors.Primary" Click="DeleteInvite">Да</Button>
+        <Button Color="ThemeColors.Secondary" Click="() => modalDialogPrompt?.Close()">Нет</Button>
+    </ModalFooter>
+</ModalDialog>
+
+@code {
+
+    /// <summary>
+    /// Идентификатор организации
+    /// </summary>
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    private string? SearchValue { get; set; }
+    private OrganizationApiModel? currentOrganization;
+    private bool isLoaded;
+    private IReadOnlyCollection<InviteOrganizationApiModel>? sourceOrganizationInvites;
+    private IReadOnlyCollection<InviteOrganizationApiModel>? organizationInvites;
+    private ModalDialog? modalDialogPrompt;
+    private InviteOrganizationApiModel? inviteTargetItem;
+
+    private readonly IReadOnlyCollection<ButtonGroupItem<CommonAction>> items =
+		new List<ButtonGroupItem<CommonAction>>()
+        {
+            new() { Color = ThemeColors.Secondary, Value = CommonAction.Refresh, IconType = IconTypes.Reload, },
+        };
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadItemsAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        isLoaded = false;
+        StateHasChanged();
+        currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+		var result = await ApiClient.InviteGetForOrganizationAsync(OrganizationId, TokenSource.Token);
+        sourceOrganizationInvites = new ReadOnlyCollection<InviteOrganizationApiModel>(result.ToList());
+        organizationInvites = new ReadOnlyCollection<InviteOrganizationApiModel>(sourceOrganizationInvites
+            .Where(InviteOrganizationFilter(SearchValue))
+            .ToList());
+        isLoaded = true;
+        StateHasChanged();
+    }
+
+    private static Func<InviteOrganizationApiModel, bool> InviteOrganizationFilter(string? filterValue)
+        => x => string.IsNullOrWhiteSpace(filterValue) ||
+                x.UserName.Contains(filterValue, StringComparison.InvariantCultureIgnoreCase) ||
+                x.UserMail.Contains(filterValue, StringComparison.InvariantCultureIgnoreCase);
+
+    private void SearchChangeEventHandler(string value)
+    {
+        SearchValue = value;
+        organizationInvites = sourceOrganizationInvites == null
+            ? Array.Empty<InviteOrganizationApiModel>()
+            : new ReadOnlyCollection<InviteOrganizationApiModel>(sourceOrganizationInvites
+                .Where(InviteOrganizationFilter(SearchValue))
+                .ToList());
+        StateHasChanged();
+    }
+
+    private async Task OnClickHandler(CommonAction value)
+    {
+        switch (value)
+        {
+            case CommonAction.Refresh:
+                await LoadItemsAsync();
+                break;
+        }
+    }
+
+    private void DeleteInvitePrompt(InviteOrganizationApiModel model)
+    {
+        inviteTargetItem = model;
+        modalDialogPrompt?.Open();
+    }
+
+    private async Task DeleteInvite()
+    {
+        modalDialogPrompt?.Close();
+        if (inviteTargetItem != null)
+        {
+            await ApiClient.InviteDeleteAsync(inviteTargetItem.Id, TokenSource.Token);
+            await LoadItemsAsync();
+        }
+    }
+}

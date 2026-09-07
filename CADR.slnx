@@ -3,7 +3,7 @@
     <Project Path="Administrations/CADR.Administrations.Api/CADR.Administrations.Api.csproj" Id="dc57d8b2-b6b8-49ed-965a-16981fde0f64" />
     <Project Path="Administrations/CADR.Administrations.Entities.Configurations/CADR.Administrations.Entities.Configurations.csproj" Id="3adf92bd-6b1e-4d7f-b14d-9b0ee377913d" />
     <Project Path="Administrations/CADR.Administrations.Entities/CADR.Administrations.Entities.csproj" />
-    <Project Path="Administrations/CADR.Administrations.Pages/CADR.Administrations.Pages.csproj" Id="79c955ff-411a-4517-8cec-5c4980d0d07b" />
+    <Project Path="Administrations/CADR.Administrations.Pages/CADR.Administrations.Pages.csproj" Id="84284081-a0ef-4fef-a91f-b335186c788a" />
     <Project Path="Administrations/CADR.Administrations.Repositories.Contracts/CADR.Administrations.Repositories.Contracts.csproj" Id="bc6d584f-0cac-4167-bf20-24f45b585d1e" />
     <Project Path="Administrations/CADR.Administrations.Repositories.Tests/CADR.Administrations.Repositories.Tests.csproj" Id="a7a4019e-5757-4589-aca9-f8eaef73c1e3" />
     <Project Path="Administrations/CADR.Administrations.Repositories/CADR.Administrations.Repositories.csproj" Id="d4355725-5ac3-49fe-be1b-b0e6755ec452" />
@@ -24,6 +24,11 @@
     <Project Path="DataAccess/CADR.Context.EntityFrameworkCore/CADR.Context.EntityFrameworkCore.csproj" Id="9217d62b-5010-4e25-9ccc-02c8873a25bc" />
     <Project Path="DataAccess/CADR.Context.Tests/CADR.Context.Tests.csproj" Id="976c9c05-a3e3-4d48-9a0c-9478bcd7b9a9" />
     <Project Path="DataAccess/CADR.Context/CADR.Context.csproj" Id="f51904bc-5036-45ce-b2f5-67a201fe35bf" />
+  </Folder>
+  <Folder Name="/Portal/">
+    <Project Path="Portal/CADR.Portal.Components/CADR.Portal.Components.csproj" Id="83b98bd4-9876-4d90-8ee7-3975ede5c4ee" />
+    <Project Path="Portal/CADR.Portal.Contracts/CADR.Portal.Contracts.csproj" Id="93bdcdcc-54ee-4318-9102-da507e5e38ec" />
+    <Project Path="Portal/CADR.Portal/CADR.Portal.csproj" Id="73ac6241-cb25-4a80-a829-5f1ea70fa234" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />

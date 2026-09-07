@@ -1,0 +1,18 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<span class="@BaseCssClass" aria-hidden="true" @attributes="@CapturedAttributes"></span>
+
+@code {
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter]
+    public IconTypes IconType { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add(IconType.ToCssClass());
+        await base.OnParametersSetAsync();
+    }
+}
