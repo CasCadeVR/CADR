@@ -1,0 +1,54 @@
+﻿@typeparam TItem
+
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+    @TabHeader
+    @if (!IsLoaded)
+    {
+        <Paragraph TextAlignment="TextAlignments.Center">
+            <Spinner/>
+        </Paragraph>
+    }
+    else
+    {
+        <Table Items="@TableItems" EmptyMessage="@EmptyTableMessage" TItem="TItem" TableHeader="TableHeader" RowTemplate="RowTemplate"></Table>
+    }
+</Container>
+
+@code {
+    /// <summary>
+    /// Контент над таблицей
+    /// </summary>
+    [Parameter]
+    public RenderFragment? TabHeader { get; set; }
+
+    /// <summary>
+    /// Сообщение, если в таблице нет элементов
+    /// </summary>
+    [Parameter]
+    public string? EmptyTableMessage { get; set; }
+
+    /// <summary>
+    /// Записи таблицы
+    /// </summary>
+    [Parameter]
+    public IReadOnlyCollection<TItem>? TableItems { get; set; }
+
+    /// <summary>
+    /// Заголовок таблицы
+    /// </summary>
+    [Parameter]
+    public RenderFragment? TableHeader { get; set; }
+
+    /// <summary>
+    /// Шаблон строки таблицы
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TItem>? RowTemplate { get; set; }
+
+    /// <summary>
+    /// Загружены ли элементы таблицы
+    /// </summary>
+    [Parameter]
+    public bool IsLoaded { get; set; }
+
+}

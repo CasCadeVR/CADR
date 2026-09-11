@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Administrations.Repositories.Contracts</RootNamespace>
+    <AssemblyName>CADR.Administrations.Repositories.Contracts</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\CADR.Common.Repositories.Contracts\CADR.Common.Repositories.Contracts.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Entities\CADR.Administrations.Entities.csproj" />
+  </ItemGroup>
+
+</Project>

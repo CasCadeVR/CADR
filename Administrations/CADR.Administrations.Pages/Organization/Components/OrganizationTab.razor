@@ -1,0 +1,131 @@
+﻿@using CADR.Api.Client
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Resources
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Models.Enums;
+@using CADR.Portal.Components.Controls.Forms
+@typeparam TItem
+
+@inject IPortalCadrApiClient ApiClient
+
+<DefaultTab TItem="TItem"
+            TableHeader="TableHeader"
+            RowTemplate="RowTemplate"
+            IsLoaded="IsLoaded"
+            TableItems="FilteredItems"
+            EmptyTableMessage="@EmptyTableMessage">
+    <TabHeader>
+        <Row>
+            <FormPillsToolBar Totals="ItemsSource?.Count" Current="FilteredItems?.Count">
+                <PillsContent>
+                    @foreach (var entry in OrganizationTabEntries.Entries)
+                    {
+                        <PillItem IsActive="@(ActiveTable == entry.EnumValue)"
+								  Url="@string.Format(entry.Url, OrganizationId)">
+                            @entry.Text
+                        </PillItem>
+                    }
+                </PillsContent>
+                <ToolBarContent>
+                    <InputGroup>
+                        <InputGroupText id="search">
+                            <Icon IconType="IconTypes.MagnifyingGlass"/>
+                        </InputGroupText>
+                        <input class="form-control" aria-describedby="search" @oninput="SearchChangeEventHandler"/>
+                    </InputGroup>
+                    <ButtonGroup Items="@ButtonItems" Margin="4 * 2 *" IsOutline="true"
+                                 ItemType="ButtonGroupType.Button" OnItemClick="OnButtonsClick"/>
+                </ToolBarContent>
+            </FormPillsToolBar>
+        </Row>
+    </TabHeader>
+</DefaultTab>
+
+@code {
+	private readonly IReadOnlyCollection<LinkedItem> breadcrumbItems =
+    [
+		new() { IconType = IconTypes.Home, Caption = "Список организаций", Url = Routes.Administration.Organization.List, }
+	];
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+    /// <summary>
+    /// Организация
+    /// </summary>
+    [Parameter]
+    public OrganizationApiModel? Organization { get; set; }
+
+    /// <summary>
+    /// Сообщение, если в таблице нет элементов
+    /// </summary>
+    [Parameter]
+    public string? EmptyTableMessage { get; set; }
+
+    /// <summary>
+    /// Коллекция исходных элементов
+    /// </summary>
+    [Parameter]
+    public IReadOnlyCollection<TItem>? ItemsSource { get; set; }
+
+    /// <summary>
+    /// Коллекция отфильтрованных элементов
+    /// </summary>
+    [Parameter]
+    public IReadOnlyCollection<TItem>? FilteredItems { get; set; }
+
+    /// <summary>
+    /// Действие при использовании поисковой строки
+    /// </summary>
+    /// <remarks> Параметр делегата — введённое для поиска значение </remarks>
+    [Parameter]
+    public Action<string>? OnSearch { get; set; }
+
+    /// <summary>
+    /// Действие при нажатии на какую-нибудь кнопку в группе кнопок
+    /// </summary>
+    [Parameter]
+	public Func<CommonAction, Task>? OnButtonsClick { get; set; }
+
+    /// <summary>
+    /// Заголовок таблицы
+    /// </summary>
+    [Parameter]
+    public RenderFragment? TableHeader { get; set; }
+
+    /// <summary>
+    /// Шаблон строки таблицы
+    /// </summary>
+    [Parameter]
+    public RenderFragment<TItem>? RowTemplate { get; set; }
+
+    /// <summary>
+    /// Значение активной таблицы
+    /// </summary>
+    [Parameter]
+    public OrganizationTableItem ActiveTable { get; set; }
+
+    /// <summary>
+    /// Загружены ли элементы таблицы
+    /// </summary>
+    [Parameter]
+    public bool IsLoaded { get; set; }
+
+    /// <summary>
+    /// Кнопки над таблицей
+    /// </summary>
+    [Parameter]
+    public IReadOnlyCollection<ButtonGroupItem<CommonAction>>? ButtonItems { get; set; }
+
+    private void SearchChangeEventHandler(ChangeEventArgs args)
+    {
+        if (args.Value?.ToString() is { } value)
+        {
+            OnSearch?.Invoke(value);
+        }
+    }
+}
+

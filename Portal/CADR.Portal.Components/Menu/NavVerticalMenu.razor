@@ -1,0 +1,11 @@
+﻿<nav class="navbar navbar-light bg-light">
+    <ul class="navbar-nav flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
+        @ChildContent
+    </ul>
+</nav>
+
+@code {
+    /// <see cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

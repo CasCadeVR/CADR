@@ -1,0 +1,29 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" role="status" @attributes="@CapturedAttributes">
+    <span class="visually-hidden">Загрузка...</span>
+</div>
+
+@code {
+    /// <summary>
+    /// Анимация растущего спиннера
+    /// </summary>
+    [Parameter] public bool Growing { get; set; }
+
+    /// <summary>
+    /// Небольшой размер спиннера
+    /// </summary>
+    [Parameter] public bool IsSmall { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add($"spinner-{(Growing ? "grow" : "border")}");
+        if (IsSmall)
+        {
+            InheritCss.Add($"spinner-{(Growing ? "grow" : "border")}-sm");
+        }
+        await base.OnParametersSetAsync();
+    }
+}

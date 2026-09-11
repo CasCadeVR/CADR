@@ -1,0 +1,104 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@using Microsoft.JSInterop
+@using CADR.Portal.Components.Infrastructures.Handlers
+@using CADR.Portal.Components.Models.Enums
+@implements IDisposable
+
+@inject IMessageProvider MessageProvider
+@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="@id" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">@messageParameter.Caption</h5>
+                <button type="button" class="btn-close" aria-label="Close" @onclick="() => CloseDialog(defaultDialogResult)"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-2 d-flex align-items-center justify-content-center text-secondary"><span class="display-6"><Icon IconType="@GetTypeByIcon(messageParameter.Icon)" /></span></div>
+                    <div class="col-10 d-flex align-items-center">@messageParameter.Text</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                @switch (messageParameter.Buttons)
+                {
+                    case MessageBoxButtons.OkCancel:
+                        <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(defaultDialogResult)">Отмена</button>
+                        <button type="button" class="btn btn-primary" @onclick="() => CloseDialog(DialogResult.Ok)">Ок</button>
+                        break;
+                    case MessageBoxButtons.YesNoCancel:
+                        <button type="button" class="btn btn-light" @onclick="() => CloseDialog(defaultDialogResult)">Отмена</button>
+                        <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(DialogResult.No)">Нет</button>
+                        <button type="button" class="btn btn-primary" @onclick="() => CloseDialog(DialogResult.Yes)">Да</button>
+                        break;
+                    case MessageBoxButtons.YesNo:
+                        <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(defaultDialogResult)">Нет</button>
+                        <button type="button" class="btn btn-primary" @onclick="() => CloseDialog(DialogResult.Yes)">Да</button>
+                        break;
+                    default:
+                        <button type="button" class="btn btn-primary" @onclick="() => CloseDialog(DialogResult.Ok)">ОК</button>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly string id = $"auid{Guid.NewGuid():N}";
+    private MessageEventArgs messageParameter = MessageEventArgs.Default;
+    private DialogResult defaultDialogResult = DialogResult.Cancel;
+    private DialogResult? currentDialogResult;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        MessageProvider.OnMessageReceived += OnMessageReceived;
+    }
+
+    private async Task<DialogResult> OnMessageReceived(MessageEventArgs arg, CancellationToken cancellationToken)
+    {
+        currentDialogResult = null;
+        messageParameter = arg;
+        StateHasChanged();
+        defaultDialogResult = arg.Buttons switch
+        {
+            MessageBoxButtons.Ok => DialogResult.Ok,
+            MessageBoxButtons.YesNo => DialogResult.No,
+            _ => DialogResult.Cancel
+        };
+        await JsRuntime.InvokeVoidAsync("modalInvoker", cancellationToken, id, true);
+        while (currentDialogResult == null && !cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(250, cancellationToken);
+        }
+        return currentDialogResult ?? defaultDialogResult;
+    }
+
+    private async Task CloseDialog(DialogResult dialogResult)
+    {
+        await JsRuntime.InvokeVoidAsync("modalInvoker", id, false);
+        currentDialogResult = dialogResult;
+    }
+
+    private IconTypes GetTypeByIcon(MessageBoxIcon icon)
+        => icon switch
+        {
+            MessageBoxIcon.Warning => IconTypes.Warning,
+            MessageBoxIcon.Error => IconTypes.CircleCross,
+            MessageBoxIcon.Question => IconTypes.QuestionMark,
+            _ => IconTypes.Info,
+
+            };
+
+    #region IDisposable
+
+    /// <inheritdoc cref="IDisposable"/>
+    public void Dispose()
+    {
+        MessageProvider.OnMessageReceived -= OnMessageReceived;
+    }
+
+    #endregion
+}

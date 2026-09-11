@@ -1,0 +1,103 @@
+﻿@inherits BootstrapComponentBase
+@typeparam TItem
+
+<table class="@BaseCssClass" @attributes="@CapturedAttributes">
+    <thead>
+    <tr>@TableHeader</tr>
+    </thead>
+    <tbody>
+    @if (Items is null or { Count: 0 })
+    {
+        <tr>
+            <td colspan="16"><Paragraph TextAlignment="TextAlignments.Center" Foreground="ThemeColors.Muted">@EmptyMessage</Paragraph></td>
+        </tr>
+    }
+    else
+    {
+        foreach (var item in Items)
+        {
+            if (RowTemplate is not null)
+            {
+                <tr>@RowTemplate(item)</tr>
+            }
+        }
+    }
+    </tbody>
+</table>
+
+@code {
+
+    /// <summary>
+    /// Текст, который будет отображаться в случае, если коллекция пуста
+    /// </summary>
+    [Parameter]
+    public string EmptyMessage { get; set; } = "Нет элементов для отображения";
+
+    /// <summary>
+    /// Шаблон заголовка таблицы
+    /// </summary>
+    [Parameter] public RenderFragment? TableHeader { get; set; }
+
+    /// <summary>
+    /// Шаблон строки таблицы
+    /// </summary>
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+
+    /// <summary>
+    /// Элементы таблицы
+    /// </summary>
+    [Parameter] public IReadOnlyCollection<TItem>? Items { get; set; }
+
+    /// <summary>
+    /// Добавляет зебру к строкам таблицы
+    /// </summary>
+    [Parameter] public bool StripedRows { get; set; }
+
+    /// <summary>
+    /// Добавляет эффект при наведении на строку
+    /// </summary>
+    [Parameter] public bool HoverRows { get; set; }
+
+    /// <summary>
+    /// Добавляет рамку к таблице
+    /// </summary>
+    [Parameter] public bool Bordered { get; set; }
+
+    /// <summary>
+    /// Убирает рамку у таблицы
+    /// </summary>
+    [Parameter] public bool Borderless { get; set; }
+
+    /// <summary>
+    /// Делает таблицу компактной
+    /// </summary>
+    [Parameter] public bool IsSmallTables { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("table");
+        if (StripedRows)
+        {
+            InheritCss.Add("table-striped");
+        }
+        if (HoverRows)
+        {
+            InheritCss.Add("table-hover");
+        }
+        if (Bordered)
+        {
+            InheritCss.Add("table-bordered");
+        }
+        if (Borderless)
+        {
+            InheritCss.Add("table-borderless");
+        }
+        if (IsSmallTables)
+        {
+            InheritCss.Add("table-sm");
+        }
+        await base.OnParametersSetAsync();
+    }
+}

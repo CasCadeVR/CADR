@@ -1,0 +1,25 @@
+﻿@using CADR.Portal.Components.Infrastructures
+
+@inherits BootstrapComponentBase
+
+<ul class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</ul>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Заполнение элементов</summary>
+    [Parameter] public NavAlignment? Fill { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("nav");
+        InheritCss.Add("nav-pills");
+        Fill.TryAddCssValue(InheritCss);
+        await base.OnParametersSetAsync();
+    }
+}

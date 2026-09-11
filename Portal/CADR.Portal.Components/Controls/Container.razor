@@ -1,0 +1,47 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</div>
+
+@code
+{
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Характеристики контейнера по умолчанию</summary>
+    [Parameter] public Containers? Size { get; set; }
+
+    /// <summary>Характеристики столбца по умолчанию для контейнера</summary>
+    [Parameter] public Columns? SizeColumn { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="small"/> для контейнера</summary>
+    [Parameter] public Columns? SizeColumnSmall { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="medium "/> для контейнера</summary>
+    [Parameter] public Columns? SizeColumnMedium { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="large"/> для контейнера</summary>
+    [Parameter] public Columns? SizeColumnLarge { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="extra large"/> для контейнера</summary>
+    [Parameter] public Columns? SizeColumnExtraLarge { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="extra extra large"/> для контейнера</summary>
+    [Parameter] public Columns? SizeColumnExtraExtraLarge { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        Size.TryAddCssValue(InheritCss);
+        SizeColumn.TryAddCssValue(InheritCss, $"{Containers.Default.ToCssClass()}-");
+        SizeColumnSmall.TryAddCssValue(InheritCss, $"{Containers.Small.ToCssClass()}-");
+        SizeColumnMedium.TryAddCssValue(InheritCss, $"{Containers.Medium.ToCssClass()}-");
+        SizeColumnLarge.TryAddCssValue(InheritCss, $"{Containers.Large.ToCssClass()}-");
+        SizeColumnExtraLarge.TryAddCssValue(InheritCss, $"{Containers.ExtraLarge.ToCssClass()}-");
+        SizeColumnExtraExtraLarge.TryAddCssValue(InheritCss, $"{Containers.ExtraExtraLarge.ToCssClass()}-");
+        await base.OnParametersSetAsync();
+    }
+}

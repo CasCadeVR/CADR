@@ -1,0 +1,42 @@
+﻿@using CADR.Portal.Components.Models
+@inherits BootstrapComponentBase
+
+<nav aria-label="breadcrumb" class="@BaseCssClass" @attributes="@CapturedAttributes">
+    <ol class="breadcrumb">
+        @foreach (var item in Items)
+        {
+            <li class="breadcrumb-item">
+                <a href="@item.Url">
+                    @if (item.IconType.HasValue)
+                    {
+                        <Icon IconType="@item.IconType.Value" />
+                        @if (!string.IsNullOrEmpty(item.Caption))
+                        {
+                            <text>&nbsp;</text>
+                        }
+                    }
+                    @item.Caption
+                </a>
+            </li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@Caption</li>
+        @CaptionAdditional
+    </ol>
+</nav>
+
+@code {
+
+	/// <summary>
+	/// Заголовок элемента
+	/// </summary>
+	[Parameter] public string Caption { get; set; } = string.Empty;
+
+	/// <inheritdoc cref="RenderFragment"/>
+	[Parameter] public RenderFragment? CaptionAdditional { get; set; }
+
+	/// <summary>
+	/// Список элементов хлебных крошек
+	/// </summary>
+	[Parameter]
+    public IReadOnlyCollection<LinkedItem> Items { get; set; } = Array.Empty<LinkedItem>();
+}

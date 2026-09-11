@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Common.Core</RootNamespace>
+    <AssemblyName>CADR.Common.Core</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\CADR.Common.Mvc\CADR.Common.Mvc.csproj" />
+  </ItemGroup>
+
+</Project>

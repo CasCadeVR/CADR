@@ -1,0 +1,26 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<img src="@Src" class="@BaseCssClass" @attributes="@CapturedAttributes" loading="@Loading.Description()" />
+
+@code {
+    /// <summary>Ссылка на картинку</summary>
+    [Parameter]
+    public string? Src { get; set; }
+
+    /// <summary>Ссылка на картинку</summary>
+    [Parameter]
+    public ImageAppearances? Appearances { get; set; }
+
+    /// <summary><inheritdoc cref="ImageLoading"/></summary>
+    [Parameter]
+    public ImageLoading Loading { get; set; } = ImageLoading.Eager;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        Appearances.TryAddCssValue(InheritCss);
+        await base.OnParametersSetAsync();
+    }
+}

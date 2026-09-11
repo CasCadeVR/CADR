@@ -1,0 +1,65 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" role="alert">
+	@if(!string.IsNullOrWhiteSpace(Header))
+	{
+		<h4 class="alert-heading">@Header</h4>
+	}
+	@BodyContent
+	@if (HasDismissing)
+	{
+		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	}
+	@if (FooterContent != null)
+	{
+		<hr>
+		@FooterContent
+	}
+	
+</div>
+
+@code {
+	/// <summary>
+	/// Заголовок оповещения
+	/// </summary>
+	[Parameter]
+	public string? Header { get; set; }
+
+	/// <summary>
+	/// Тело оповещения
+	/// </summary>
+	[Parameter]
+	public RenderFragment? BodyContent { get; set; }
+
+	/// <summary>
+	/// Подвал оповещения
+	/// </summary>
+	[Parameter]
+	public RenderFragment? FooterContent { get; set; }
+
+	/// <summary>
+	/// Цвет оповещения
+	/// </summary>
+	[Parameter]
+	public ThemeColors Color { get; set; } = ThemeColors.Primary;
+
+	/// <summary>
+	/// Флаг, указывающий на то, имеется ли у оповещения кнопка закрытия
+	/// </summary>
+	[Parameter]
+	public bool HasDismissing { get; set; } = false;
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		InheritCss.Clear();
+		InheritCss.Add("alert");
+		InheritCss.Add($"alert-{Color.ToCssClass()}");
+		if (HasDismissing)
+		{
+			InheritCss.Add("alert-dismissible fade show");
+		}
+		await base.OnParametersSetAsync();
+	}
+}

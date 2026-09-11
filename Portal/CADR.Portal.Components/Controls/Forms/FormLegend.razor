@@ -1,0 +1,19 @@
+﻿@inherits BootstrapComponentBase
+
+<fieldset class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @if (!string.IsNullOrWhiteSpace(Caption))
+    {
+        <legend>@Caption</legend>
+    }
+    @ChildContent
+</fieldset>
+
+@code {
+    /// <summary>
+    /// Заголовок формы
+    /// </summary>
+    [Parameter] public string Caption { get; set; } = string.Empty;
+
+    /// <see cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

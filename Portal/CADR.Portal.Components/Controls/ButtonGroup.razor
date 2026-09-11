@@ -1,0 +1,107 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@using CADR.Portal.Components.Models
+@inherits BootstrapComponentBase
+@typeparam TItem
+
+<div class="@BaseCssClass" role="group" aria-label="@AriaLabel">
+    @foreach (var item in Items.Select((x, i) => new { Value = x , Index = i }))
+
+    {
+        RenderFragment itemContent = @<FragmentContent>
+                                            @if (item.Value.IconType.HasValue)
+                                            {
+                                                <Icon IconType="@item.Value.IconType.Value"/>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(item.Value.Text) && item.Value.IconType.HasValue)
+                                            {
+                                                <text>&nbsp;</text>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(item.Value.Text))
+                                            {
+                                                @item.Value.Text
+                                            }
+                                        </FragmentContent>;
+        if (ItemType == ButtonGroupType.Link)
+        {
+            <a href="@(item.Value.Uri ?? "#")" class="btn btn-@((item.Value.Color ?? ThemeColors.Primary).ToCssClass())">
+                @itemContent
+            </a>
+        }
+        else if (ItemType == ButtonGroupType.Radio)
+        {
+            <input type="radio" class="btn-check" name="@elementName" id="@($"{elementName}_{item.Index}")" autocomplete="off">
+            <label class="btn btn-@((item.Value.Color ?? ThemeColors.Primary).ToCssClass())" for="@($"{elementName}_{item.Index}")">
+                @itemContent
+            </label>
+        }
+        else if (ItemType == ButtonGroupType.Checkbox)
+        {
+            <input type="checkbox" class="btn-check" id="@($"{elementName}_{item.Index}")" autocomplete="off">
+            <label class="btn btn-@((item.Value.Color ?? ThemeColors.Primary).ToCssClass())" for="@($"{elementName}_{item.Index}")">Checkbox 1</label>
+        }
+        else
+        {
+            <Button ButtonType="ButtonTypes.Button"
+                    Color="@(item.Value.Color ?? ThemeColors.Primary)"
+                    IconType="@item.Value.IconType"
+                    Click="args => ClickHandler(args, item.Value.Value)"
+                    IsOutline="@IsOutline"
+                    Size="ButtonSize.Small">
+                @item.Value.Text
+            </Button>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Метка для элемента управления
+    /// </summary>
+    [Parameter]
+    public string AriaLabel { get; set; } = "Button groups";
+
+    /// <summary>
+    /// Задаёт размер группы кнопок
+    /// </summary>
+    [Parameter] public ButtonSize? Size { get; set; }
+
+    /// <summary>
+    /// Задаёт вертикальное расположение группы кнопок
+    /// </summary>
+    [Parameter] public bool IsVertical { get; set; } = false;
+
+    /// <summary>
+    /// Элементы группы кнопок
+    /// </summary>
+    [Parameter] public IReadOnlyCollection<ButtonGroupItem<TItem>> Items { get; set; } = new List<ButtonGroupItem<TItem>>();
+
+    /// <inheritdoc cref="ButtonGroupType"/>
+    [Parameter] public ButtonGroupType ItemType { get; set; } = ButtonGroupType.Button;
+
+    /// <summary>
+    /// Обработчик нажатия на кнопку
+    /// </summary>
+    [Parameter]
+    public Func<TItem, Task>? OnItemClick { get; set; }
+
+    /// <summary>
+    /// Оставляет только рамку кнопки
+    /// </summary>
+    [Parameter] public bool IsOutline { get; set; } = false;
+
+    private readonly string elementName = Guid.NewGuid().ToString("N");
+
+    private Task ClickHandler(MouseEventArgs e, TItem item)
+    {
+        return OnItemClick?.Invoke(item) ?? Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add($"btn-group{(IsVertical ? "-vertical" : string.Empty)}");
+        Size.TryAddCssValue(InheritCss);
+        await base.OnParametersSetAsync();
+    }
+}

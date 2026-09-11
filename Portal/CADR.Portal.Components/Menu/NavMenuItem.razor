@@ -1,0 +1,59 @@
+﻿@inject NavigationManager NavigationManager
+
+<li class="nav-item">
+    <a href="@Url" class="@FinalCssClass" @onclick="Click">
+        @if (IconType.HasValue)
+        {
+            <Icon IconType="@IconType.Value" /><text>&nbsp;</text>
+        }
+        @Caption
+    </a>
+</li>
+
+@code {
+    /// <summary>
+    /// Заголовок меню
+    /// </summary>
+    [Parameter]
+    public string? Caption { get; set; }
+
+    /// <summary>
+    /// Ссылка меню
+    /// </summary>
+    [Parameter]
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Элемент не доступен для выбора пользователем
+    /// </summary>
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter]
+    public IconTypes? IconType { get; set; }
+
+    /// <summary>
+    /// Действие по нажатию на кнопку
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OnClickAction { get; set; }
+
+    private string? FinalCssClass { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (string.IsNullOrWhiteSpace(Url))
+        {
+            Url = $"{NavigationManager.Uri}#";
+        }
+
+        FinalCssClass = string.Join(" ", "nav-link", (IsDisabled ? "disabled" : string.Empty)).Trim();
+    }
+
+    private Task Click() => OnClickAction != null
+        ? OnClickAction.Invoke()
+        : Task.CompletedTask;
+}

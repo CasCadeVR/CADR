@@ -1,0 +1,79 @@
+﻿@using CADR.Portal.Components.Infrastructures
+
+@inherits BootstrapComponentBase
+
+@{
+    RenderFragment buttonContent = @<FragmentContent>
+                                       @if (IconType.HasValue)
+                                       {
+                                           <Icon IconType="@IconType.Value"/>
+                                           @if(!string.IsNullOrEmpty(Caption))
+                                           {
+                                               <text>&nbsp;</text>
+                                           }
+                                       }
+                                       @Caption
+                                   </FragmentContent>;
+}
+
+<div class="btn-group">
+    @if(Split)
+    {
+        <button type="button" class="btn btn-@Color.ToCssClass() @Size.ToCssClass()" data-bs-toggle="dropdown" aria-expanded="false" @attributes="@CapturedAttributes">
+            @buttonContent
+        </button>
+        <button type="button" class="@BaseCssClass" data-bs-toggle="dropdown" aria-expanded="false" @attributes="@CapturedAttributes">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+    }
+    else
+    {
+        <button type="button" class="@BaseCssClass" data-bs-toggle="dropdown" aria-expanded="false" @attributes="@CapturedAttributes">
+            @buttonContent
+        </button>
+    }
+    <ul class="dropdown-menu@(DarkDropdowns ? " dropdown-menu-dark" : string.Empty) @Direction.ToCssClass()">
+        @ChildContent
+    </ul>
+</div>
+
+@code {
+    /// <summary>Цвет кнопки</summary>
+    [Parameter] public ThemeColors Color { get; set; } = ThemeColors.Primary;
+
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Делить кнопку на две части</summary>
+    [Parameter] public bool Split { get; set; }
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter] public IconTypes? IconType { get; set; }
+
+    /// <summary>Текст кнопки</summary>
+    [Parameter] public string Caption { get; set; } = string.Empty;
+
+    /// <summary>Задаёт размер кнопки</summary>
+    [Parameter] public ButtonSize? Size { get; set; }
+
+    /// <summary>Делает тёмным выпадающий список</summary>
+    [Parameter] public bool DarkDropdowns { get; set; }
+
+    /// <inheritdoc cref="DropDownDirections"/>
+    [Parameter] public DropDownDirections? Direction { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("btn");
+        InheritCss.Add("dropdown-toggle");
+        InheritCss.Add($"btn-{Color.ToCssClass()}");
+        if (Split)
+        {
+            InheritCss.Add("dropdown-toggle-split");
+        }
+        Size.TryAddCssValue(InheritCss);
+        await base.OnParametersSetAsync();
+    }
+}

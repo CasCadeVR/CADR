@@ -1,0 +1,18 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</div>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("form-text");
+        await base.OnParametersSetAsync();
+    }
+}

@@ -1,0 +1,113 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+@{
+    RenderFragment buttonContent = @<FragmentContent>
+                                       @if (IsSpinner)
+                                       {
+                                           <Spinner IsSmall="true"/>
+                                       }
+                                       else if (IconType.HasValue)
+                                       {
+                                           <Icon IconType="@IconType.Value"/>
+                                       }
+                                       @if (ChildContent != null && (IsSpinner || IconType.HasValue))
+                                       {
+                                           <text>&nbsp;</text>
+                                       }
+                                       @ChildContent
+                                   </FragmentContent>;
+}
+
+@if (AsLink)
+{
+    <a href="@Url" role="button" class="@BaseCssClass" @attributes="@CapturedAttributes" disabled="@(IsDisabled || IsSpinner)" @onclick="Click" aria-label="@(ButtonClose != ButtonCloseType.None ? "Close" : string.Empty)">
+        @buttonContent
+    </a>
+}
+else
+{
+    <button type="@ButtonType.Description()" class="@BaseCssClass" @attributes="@CapturedAttributes" disabled="@(IsDisabled || IsSpinner)" @onclick="Click" aria-label="@(ButtonClose != ButtonCloseType.None ? "Close" : string.Empty)">
+        @buttonContent
+    </button>   
+}
+
+@code {
+
+    /// <summary>
+    /// Обработчик нажатия на кнопку
+    /// </summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> Click { get; set; }
+
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc cref="ButtonTypes"/>
+    [Parameter]
+    public ButtonTypes ButtonType { get; set; } = ButtonTypes.Button;
+
+    /// <summary>
+    /// Цвет кнопки
+    /// </summary>
+    [Parameter] public ThemeColors Color { get; set; } = ThemeColors.Primary;
+
+    /// <summary>
+    /// Оставляет только рамку кнопки
+    /// </summary>
+    [Parameter] public bool IsOutline { get; set; } = false;
+
+    /// <summary>
+    /// Задаёт размер кнопки
+    /// </summary>
+    [Parameter] public ButtonSize? Size { get; set; }
+
+    /// <summary>
+    /// Делает кнопку не доступной к выбору
+    /// </summary>
+    [Parameter] public bool IsDisabled { get; set; } = false;
+
+    /// <summary>
+    /// Показывать ссылку как кнопку
+    /// </summary>
+    [Parameter]
+    public bool AsLink { get; set; }
+
+    /// <summary>Адрес перехода</summary>
+    [Parameter] public string Url { get; set; } = string.Empty;
+
+    /// <summary>Кнопка на всю длину</summary>
+    [Parameter] public bool LongWidth { get; set; }
+
+    /// <summary>Тип закрытия кнопки</summary>
+    [Parameter] public ButtonCloseType ButtonClose { get; set; }
+
+    /// <inheritdoc cref="IconTypes"/>
+    [Parameter] public IconTypes? IconType { get; set; }
+
+    /// <summary>
+    /// Переводит кнопку в режим спинера. При этом кнопка заблокирована
+    /// </summary>
+    [Parameter] public bool IsSpinner { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("btn");
+        if (LongWidth)
+        {
+            InheritCss.Add("w-100");
+        }
+        InheritCss.Add(IsOutline
+            ? $"btn-outline-{Color.ToCssClass()}"
+            : $"btn-{Color.ToCssClass()}");
+        if (ButtonClose != ButtonCloseType.None)
+        {
+            ButtonClose.TryAddCssValue(InheritCss);
+        }
+
+        Size.TryAddCssValue(InheritCss);
+        await base.OnParametersSetAsync();
+    }
+}

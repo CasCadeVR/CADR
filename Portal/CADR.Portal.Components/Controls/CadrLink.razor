@@ -1,0 +1,54 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<a href="@(IsDisabled ? null : Url)" class="@BaseCssClass" @attributes="@CapturedAttributes"
+   @onclick="OnClickHandler" @onclick:preventDefault="IsDisabled"
+   aria-disabled="@(IsDisabled ? "true" : null)">
+    @ChildContent
+</a>
+
+@code {
+    /// <summary>
+    /// Обработчик нажатия на ссылку
+    /// </summary>
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Адрес перехода
+    /// </summary>
+    [Parameter] public string Url { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Отключает стандартные стили ссылки (подчёркивание, цвет)
+    /// </summary>
+    [Parameter] public bool DisableLinkStyles { get; set; }
+
+    /// <summary>
+    /// Делает ссылку неактивной
+    /// </summary>
+    [Parameter] public bool IsDisabled { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+
+        if (DisableLinkStyles)
+        {
+            InheritCss.Add("link-unstyled");
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task OnClickHandler(MouseEventArgs e)
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(e);
+        }
+    }
+}

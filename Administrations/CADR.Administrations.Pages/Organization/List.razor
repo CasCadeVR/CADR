@@ -1,0 +1,197 @@
+﻿@attribute [Route(Routes.Administration.Organization.List)]
+
+@using CADR.Administrations.Pages.Organization.Components;
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Models.Enums
+@using CADR.Portal.Contracts.Interfaces
+@using System.Collections.ObjectModel
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Организации</PageTitle>
+
+<DefaultTab TItem="OrganizationApiModel"
+            IsLoaded="isLoaded"
+            TableItems="organizations"
+            EmptyTableMessage="У вас ещё нет организаций">
+    <TabHeader>
+        <FormToolBar Header="Организации" Totals="@sourceOrganizations?.Count" Current="@organizations?.Count">
+            <ToolBarContent>
+                <InputGroup>
+                    <InputGroupText id="organizationSearch">
+                        <Icon IconType="IconTypes.MagnifyingGlass" />
+                    </InputGroupText>
+                    <input class="form-control" aria-describedby="organizationSearch" value="@SearchValue" @oninput="SearchChangeEventHandler" />
+                </InputGroup>
+                <ButtonGroup Items="@items" Margin="4 * 2 *" IsOutline="true" ItemType="ButtonGroupType.Button" OnItemClick="OnClickHandler"/>
+            </ToolBarContent>
+        </FormToolBar>
+        <Container Flex="Flexes.Flex" Gap="3">
+            @foreach (var item in (invites ?? new List<InviteForUserApiResponse>()).Take(2))
+			{
+				<Column>
+					<Alert Color="ThemeColors.Primary" Header="Приглашение к организации" FlexDirection="FlexDirections.Column" FlexContentFill="FlexFills.Default">
+						<BodyContent>
+							<Paragraph>Вас пригласили в организацию <b>@item.OrganizationName</b> в роли <b>@item.Role.ToString()</b>. Данную роль можно будет сменить в настройках организации</Paragraph>
+							<TextElement>@item.OrganizationDescription</TextElement>
+						</BodyContent>
+						<FooterContent>
+							<Button Color="ThemeColors.Primary" Click="() => AcceptInvitation(item.Id)">Принять</Button>
+							<Button Color="ThemeColors.Primary" IsOutline="true" Click="() => RejectInvitePrompt(item)">Отклонить</Button>
+						</FooterContent>
+					</Alert>
+				</Column>
+			}
+		</Container>
+	</TabHeader>
+	<TableHeader>
+		<th>Наименование</th>
+		<th>Описание</th>
+		<th>&nbsp;</th>
+	</TableHeader>
+	<RowTemplate>
+		<td><Button AsLink="true"
+			Url="@(string.Format(Routes.Administration.Organization.Users, context.Id))"
+			Color="ThemeColors.Link"
+			Size="ButtonSize.Small">@context.Name</Button></td>
+		<td>@context.Description</td>
+		<td>
+			<Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
+                @foreach (var entry in OrganizationTabEntries.Entries)
+                {
+                    <DropDownItem IconType="@entry.Icon"
+                        Url="@string.Format(entry.Url, context.Id)">
+                        @($" {entry.Text} ")
+                    </DropDownItem>
+                }
+                <DropdownDivider/>
+				<DropDownItem IconType="IconTypes.Pencil"
+				    Url="@($"{Routes.Administration.Organization.Form}/{context.Id}")"
+				    Disabled="@(!context.UserIsAdmin)">
+					Редактировать
+				</DropDownItem>
+				<DropdownDivider/>
+				<DropDownItem IconType="IconTypes.Trash"
+				    Disabled="@(!context.UserIsAdmin)">
+					Удалить
+				</DropDownItem>
+			</Dropdown>
+		</td>
+	</RowTemplate>
+</DefaultTab>
+
+<ContextModalDialog TItem="InviteForUserApiResponse" @ref="rejectInvitePrompt" Title="Приглашение к организации">
+	<ModalBody>
+		<TextElement>Вы действительно желаете отклонить приглашение от <b>@context?.OrganizationName</b>?</TextElement>
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Primary" Click="() => RejectInvitation(context)">Отклонить</Button>
+		<Button Color="ThemeColors.Dark" Click="() => rejectInvitePrompt?.Close()">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
+@code {
+	private IReadOnlyCollection<OrganizationApiModel>? sourceOrganizations;
+	private IReadOnlyCollection<OrganizationApiModel>? organizations;
+	private List<InviteForUserApiResponse>? invites;
+	private ContextModalDialog<InviteForUserApiResponse>? rejectInvitePrompt;
+	private bool isLoaded;
+
+	private readonly IReadOnlyCollection<ButtonGroupItem<CommonAction>> items =
+		new List<ButtonGroupItem<CommonAction>>()
+        {
+            new() { Text = "Добавить", Color = ThemeColors.Secondary, Value = CommonAction.Append, IconType = IconTypes.Plus, },
+            new() { Color = ThemeColors.Secondary, Value = CommonAction.Refresh, IconType = IconTypes.Reload, },
+        };
+
+	private string? SearchValue { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task OnClickHandler(CommonAction value)
+	{
+		switch (value)
+		{
+			case CommonAction.Append:
+				NavigationManager.NavigateTo(Routes.Administration.Organization.Form);
+				break;
+			case CommonAction.Refresh:
+				await LoadItemsAsync();
+				break;
+		}
+	}
+
+	private Task SearchChangeEventHandler(ChangeEventArgs args)
+	{
+		SearchValue = args.Value?.ToString();
+		organizations = sourceOrganizations == null
+			? Array.Empty<OrganizationApiModel>()
+			: new ReadOnlyCollection<OrganizationApiModel>(sourceOrganizations
+				.Where(OrganizationFilter(SearchValue))
+				.ToList());
+		return Task.CompletedTask;
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		await LoadOrganizations();
+		var invitesCollection = await ApiClient.InviteGetByUserIdAsync(TokenSource.Token);
+		invites = invitesCollection.ToList();
+		isLoaded = true;
+		StateHasChanged();
+	}
+
+	private async Task LoadOrganizations()
+	{
+		var result = await ApiClient.OrganizationGetAsync(TokenSource.Token);
+		sourceOrganizations = new ReadOnlyCollection<OrganizationApiModel>(result.ToList());
+		organizations = new ReadOnlyCollection<OrganizationApiModel>(sourceOrganizations
+			.Where(OrganizationFilter(SearchValue))
+			.ToList());
+	}
+
+	private async Task AcceptInvitation(Guid inviteId)
+	{
+		await ApiClient.InviteAcceptAsync(inviteId, TokenSource.Token);
+		await SetDeclineInviteInfoAlert(invites!.First(x => x.Id == inviteId));
+		await LoadOrganizations();
+		StateHasChanged();
+	}
+
+	private void RejectInvitePrompt(InviteForUserApiResponse invite)
+	{
+		rejectInvitePrompt?.Open(invite);
+	}
+
+	private async Task RejectInvitation(InviteForUserApiResponse? invite)
+	{
+		rejectInvitePrompt?.Close();
+		await ApiClient.InviteRejectAsync(invite!.Id, TokenSource.Token);
+		await SetDeclineInviteInfoAlert(invite!);
+		StateHasChanged();
+	}
+
+	private async Task SetDeclineInviteInfoAlert(InviteForUserApiResponse invite)
+	{
+		if (invites is null)
+		{
+			return;
+		}
+		var sourceInvites = await ApiClient.InviteGetByUserIdAsync(TokenSource.Token);
+		var firstInvitations = sourceInvites.Take(4).ToList();
+		invites = firstInvitations;
+	}
+
+    private static Func<OrganizationApiModel, bool> OrganizationFilter(string? filterValue)
+        => x => string.IsNullOrWhiteSpace(filterValue) ||
+                x.Name.Contains(filterValue, StringComparison.InvariantCultureIgnoreCase);
+}

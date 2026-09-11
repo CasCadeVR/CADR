@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <Copyright>2023 NG Software</Copyright>
-    <Authors>NG Software Specular</Authors>
-    <Company>NG Software</Company>
-    <Copyright>NG Software</Copyright>
+    <Copyright>2026 CADR</Copyright>
+    <Authors>CasCade</Authors>
+    <Company>CADR</Company>
+    <Copyright>CADR</Copyright>
     <!-- Pack everything with embedded .pdb -->
     <EmbedAllSources>true</EmbedAllSources>
     <DebugType>embedded</DebugType>

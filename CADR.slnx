@@ -1,17 +1,44 @@
 <Solution>
   <Folder Name="/Administrations/">
+    <Project Path="Administrations/CADR.Administrations.Api/CADR.Administrations.Api.csproj" Id="dc57d8b2-b6b8-49ed-965a-16981fde0f64" />
+    <Project Path="Administrations/CADR.Administrations.Entities.Configurations/CADR.Administrations.Entities.Configurations.csproj" Id="3adf92bd-6b1e-4d7f-b14d-9b0ee377913d" />
     <Project Path="Administrations/CADR.Administrations.Entities/CADR.Administrations.Entities.csproj" />
+    <Project Path="Administrations/CADR.Administrations.Pages/CADR.Administrations.Pages.csproj" Id="84284081-a0ef-4fef-a91f-b335186c788a" />
+    <Project Path="Administrations/CADR.Administrations.Repositories.Contracts/CADR.Administrations.Repositories.Contracts.csproj" Id="bc6d584f-0cac-4167-bf20-24f45b585d1e" />
+    <Project Path="Administrations/CADR.Administrations.Repositories.Tests/CADR.Administrations.Repositories.Tests.csproj" Id="a7a4019e-5757-4589-aca9-f8eaef73c1e3" />
+    <Project Path="Administrations/CADR.Administrations.Repositories/CADR.Administrations.Repositories.csproj" Id="d4355725-5ac3-49fe-be1b-b0e6755ec452" />
+    <Project Path="Administrations/CADR.Administrations.Services.Contracts/CADR.Administrations.Services.Contracts.csproj" Id="39a1557f-4a61-4ca2-9bd9-d77bc163750c" />
+    <Project Path="Administrations/CADR.Administrations.Services.Tests/CADR.Administrations.Services.Tests.csproj" Id="cc9a5aee-4219-4c7a-80c0-6a3f6322b6cb" />
+    <Project Path="Administrations/CADR.Administrations.Services/CADR.Administrations.Services.csproj" Id="ffc714a7-b640-47b1-a159-e3892665451d" />
   </Folder>
   <Folder Name="/Common/">
     <Project Path="Common/CADR.Common.Core.Contracts/CADR.Common.Core.Contracts.csproj" />
+    <Project Path="Common/CADR.Common.Core/CADR.Common.Core.csproj" Id="e1eab1c7-8b8e-4e02-8d16-b97eee86ff9f" />
+    <Project Path="Common/CADR.Common.Mvc/CADR.Common.Mvc.csproj" Id="658a3f78-8deb-4c0f-ab68-3d5fe21c7ab9" />
+    <Project Path="Common/CADR.Common.Repositories.Contracts/CADR.Common.Repositories.Contracts.csproj" Id="34b220ac-53d5-4eb4-9614-54a30a52760b" />
+    <Project Path="Common/CADR.Common.Repositories/CADR.Common.Repositories.csproj" Id="dfbde888-3426-4454-bbb2-20c482540cfc" />
   </Folder>
   <Folder Name="/DataAccess/">
     <Project Path="DataAccess/CADR.Context.Contracts/CADR.Context.Contracts.csproj" />
+    <Project Path="DataAccess/CADR.Context.Entities.Contracts/CADR.Context.Entities.Contracts.csproj" Id="31835f9e-09ec-4c2e-9d1b-85e8c1c383d2" />
+    <Project Path="DataAccess/CADR.Context.EntityFrameworkCore/CADR.Context.EntityFrameworkCore.csproj" Id="9217d62b-5010-4e25-9ccc-02c8873a25bc" />
+    <Project Path="DataAccess/CADR.Context.Tests/CADR.Context.Tests.csproj" Id="976c9c05-a3e3-4d48-9a0c-9478bcd7b9a9" />
+    <Project Path="DataAccess/CADR.Context/CADR.Context.csproj" Id="f51904bc-5036-45ce-b2f5-67a201fe35bf" />
+  </Folder>
+  <Folder Name="/Portal/">
+    <Project Path="Portal/CADR.Portal.Components/CADR.Portal.Components.csproj" Id="83b98bd4-9876-4d90-8ee7-3975ede5c4ee" />
+    <Project Path="Portal/CADR.Portal.Contracts/CADR.Portal.Contracts.csproj" Id="93bdcdcc-54ee-4318-9102-da507e5e38ec" />
+    <Project Path="Portal/CADR.Portal.Tests/CADR.Portal.Tests.csproj" Id="c2718d32-7088-4f01-a71e-189e1be91c22" />
+    <Project Path="Portal/CADR.Portal/CADR.Portal.csproj" Id="73ac6241-cb25-4a80-a829-5f1ea70fa234" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
+    <File Path="LICENSE.txt" />
+    <File Path="README.md" />
   </Folder>
+  <Project Path="CADR.Api.Client/CADR.Api.Client.csproj" Id="b6fff804-83ed-4e04-b38e-82525e3e54d6" />
+  <Project Path="CADR.Api.Tests/CADR.Api.Tests.csproj" Id="6336f95c-9de1-427a-8a8c-49e98693af5c" />
   <Project Path="CADR.Api/CADR.Api.csproj" />
 </Solution>

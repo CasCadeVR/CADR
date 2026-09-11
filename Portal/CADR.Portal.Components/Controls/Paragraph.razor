@@ -1,0 +1,27 @@
+﻿@inherits BootstrapComponentBase
+<p class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</p>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Выделяет абзац
+    /// </summary>
+    [Parameter]
+    public bool IsLead { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        if (IsLead)
+        {
+            InheritCss.Add("lead");
+        }
+        await base.OnParametersSetAsync();
+    }
+}

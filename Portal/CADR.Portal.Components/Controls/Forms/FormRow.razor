@@ -1,0 +1,63 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @if (IsHorizontal)
+    {
+        <label for="@For" class="col-sm-@((int)LabelAreaWidth) col-form-label">@Label</label>
+        <div class="col-sm-@(12 - (int)LabelAreaWidth)">
+            @ChildContent
+        </div>
+    }
+    else
+    {
+        @ChildContent   
+    }
+</div>
+
+@code {
+    /// <see cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Указывает, что метки в строке будут плавающие
+    /// </summary>
+    [Parameter] public bool IsFloating { get; set; }
+
+    /// <summary>
+    /// Указывает, что элементы в строке будут расположенны друг за другом
+    /// </summary>
+    [Parameter] public bool IsHorizontal { get; set; }
+
+    /// <summary>
+    /// Длина области с меткой
+    /// </summary>
+    [Parameter]
+    public Columns LabelAreaWidth { get; set; } = Columns.Template2;
+
+    /// <summary>
+    /// Имя идентификатора, для которого в контенте будет выполнена метка
+    /// </summary>
+    [Parameter]
+    public string For { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Текст метки
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add(IsFloating ? "form-floating" : "row");
+        await base.OnParametersSetAsync();
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Margin = "* * * 3";
+    }
+}

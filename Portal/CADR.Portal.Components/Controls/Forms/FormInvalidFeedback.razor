@@ -1,0 +1,28 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</div>
+
+@code
+{
+    /// <see cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Показывать последним по порядку
+    /// </summary>
+    [Parameter] public bool IsOrderLast { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        if (IsOrderLast)
+        {
+            InheritCss.Add("order-last");
+        }
+        
+        await base.OnParametersSetAsync();
+    }
+}

@@ -1,0 +1,24 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" role="toolbar" aria-label="@AriaLabel">
+    @ChildContent
+</div>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Метка для элемента управления
+    /// </summary>
+    [Parameter]
+    public string AriaLabel { get; set; } = "Toolbar with button groups";
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("btn-toolbar");
+        await base.OnParametersSetAsync();
+    }
+}

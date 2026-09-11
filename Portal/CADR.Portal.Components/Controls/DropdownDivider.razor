@@ -1,0 +1,16 @@
+﻿@inherits BootstrapComponentBase
+
+<li>
+    <hr class="@BaseCssClass" @attributes="@CapturedAttributes">
+</li>
+
+@code {
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("dropdown-divider");
+        base.OnParametersSet();
+    }
+}

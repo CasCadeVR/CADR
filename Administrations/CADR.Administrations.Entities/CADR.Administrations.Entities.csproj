@@ -2,8 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Administrations.Entities</RootNamespace>
+    <AssemblyName>CADR.Administrations.Entities</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataAccess\CADR.Context.Contracts\CADR.Context.Contracts.csproj" />
+  </ItemGroup>
 
 </Project>

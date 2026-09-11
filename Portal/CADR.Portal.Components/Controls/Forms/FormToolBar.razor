@@ -1,0 +1,56 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    <Panel Display="Displays.Flex" FlexContentJustify="FlexJustify.Center" FlexItemsAlign="FlexAlign.Center">
+        <Header Level="2">@Header</Header>
+        <TextElement Foreground="ThemeColors.Muted" Padding="3 * * *"><small>@Legend</small></TextElement>
+    </Panel>
+    <Toolbar Margin="* * * 2,md:* * * 0">
+        @ToolBarContent
+    </Toolbar>
+</div>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ToolBarContent { get; set; }
+
+    /// <summary>
+    /// Заголовок
+    /// </summary>
+    [Parameter] public string Header { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Суммарное количество записей
+    /// </summary>
+    [Parameter] public int? Totals { get; set; }
+
+    /// <summary>
+    /// Текущее количество записей
+    /// </summary>
+    [Parameter] public int? Current { get; set; }
+
+    private string Legend { get; set; } = string.Empty;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Display = Displays.Flex;
+        FlexContentJustify = FlexJustify.Between;
+        FlexWrap = FlexWraps.Wrap | FlexWraps.NowrapMedium;
+        FlexItemsAlign = FlexAlign.Center;
+        Padding = "* 3 * 2";
+        Margin = "* * * 3";
+        Border = "* * * 1";
+    }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Legend = $"Всего {Totals ?? Current ?? 0}";
+        if (Totals > Current)
+        {
+            Legend = $"{Current} из {Totals}";
+        }
+    }
+}

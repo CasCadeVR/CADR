@@ -2,8 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Context.Contracts</RootNamespace>
+    <AssemblyName>CADR.Context.Contracts</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\CADR.Common.Core.Contracts\CADR.Common.Core.Contracts.csproj" />
+    <ProjectReference Include="..\CADR.Context.Entities.Contracts\CADR.Context.Entities.Contracts.csproj" />
+  </ItemGroup>
 
 </Project>

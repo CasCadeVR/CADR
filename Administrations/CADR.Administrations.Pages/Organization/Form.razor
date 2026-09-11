@@ -1,0 +1,75 @@
+﻿@attribute [Route(Routes.Administration.Organization.Form)]
+@attribute [Route(Routes.Administration.Organization.Form + "/{id:guid}")]
+@using CADR.Portal.Contracts.Interfaces
+@using AutoMapper
+@using CADR.Administrations.Pages.Models.Organization
+@inherits DisposableComponentBase
+
+@inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
+@inject IMapper Mapper
+
+<PageTitle>@pageTitle</PageTitle>
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+    <CommonEditForm Model="organization"
+                    Handler="FormHandler"
+                    SubmitText="@(Id.HasValue ? "Сохранить" : "Создать")">
+        <ChildContent>
+            <Header Level="3">@pageTitle</Header>
+            <FormRow IsHorizontal="true" Label="Наименование" LabelAreaWidth="Columns.Template3">
+                <InputText @bind-Value="organization.Name" class="form-control" id="inputName" type="text" />
+                <FormInvalidFeedback>
+                    <ValidationMessage For="() => organization.Name" />
+                </FormInvalidFeedback>
+            </FormRow>
+            <FormRow IsHorizontal="true" Label="Описание" LabelAreaWidth="Columns.Template3">
+                <InputTextArea @bind-Value="organization.Description" class="form-control" id="inputDescription"/>
+                <FormInvalidFeedback>
+                    <ValidationMessage For="() => organization.Description" />
+                </FormInvalidFeedback>
+            </FormRow>
+        </ChildContent>
+    </CommonEditForm>
+</Container>
+
+@code {
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid? Id { get; set; }
+
+	private string pageTitle = "Добавление организации";
+    private readonly OrganizationRequestModel organization = new();
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		if(Id.HasValue)
+		{
+			var result = await ApiClient.OrganizationGetByIdAsync(Id.Value, TokenSource.Token);
+			if (result != null)
+			{
+				Mapper.Map(result, organization);
+				organization.Id = Id.Value;
+				pageTitle = "Редактирование организации";
+			}
+		}
+	}
+
+	private async Task FormHandler(CancellationToken cancellationToken)
+	{
+		if (Id.HasValue)
+		{
+			var request = Mapper.Map<OrganizationApiModel>(organization);
+			request.Id = Id.Value;
+			await ApiClient.OrganizationUpdateAsync(request, cancellationToken);
+        }
+        else
+        {
+            var request = Mapper.Map<CreateOrganizationApiModel>(organization);
+            await ApiClient.OrganizationCreateAsync(request, cancellationToken);
+        }
+        NavigationManager.NavigateTo(Routes.Administration.Organization.List);
+    }
+}

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Common.Repositories</RootNamespace>
+    <AssemblyName>CADR.Common.Repositories</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataAccess\CADR.Context.Contracts\CADR.Context.Contracts.csproj" />
+    <ProjectReference Include="..\Cadr.Common.Repositories.Contracts\CADR.Common.Repositories.Contracts.csproj" />
+  </ItemGroup>
+  
+</Project>

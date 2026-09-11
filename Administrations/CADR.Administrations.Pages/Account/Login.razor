@@ -1,0 +1,96 @@
+﻿@using CADR.Portal.Contracts.Interfaces
+@using AutoMapper
+@using CADR.Administrations.Pages.Models.Account
+
+@attribute [Route(Routes.Administration.Account.Login)]
+@layout AnonymousLayout
+@implements IDisposable
+
+@inject IPortalIdentity PortalIdentity
+@inject NavigationManager NavigationManager
+@inject IMapper Mapper
+@inject IPortalCadrApiClient ApiClient
+
+<PageTitle>Авторизация</PageTitle>
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+    <Row FlexItemsAlign="FlexAlign.Center" Padding="* 5" Gutter="lg: 5">
+        <Welcome />
+        <Panel ColumnMedium="Columns.Template10" ColumnLarge="Columns.Template5" Margin="a *">
+            <CommonEditForm Model="loginRequestModel"
+                            Handler="FormHandler"
+                            LongWidth="true"
+                            SubmitText="Войти">
+                <ChildContent>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="loginRequestModel.Login" class="form-control" id="inputLogin" type="text" />
+                        <label for="inputLogin">Логин</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => loginRequestModel.Login" />
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputText @bind-Value="loginRequestModel.Password" class="form-control" id="inputPassword" type="password" />
+                        <label for="inputPassword">Пароль</label>
+                        <FormInvalidFeedback>
+                            <ValidationMessage For="() => loginRequestModel.Password" />
+                        </FormInvalidFeedback>
+                    </FormRow>
+                    <FormRow IsFloating="true">
+                        <InputCheckbox @bind-Value="loginRequestModel.IsRemember" /> Запомнить меня
+                    </FormRow>
+                </ChildContent>
+                <FooterContent>
+                    <HorizontalLine Margin="* 4"/>
+                    <TextElement Foreground="ThemeColors.Muted">
+                        <small>Обработка предоставленных персональных данных обеспечена в соответствии с №152-ФЗ «О персональных данных» от 27.07.2006</small>
+                    </TextElement>
+                    <HorizontalLine Margin="* 4"/>
+                    <Button Color="ThemeColors.Link" Click="() => NavigationManager.NavigateTo(Routes.Administration.Account.Registration)">Регистрация</Button>
+                </FooterContent>
+            </CommonEditForm>
+        </Panel>
+    </Row>
+</Container>
+
+@code
+{
+	private readonly LoginRequestModel loginRequestModel = new();
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	/// <summary>
+	/// Адрес, на который необходимо отправить пользователя после авторизации
+	/// </summary>
+	[Parameter, SupplyParameterFromQuery] public string ReturnUrl { get; set; } = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		await PortalIdentity.TryAuthenticate(cancellationTokenSource.Token);
+
+		if (PortalIdentity.IsAuthenticated)
+		{
+			NavigateTo();
+		}
+	}
+
+	private async Task FormHandler(CancellationToken cancellationToken)
+	{
+		var request = Mapper.Map<LoginApiRequest>(loginRequestModel);
+		await ApiClient.AllowAnonymous().AccountLoginAsync(request, cancellationToken);
+		PortalIdentity.InvalidateCache();
+		await PortalIdentity.TryAuthenticate(cancellationToken);
+		NavigateTo();
+	}
+
+    private void NavigateTo()
+        => NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl)
+            ? Routes.Dashboard
+            : ReturnUrl);
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
+    }
+}

@@ -1,0 +1,19 @@
+@inherits LayoutComponentBase
+
+<main>
+    <div id="navDivId"></div>
+    <NavMenu/>
+    <div id="childId"></div>
+    @ChildContent
+    <div id="modalId"></div>
+    <BootstrapModal/>
+</main>
+
+@code
+{
+    /// <summary>
+    /// Определяет содержимое контента
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,45 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" style="@style" @attributes="@CapturedAttributes">
+	<div class="card-body">
+		@CardBody
+	</div>
+</div>
+
+@code {
+	/// <inheritdoc cref="RenderFragment"/>
+	[Parameter] public RenderFragment? CardBody { get; set; }
+
+	/// <summary>
+	/// Сторона границы
+	/// </summary>
+	[Parameter] public BorderSides? AccentBorderSide { get; set; }
+
+	/// <summary>
+	/// Цвет одной границы
+	/// </summary>
+	[Parameter] public ThemeColors? AccentBorderColor { get; set; }
+
+	/// <summary>
+	/// Ширина цветной одной границы (в пикселях)
+	/// </summary>
+	[Parameter] public int AccentBorderWidth { get; set; } = 4;
+
+	private string? style;
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		InheritCss.Clear();
+		InheritCss.Add("card");
+
+		if (AccentBorderSide.HasValue && AccentBorderColor.HasValue)
+		{
+			InheritCss.Add($"card-accent-border-{AccentBorderSide.Value.ToCssClass()}");
+			style = $"--card-border-color: var(--bs-{AccentBorderColor.Value.ToCssClass()}); --card-border-width: {AccentBorderWidth}px;";
+		}
+
+		await base.OnParametersSetAsync();
+	}
+}

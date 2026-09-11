@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>CADR.Administrations.Services.Tests</RootNamespace>
+    <AssemblyName>CADR.Administrations.Services.Tests</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataAccess\CADR.Context.Tests\CADR.Context.Tests.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Repositories\CADR.Administrations.Repositories.csproj" />
+    <ProjectReference Include="..\CADR.Administrations.Services\CADR.Administrations.Services.csproj" />
+  </ItemGroup>
+
+</Project>

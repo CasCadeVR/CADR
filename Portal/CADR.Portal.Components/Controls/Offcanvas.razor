@@ -1,0 +1,48 @@
+﻿@using Microsoft.JSInterop
+@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+@inject IJSRuntime JsRuntime
+
+<div class="@BaseCssClass" tabindex="-1" id="@id" aria-labelledby="@($"{id}Label")" @attributes="@CapturedAttributes">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="@($"{id}Label")">@Caption</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    private readonly string id = "ocid_" + Guid.NewGuid().ToString("N");
+
+    /// <see cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Заголовок</summary>
+    [Parameter] public string Caption { get; set; } = string.Empty;
+
+    /// <summary>Позиция</summary>
+    [Parameter] public OffcanvasPosition Position { get; set; } = OffcanvasPosition.Right;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("offcanvas");
+        InheritCss.Add(Position.ToCssClass());
+        await base.OnParametersSetAsync();
+    }
+
+    /// <summary>Показывает боковую панель</summary>
+    public ValueTask ShowAsync(CancellationToken token)
+        => InvokeVoidAsync(true, token);
+
+    /// <summary>Скрывает боковую панель</summary>
+    public ValueTask HideAsync(CancellationToken token)
+        => InvokeVoidAsync(false, token);
+
+    private ValueTask InvokeVoidAsync(bool visible, CancellationToken token)
+        => JsRuntime.InvokeVoidAsync("offcanvasInvoker", token, id, visible);
+}

@@ -1,0 +1,44 @@
+﻿@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+	<div class="accordion-header" id="@headerId">
+		<button class="accordion-button @(Active ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@Active.ToString().ToLowerInvariant()" aria-controls="@collapseId">
+			@AccordionHeader
+		</button>
+	</div>
+	<div class="accordion-collapse collapse @(Active ? "show" : "")" id="@collapseId" aria-labelledby="@headerId" data-bs-parent="#@(Parent?.Id)">
+		<div class="accordion-body">
+			@AccordionBody
+		</div>
+	</div>
+</div>
+
+@code {
+	private readonly string headerId = "accid_" + Guid.NewGuid().ToString("N");
+	private readonly string collapseId = "accid_" + Guid.NewGuid().ToString("N");
+
+	/// <summary>
+	/// Родитель-аккордион
+	/// </summary>
+	[CascadingParameter] public Accordion? Parent { get; set; }
+
+	/// <inheritdoc cref="RenderFragment"/>
+	[Parameter] public RenderFragment? AccordionHeader { get; set; }
+
+	/// <inheritdoc cref="RenderFragment"/>
+	[Parameter] public RenderFragment? AccordionBody { get; set; }
+
+	/// <summary>
+	/// Открыт ли данный элемент аккордиона
+	/// </summary>
+	[Parameter] public bool Active { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		InheritCss.Clear();
+		InheritCss.Add("accordion-item");
+
+		await base.OnParametersSetAsync();
+	}
+}

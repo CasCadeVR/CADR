@@ -1,0 +1,16 @@
+﻿@inherits BootstrapComponentBase
+
+<li><h6 class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</h6></li>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("dropdown-header");
+        base.OnParametersSet();
+    }
+}

@@ -1,0 +1,43 @@
+﻿@using CADR.Portal.Components.Infrastructures
+@inherits BootstrapComponentBase
+
+<div class="@BaseCssClass" @attributes="@CapturedAttributes">
+    @ChildContent
+</div>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Характеристики столбца по умолчанию для строки</summary>
+    [Parameter] public Columns? RowColumn { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="small"/> для строки</summary>
+    [Parameter] public Columns? RowColumnSmall { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="medium "/> для строки</summary>
+    [Parameter] public Columns? RowColumnMedium { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="large"/> для строки</summary>
+    [Parameter] public Columns? RowColumnLarge { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="extra large"/> для строки</summary>
+    [Parameter] public Columns? RowColumnExtraLarge { get; set; }
+
+    /// <summary>Характеристики столбца для <see langword="extra extra large"/> для строки</summary>
+    [Parameter] public Columns? RowColumnExtraExtraLarge { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        InheritCss.Clear();
+        InheritCss.Add("row");
+        RowColumn.TryAddCssValue(InheritCss, "row-cols-");
+        RowColumnSmall.TryAddCssValue(InheritCss, "row-cols-sm-");
+        RowColumnMedium.TryAddCssValue(InheritCss, "row-cols-md-");
+        RowColumnLarge.TryAddCssValue(InheritCss, "row-cols-lg-");
+        RowColumnExtraLarge.TryAddCssValue(InheritCss, "row-cols-xl-");
+        RowColumnExtraExtraLarge.TryAddCssValue(InheritCss, "row-cols-xxl-");
+        await base.OnParametersSetAsync();
+    }
+}

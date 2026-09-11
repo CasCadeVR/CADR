@@ -1,0 +1,9 @@
+﻿@inherits BootstrapComponentBase
+
+<span class="@BaseCssClass" @attributes="@CapturedAttributes">@ChildContent</span>
+
+@code {
+    /// <inheritdoc cref="RenderFragment"/>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
