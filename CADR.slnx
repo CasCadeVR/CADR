@@ -28,6 +28,7 @@
   <Folder Name="/Portal/">
     <Project Path="Portal/CADR.Portal.Components/CADR.Portal.Components.csproj" Id="83b98bd4-9876-4d90-8ee7-3975ede5c4ee" />
     <Project Path="Portal/CADR.Portal.Contracts/CADR.Portal.Contracts.csproj" Id="93bdcdcc-54ee-4318-9102-da507e5e38ec" />
+    <Project Path="Portal/CADR.Portal.Tests/CADR.Portal.Tests.csproj" Id="c2718d32-7088-4f01-a71e-189e1be91c22" />
     <Project Path="Portal/CADR.Portal/CADR.Portal.csproj" Id="73ac6241-cb25-4a80-a829-5f1ea70fa234" />
   </Folder>
   <Folder Name="/Solution Items/">

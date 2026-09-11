@@ -292,6 +292,7 @@ public class OrganizationReadRepositoryTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task IsUserAdminNotAdminReturnFalse(Role targetUserRole)
     {
         //Arrange

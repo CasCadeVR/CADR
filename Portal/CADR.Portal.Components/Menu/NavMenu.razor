@@ -1,41 +1,35 @@
-﻿@implements IDisposable
+﻿@using CADR.Portal.Components.Resources;
 
 <AuthorizeView>
+	<Authorized>
+		<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top border-bottom">
+			<div class="container d-flex flex-wrap">
+				<a class="navbar-brand" href="@Routes.Dashboard">
+					<img src="images/cadr.png" width="32" height="32" class="d-inline-block align-text-top">
+					CADR
+				</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNavDropdown">
+					<ul class="navbar-nav">
+						<NavMenuItem Caption="Главная" Url="@Routes.Dashboard" />
+					</ul>
+					<ul class="navbar-nav ms-auto d-flex">
+						@* Надо добавить сюда пункты *@
+						<CurrentUser />
+					</ul>
+				</div>
+			</div>
+		</nav>
+	</Authorized>
 	<NotAuthorized>
 		<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top border-bottom">
 			<div class="container d-flex flex-wrap justify-content-center">
 				<a href="/" class="d-flex align-items-center text-decoration-none">
-					<img src="images/cadr.svg" width="32" height="32" />
+					<img src="images/cadr.png" width="32" height="32" />
 				</a>
 			</div>
 		</nav>
 	</NotAuthorized>
 </AuthorizeView>
-
-@code{
-	private readonly CancellationTokenSource cancellationTokenSource = new();
-
-	/// <inheritdoc/>
-	protected override async Task OnInitializedAsync()
-	{
-		await LoadItemsAsync();
-		await base.OnInitializedAsync();
-	}
-
-	private async Task LoadItemsAsync()
-	{
-		StateHasChanged();
-	}
-
-	private async Task OnNavMenuDropdownOpen()
-	{
-		StateHasChanged();
-	}
-
-	/// <inheritdoc />
-	public void Dispose()
-	{
-		cancellationTokenSource.Cancel();
-		cancellationTokenSource.Dispose();
-	}
-}

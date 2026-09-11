@@ -161,7 +161,7 @@ public class InviteManagerTests : CadrContextInMemory
         {
             x.OrganizationId = Guid.NewGuid();
             x.UserId = ownUser.Id;
-            x.Role = Role.User;
+            x.Role = Role.Architect;
         });
         await Context.AddRangeAsync(ownUserOrganization, ownUser, targetUser);
         await Context.SaveChangesAsync();
@@ -183,7 +183,7 @@ public class InviteManagerTests : CadrContextInMemory
             .And.BeEquivalentTo(new
             {
                 OrganizationId = ownUserOrganization.OrganizationId!.Value,
-                Role = Role.User,
+                Role = Role.Architect,
             });
     }
 
@@ -270,6 +270,7 @@ public class InviteManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task DeleteInviteShouldThrowByRole(Role role)
     {
         //Arrange

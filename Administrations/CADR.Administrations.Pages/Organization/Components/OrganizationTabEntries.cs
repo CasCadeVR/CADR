@@ -1,7 +1,8 @@
-﻿using CADR.Portal.Components.Models;
+﻿using CADR.Portal.Components.Enums;
+using CADR.Portal.Components.Models;
 using CADR.Portal.Components.Resources;
 
-namespace CADR.Portal.Components.Controls.Organization;
+namespace CADR.Administrations.Pages.Organization.Components;
 
 /// <summary>
 /// Метаданные таблицы организаций
@@ -15,13 +16,13 @@ public static class OrganizationTabEntries
         new() {
             Text = "Пользователи",
             Url = Routes.Administration.Organization.Users,
-            Icon = Enums.IconTypes.Person,
+            Icon = IconTypes.Person,
             EnumValue = OrganizationTableItem.Users,
         },
         new() {
             Text = "Приглашения",
             Url = Routes.Administration.Organization.Invites,
-            Icon = Enums.IconTypes.EnvelopeOpened,
+            Icon = IconTypes.EnvelopeOpened,
             EnumValue = OrganizationTableItem.Invites,
         },
     ];

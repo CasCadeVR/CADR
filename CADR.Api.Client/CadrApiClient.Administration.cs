@@ -2707,8 +2707,9 @@ namespace CADR.Api.Client
     /// <summary>
     /// Роли пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
     /// <br/>&lt;ul&gt;
-    /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и создание ADR&lt;/li&gt;
-    /// <br/>&lt;li&gt;&lt;b&gt;1 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+    /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+    /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+    /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
     /// <br/>&lt;/ul&gt;
     /// <br/>
     /// </summary>
@@ -2719,8 +2720,11 @@ namespace CADR.Api.Client
         [System.Runtime.Serialization.EnumMember(Value = @"User")]
         User = 0,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"Architect")]
+        Architect = 1,
+
         [System.Runtime.Serialization.EnumMember(Value = @"Admin")]
-        Admin = 1,
+        Admin = 2,
 
     }
 

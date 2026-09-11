@@ -61,7 +61,6 @@ public class AccountControllerTests
                 Blocked = false,
                 LoginLowerCase = registerModel.Login.ToLower(),
                 EmailLowerCase = registerModel.Email.ToLower(),
-                PasswordIsTemporary = false,
             });
     }
 

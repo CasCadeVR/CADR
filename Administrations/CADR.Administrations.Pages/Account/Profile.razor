@@ -1,17 +1,30 @@
 ﻿@attribute [Route(Routes.Administration.Account.Profile)]
 @implements IDisposable
 
-@using AutoMapper
-@using CADR.Portal.Components.Infrastructures
 @using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Enums.Font;
 
-@inject IMapper Mapper
+@inject IPortalIdentity PortalIdentity
 @inject IPortalCadrApiClient ApiClient
-@inject IMessageBox MessageBox
 
 <PageTitle>Профиль пользователя</PageTitle>
 <Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
-	
+	<Row FlexDirection="FlexDirections.RowLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+		<Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
+			<Image Src="/images/architecture-solution.png" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
+		</Panel>
+		<Panel ColumnLarge="Columns.Template6">
+			<Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
+				@PortalIdentity.Name
+			</Header>
+			<Paragraph IsLead="true">
+				Логин: @PortalIdentity.Login
+			</Paragraph>
+			<Paragraph IsLead="true">
+				Email: @PortalIdentity.Email
+			</Paragraph>
+		</Panel>
+	</Row>
 </Container>
 
 @code {

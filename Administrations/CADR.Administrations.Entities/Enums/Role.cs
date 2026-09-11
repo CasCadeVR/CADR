@@ -6,12 +6,17 @@
 public enum Role
 {
     /// <summary>
-    /// Просмотр и создание ADR
+    /// Просмотр и комментирование ADR
     /// </summary>
     User = 0,
 
     /// <summary>
+    /// Создание и редактирование ADR
+    /// </summary>
+    Architect = 1,
+
+    /// <summary>
     /// Учётные записи, организации
     /// </summary>
-    Admin = 1,
+    Admin = 2,
 }

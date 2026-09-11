@@ -133,6 +133,7 @@ public class OrganizationManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task UpdateShouldThrowDeny(Role targetRole)
     {
         //Arrange
@@ -186,6 +187,7 @@ public class OrganizationManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task DeleteShouldThrowDeny(Role targetRole)
     {
         //Arrange
@@ -382,6 +384,7 @@ public class OrganizationManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task DeleteUserShouldThrowByRole(Role role)
     {
         //Arrange
@@ -537,6 +540,7 @@ public class OrganizationManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(Role.User)]
+    [InlineData(Role.Architect)]
     public async Task ChangeUserRoleShouldThrowByRole(Role role)
     {
         //Arrange
@@ -597,6 +601,7 @@ public class OrganizationManagerTests : CadrContextInMemory
     /// </summary>
     [Theory]
     [InlineData(UserRole.User, Role.User)]
+    [InlineData(UserRole.Architect, Role.Architect)]
     [InlineData(UserRole.Admin, Role.Admin)]
     public async Task ChangeUserRoleShouldWork(UserRole userRole, Role role)
     {
@@ -606,7 +611,7 @@ public class OrganizationManagerTests : CadrContextInMemory
             x.OrganizationId = Guid.NewGuid();
             x.Role = Role.Admin;
         });
-        var roleToArrange = role == Role.User ? Role.Admin : Role.User;
+        var roleToArrange = role == Role.User ? Role.Architect : Role.User;
         var targetUserOrganization = TestEntityProvider.Shared.Create<UserOrganization>(x =>
         {
             x.OrganizationId = item.OrganizationId!.Value;
