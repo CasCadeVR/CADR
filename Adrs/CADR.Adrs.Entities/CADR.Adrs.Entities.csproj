@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Administrations\CADR.Administrations.Entities\CADR.Administrations.Entities.csproj" />
+    <ProjectReference Include="..\..\DataAccess\CADR.Context.Contracts\CADR.Context.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

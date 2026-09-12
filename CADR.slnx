@@ -11,6 +11,10 @@
     <Project Path="Administrations/CADR.Administrations.Services.Tests/CADR.Administrations.Services.Tests.csproj" Id="cc9a5aee-4219-4c7a-80c0-6a3f6322b6cb" />
     <Project Path="Administrations/CADR.Administrations.Services/CADR.Administrations.Services.csproj" Id="ffc714a7-b640-47b1-a159-e3892665451d" />
   </Folder>
+  <Folder Name="/Adrs/">
+    <Project Path="Adrs/CADR.Adrs.Entities.Configurations/CADR.Adrs.Entities.Configurations.csproj" Id="fafcdef4-e898-4c07-a67c-4d0390be0ce2" />
+    <Project Path="Adrs/CADR.Adrs.Entities/CADR.Adrs.Entities.csproj" Id="fbba446b-9c1f-4f66-b6a1-b0a29a152af3" />
+  </Folder>
   <Folder Name="/Common/">
     <Project Path="Common/CADR.Common.Core.Contracts/CADR.Common.Core.Contracts.csproj" />
     <Project Path="Common/CADR.Common.Core/CADR.Common.Core.csproj" Id="e1eab1c7-8b8e-4e02-8d16-b97eee86ff9f" />
