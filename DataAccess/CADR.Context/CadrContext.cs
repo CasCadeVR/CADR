@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using CADR.Context.Extensions;
 using CADR.Administrations.Entities.Configurations;
+using CADR.Adrs.Entities.Configurations;
 using CADR.Context.Contracts;
+using CADR.Context.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace CADR.Context;
@@ -30,6 +31,7 @@ public class CadrContext : DbContext,
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyAllConfigurations(typeof(AdministrationEntitiesAnchor).Assembly);
+        modelBuilder.ApplyAllConfigurations(typeof(AdrsEntitiesAnchor).Assembly);
     }
 
     IQueryable<TEntity> IReader.Read<TEntity>()

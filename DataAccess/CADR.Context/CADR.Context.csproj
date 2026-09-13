@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Administrations\CADR.Administrations.Entities.Configurations\CADR.Administrations.Entities.Configurations.csproj" />
+    <ProjectReference Include="..\..\Adrs\CADR.Adrs.Entities.Configurations\CADR.Adrs.Entities.Configurations.csproj" />
     <ProjectReference Include="..\CADR.Context.Contracts\CADR.Context.Contracts.csproj" />
   </ItemGroup>
 
