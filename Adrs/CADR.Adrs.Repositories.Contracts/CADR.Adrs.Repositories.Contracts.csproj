@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>CADR.Adrs.Entities.Configurations</RootNamespace>
-    <AssemblyName>CADR.Adrs.Entities.Configurations</AssemblyName>
+    <RootNamespace>CADR.Adrs.Repositories.Contracts</RootNamespace>
+    <AssemblyName>CADR.Adrs.Repositories.Contracts</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DataAccess\CADR.Context.EntityFrameworkCore\CADR.Context.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\Common\CADR.Common.Repositories.Contracts\CADR.Common.Repositories.Contracts.csproj" />
     <ProjectReference Include="..\CADR.Adrs.Entities\CADR.Adrs.Entities.csproj" />
   </ItemGroup>
 
