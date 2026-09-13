@@ -10,10 +10,10 @@ namespace CADR.Adrs.Entities;
 public class AdrOrganizationSettings : BaseAuditEntity
 {
     /// <summary>
-    /// Сколько нужно лайков для того чтобы автоматически сделать ADR удтверждённой (<see cref="AdrStatus.Approved"/>)
-    /// 0 - ADR удтверждённы по умолчанию
+    /// Сколько нужно лайков для того чтобы автоматически сделать ADR утверждённой (<see cref="AdrStatus.Approved"/>)
+    /// 0 - ADR утверждённы по умолчанию
     /// </summary>
-    public int LikesRequiredForApprovment { get; set; } = 1;
+    public int LikesRequiredForApproval { get; set; } = 1;
 
     /// <summary>
     /// Идентификатор организации

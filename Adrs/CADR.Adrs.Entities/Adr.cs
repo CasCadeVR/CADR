@@ -36,6 +36,16 @@ public class Adr : BaseAuditEntity
     public Organization? Organization { get; set; }
 
     /// <summary>
+    /// Идентификатор автора ADR
+    /// </summary>
+    public Guid AuthorId { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство автора ADR
+    /// </summary>
+    public User? Author { get; set; }
+
+    /// <summary>
     /// Идентификатор родителя (папки)
     /// </summary>
     public Guid? ParentAdrFolderId { get; set; }

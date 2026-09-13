@@ -54,6 +54,11 @@ public class AdrConfiguration : IEntityTypeConfiguration<Adr>
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.NoAction);
 
+        builder.HasOne(x => x.Author)
+            .WithMany()
+            .HasForeignKey(x => x.AuthorId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasOne(x => x.ParentAdrFolder)
             .WithMany()
             .HasForeignKey(x => x.ParentAdrFolderId)
