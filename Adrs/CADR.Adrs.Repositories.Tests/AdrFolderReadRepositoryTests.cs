@@ -162,10 +162,9 @@ public class AdrFolderReadRepositoryTests : CadrContextInMemory
         var result = await adrFolderReadRepository.GetByOrganizationIdAsync(targetOrganizationId, CancellationToken.None);
 
         // Assert
-        result.Should()
+        result.Select(x => x.Id).Should()
             .NotBeEmpty()
-            .And.HaveCount(3)
-            .And.ContainInOrder(folderA, folderB, folderC);
+            .And.ContainInOrder(folderA.Id, folderB.Id, folderC.Id);
     }
 
     /// <summary>

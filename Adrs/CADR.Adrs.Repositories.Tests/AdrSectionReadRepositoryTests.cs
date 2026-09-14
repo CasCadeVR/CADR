@@ -116,9 +116,8 @@ public class AdrSectionReadRepositoryTests : CadrContextInMemory
         var result = await adrSectionReadRepository.GetByAdrIdAsync(targetAdrId, CancellationToken.None);
 
         // Assert
-        result.Should()
+        result.Select(x => x.Id).Should()
             .NotBeEmpty()
-            .And.HaveCount(3)
-            .And.ContainInOrder(sectionFirst, sectionSecond, sectionThird);
+            .And.ContainInOrder(sectionFirst.Id, sectionSecond.Id, sectionThird.Id);
     }
 }

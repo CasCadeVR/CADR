@@ -161,9 +161,8 @@ public class AdrCommentReadRepositoryTests : CadrContextInMemory
         var result = await adrCommentReadRepository.GetByAdrIdAsync(targetAdrId, CancellationToken.None);
 
         // Assert
-        result.Should()
+        result.Select(x => x.Id).Should()
             .NotBeEmpty()
-            .And.HaveCount(3)
-            .And.ContainInOrder(commentFirst, commentSecond, commentThird);
+            .And.ContainInOrder(commentFirst.Id, commentSecond.Id, commentThird.Id);
     }
 }

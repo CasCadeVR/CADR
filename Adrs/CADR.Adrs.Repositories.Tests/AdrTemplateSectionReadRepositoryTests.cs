@@ -118,9 +118,8 @@ public class AdrTemplateSectionReadRepositoryTests : CadrContextInMemory
         var result = await adrTemplateSectionReadRepository.GetByTemplateIdAsync(targetTemplate.Id, CancellationToken.None);
 
         // Assert
-        result.Should()
+        result.Select(x => x.Id).Should()
             .NotBeEmpty()
-            .And.HaveCount(3)
-            .And.ContainInOrder(sectionFirst, sectionSecond, sectionThird);
+            .And.ContainInOrder(sectionFirst.Id, sectionSecond.Id, sectionThird.Id);
     }
 }

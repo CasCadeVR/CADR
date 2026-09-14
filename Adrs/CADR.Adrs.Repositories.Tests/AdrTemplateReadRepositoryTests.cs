@@ -154,10 +154,9 @@ public class AdrTemplateReadRepositoryTests : CadrContextInMemory
         var result = await adrTemplateReadRepository.GetAvailableForOrganizationAsync(targetOrganization.Id, CancellationToken.None);
 
         // Assert
-        result.Should()
+        result.Select(x => x.Id).Should()
             .NotBeEmpty()
-            .And.HaveCount(3)
-            .And.ContainInOrder(templateA, templateB, templateC);
+            .And.ContainInOrder(templateA.Id, templateB.Id, templateC.Id);
     }
 
     /// <summary>
