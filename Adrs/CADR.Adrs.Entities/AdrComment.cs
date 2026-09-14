@@ -26,10 +26,10 @@ public class AdrComment : BaseAuditEntity
     /// <summary>
     /// Идентификатор комментирующего
     /// </summary>
-    public Guid UserId { get; set; }
+    public Guid AuthorId { get; set; }
 
     /// <summary>
     /// Навигационное свойство комментирующего
     /// </summary>
-    public User? User { get; set; }
+    public User? Author { get; set; }
 }

@@ -80,7 +80,7 @@ public class AdrCommentReadRepositoryTests : CadrContextInMemory
             .NotBeNull()
             .And.BeEquivalentTo(targetComment, options => options
                 .Excluding(o => o.Adr)
-                .Excluding(o => o.User));
+                .Excluding(o => o.Author));
     }
 
     /// <summary>

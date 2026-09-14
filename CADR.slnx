@@ -17,6 +17,9 @@
     <Project Path="Adrs/CADR.Adrs.Repositories.Contracts/CADR.Adrs.Repositories.Contracts.csproj" Id="91b66226-493c-4352-b73a-bca5fd99a7f0" />
     <Project Path="Adrs/CADR.Adrs.Repositories.Tests/CADR.Adrs.Repositories.Tests.csproj" Id="3e81fb4a-a033-491a-a4a4-50d2f6ab036d" />
     <Project Path="Adrs/CADR.Adrs.Repositories/CADR.Adrs.Repositories.csproj" Id="8f710597-0d4a-440e-baab-4d0ea095b48b" />
+    <Project Path="Adrs/CADR.Adrs.Services.Contracts/CADR.Adrs.Services.Contracts.csproj" Id="cdbe92f7-1e2a-4957-a0ee-746aa146c923" />
+    <Project Path="Adrs/CADR.Adrs.Services.Tests/CADR.Adrs.Services.Tests.csproj" Id="86d77926-df8a-4a28-9453-e5c89abd5f7a" />
+    <Project Path="Adrs/CADR.Adrs.Services/CADR.Adrs.Services.csproj" Id="bff42614-7518-4c8d-baa5-4b1c8536a128" />
   </Folder>
   <Folder Name="/Common/">
     <Project Path="Common/CADR.Common.Core.Contracts/CADR.Common.Core.Contracts.csproj" />

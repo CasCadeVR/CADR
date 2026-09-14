@@ -1,12 +1,11 @@
-﻿using CADR.Adrs.Entities.Enums;
-using CADR.Context.Entities.Contracts.Models;
+﻿using CADR.Adrs.Services.Contracts.Models.Enums;
 
-namespace CADR.Adrs.Entities;
+namespace CADR.Adrs.Services.Contracts.Models.Links;
 
 /// <summary>
-/// Связь к ADR
+/// Модель создания связи с ADR
 /// </summary>
-public class AdrLink : BaseAuditEntity
+public class CreateAdrLinkModel
 {
     /// <summary>
     /// Тип связи
@@ -19,17 +18,12 @@ public class AdrLink : BaseAuditEntity
     public Guid SourceAdrId { get; set; }
 
     /// <summary>
-    /// Навигационное свойство источника ADR
-    /// </summary>
-    public Adr? SourceAdr { get; set; }
-
-    /// <summary>
     /// Идентификатор указываемого ADR
     /// </summary>
     public Guid TargetAdrId { get; set; }
 
     /// <summary>
-    /// Навигационное свойство указываемого ADR
+    /// Идентификатор пользователя, создающий связь
     /// </summary>
-    public Adr? TargetAdr { get; set; }
+    public Guid UserId { get; set; }
 }
