@@ -25,6 +25,23 @@ public static class UserOrganizationReadRepositoryExtensions
     }
 
     /// <summary>
+    /// Проверить, является ли пользователь админом или архитектором в организации, и бросить исключение, если нет
+    /// </summary>
+    public static async Task ThrowIfNotAdminOrArchitectureAsync<T>(
+        this IUserOrganizationReadRepository repository,
+        Guid userId,
+        Guid organizationId,
+        CancellationToken cancellationToken)
+        where T : Exception, new()
+    {
+        var user = await repository.GetByUserAndOrganizationIdAsync(userId, organizationId, cancellationToken);
+        if (user?.Role is not Role.Admin && user?.Role is not Role.Architect)
+        {
+            throw new T();
+        }
+    }
+
+    /// <summary>
     /// Проверить, является ли пользователь членом организации, и бросить исключение, если нет
     /// </summary>
     public static async Task ThrowIfNotMemberAsync<T>(

@@ -44,7 +44,7 @@ public class AdrConfiguration : IEntityTypeConfiguration<Adr>
             .HasForeignKey(x => x.TargetAdrId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasMany(x => x.TargetLinks)
+        builder.HasMany(x => x.SourceLinks)
             .WithOne(x => x.SourceAdr)
             .HasForeignKey(x => x.SourceAdrId)
             .OnDelete(DeleteBehavior.NoAction);

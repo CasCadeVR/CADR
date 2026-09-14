@@ -1,5 +1,4 @@
-﻿using CADR.Context;
-using CADR.Context.Contracts;
+﻿using CADR.Context.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 

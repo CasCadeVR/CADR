@@ -71,7 +71,12 @@ public class Adr : BaseAuditEntity
     public ICollection<AdrSection> Sections { get; set; } = [];
 
     /// <summary>
-    /// Связи с другими ADR
+    /// Связи с другими ADR в качестве используемого
+    /// </summary>
+    public ICollection<AdrLink> SourceLinks { get; set; } = [];
+
+    /// <summary>
+    /// Связи с другими ADR в качестве использующего
     /// </summary>
     public ICollection<AdrLink> TargetLinks { get; set; } = [];
 
