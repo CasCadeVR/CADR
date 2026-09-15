@@ -48,7 +48,7 @@ internal sealed class AdrTemplateManager : IAdrTemplateManager, IAdrsServiceAnch
         };
         foreach (var sectionModel in model.Sections.OrderBy(x => x.Position))
         {
-            template.Sections.Add(new AdrTemplateSection
+            var section = new AdrTemplateSection
             {
                 Id = Guid.NewGuid(),
                 Position = sectionModel.Position,
@@ -56,7 +56,10 @@ internal sealed class AdrTemplateManager : IAdrTemplateManager, IAdrsServiceAnch
                 Hint = sectionModel.Hint,
                 Placeholder = sectionModel.Placeholder,
                 TemplateId = template.Id,
-            });
+            };
+
+            template.Sections.Add(section);
+            adrTemplateSectionWriteRepository.Add(section);
         }
 
         adrTemplateWriteRepository.Add(template);
@@ -155,6 +158,6 @@ internal sealed class AdrTemplateManager : IAdrTemplateManager, IAdrsServiceAnch
     private async Task FillSectionsAsync(AdrTemplateModel model, CancellationToken cancellationToken)
     {
         var sections = await adrTemplateSectionReadRepository.GetByTemplateIdAsync(model.Id, cancellationToken);
-        model.Sections = mapper.Map<ICollection<AdrTemplateSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
+        model.Sections = mapper.Map<IReadOnlyCollection<AdrTemplateSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
     }
 }

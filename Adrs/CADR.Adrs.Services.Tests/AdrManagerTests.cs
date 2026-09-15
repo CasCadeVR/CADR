@@ -277,9 +277,7 @@ public class AdrManagerTests : CadrContextInMemory
         //Arrange
         var (organization, user) = await SeedOrganizationUserAsync(Role.User);
         var adr1 = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
-        var adr2 = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
-        adr2.DeletedAt = DateTimeOffset.UtcNow;
-        await UnitOfWork.SaveChangesAsync();
+        var adr2 = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft, asDeleted: true);
 
         // Act
         var result = await adrManager.GetByOrganizationIdAsync(organization.Id, user.Id, CancellationToken.None);
@@ -436,10 +434,10 @@ public class AdrManagerTests : CadrContextInMemory
     }
 
     /// <summary>
-    /// Смена статуса Proposed - Rejected администратором работает, повторное открытие Rejected - Proposed работает
+    /// Смена статуса Proposed - Rejected администратором работает
     /// </summary>
     [Fact]
-    public async Task ChangeStatusProposedToRejectedByAdminAndReopenShouldWork()
+    public async Task ChangeStatusProposedToRejectedByAdminShouldWork()
     {
         //Arrange
         var (organization, admin) = await SeedOrganizationUserAsync(Role.Admin);
@@ -450,6 +448,25 @@ public class AdrManagerTests : CadrContextInMemory
             UserId = admin.Id,
             Status = ContractEnums.AdrStatus.Rejected,
         };
+
+        // Act
+        Func<Task> rejectAct = () => adrManager.ChangeStatusAsync(rejectModel, CancellationToken.None);
+
+        // Assert
+        await rejectAct.Should().NotThrowAsync();
+        Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.Rejected);
+    }
+
+    /// <summary>
+    /// Повторное открытие Rejected - Proposed работает
+    /// </summary>
+    [Fact]
+    public async Task ChangeStatusRejectedToReopenByAdminShouldWork()
+    {
+        //Arrange
+        var (organization, admin) = await SeedOrganizationUserAsync(Role.Admin);
+        var adr = await SeedAdrAsync(organization, admin.Id, EntityEnums.AdrStatus.Rejected);
+
         var reopenModel = new ChangeAdrStatusModel
         {
             AdrId = adr.Id,
@@ -458,15 +475,13 @@ public class AdrManagerTests : CadrContextInMemory
         };
 
         // Act
-        Func<Task> rejectAct = () => adrManager.ChangeStatusAsync(rejectModel, CancellationToken.None);
         Func<Task> reopenAct = () => adrManager.ChangeStatusAsync(reopenModel, CancellationToken.None);
 
         // Assert
-        await rejectAct.Should().NotThrowAsync();
-        Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.Rejected);
         await reopenAct.Should().NotThrowAsync();
         Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.Proposed);
     }
+
 
     /// <summary>
     /// Смена статуса Approved - Deprecated автором работает
@@ -788,7 +803,7 @@ public class AdrManagerTests : CadrContextInMemory
         return (organization, user);
     }
 
-    private async Task<Adr> SeedAdrAsync(Organization organization, Guid authorId, EntityEnums.AdrStatus status)
+    private async Task<Adr> SeedAdrAsync(Organization organization, Guid authorId, EntityEnums.AdrStatus status, bool? asDeleted = false)
     {
         var adr = TestEntityProvider.Shared.Create<Adr>(x =>
         {
@@ -796,6 +811,10 @@ public class AdrManagerTests : CadrContextInMemory
             x.AuthorId = authorId;
             x.Status = status;
         });
+        if (asDeleted == true)
+        {
+            adr.DeletedAt = DateTime.UtcNow;
+        }
         await Context.AddAsync(adr);
         await UnitOfWork.SaveChangesAsync();
         return adr;

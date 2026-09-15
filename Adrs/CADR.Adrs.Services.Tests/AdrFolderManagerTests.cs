@@ -126,6 +126,7 @@ public class AdrFolderManagerTests : CadrContextInMemory
         await UnitOfWork.SaveChangesAsync();
         var model = TestEntityProvider.Shared.Create<CreateAdrFolderModel>(x =>
         {
+            x.ParentAdrFolderId = Guid.NewGuid();
             x.OrganizationId = organization.Id;
             x.UserId = architect.Id;
         });

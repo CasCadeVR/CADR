@@ -60,5 +60,5 @@ public class AdrModel
     /// <summary>
     /// Разделы ADR
     /// </summary>
-    public ICollection<AdrSectionModel> Sections { get; set; } = [];
+    public IReadOnlyCollection<AdrSectionModel> Sections { get; set; } = [];
 }

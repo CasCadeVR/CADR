@@ -90,14 +90,17 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             var templateSections = await adrTemplateSectionReadRepository.GetByTemplateIdAsync(template.Id, cancellationToken);
             foreach (var templateSection in templateSections.OrderBy(x => x.Position))
             {
-                adr.Sections.Add(new AdrSection
+                var section = new AdrSection
                 {
                     Id = Guid.NewGuid(),
                     Position = templateSection.Position,
                     Title = templateSection.Title,
                     Content = templateSection.Placeholder,
                     AdrId = adr.Id,
-                });
+                };
+
+                adr.Sections.Add(section);
+                adrSectionWriteRepository.Add(section);
             }
         }
 
@@ -239,11 +242,14 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
                 UserId = model.UserId,
                 Value = mapper.Map<AdrVoteType>(model.Vote),
             };
+            adr.Votes.Add(vote);
             adrVoteWriteRepository.Add(vote);
         }
         else
         {
             vote.Value = mapper.Map<AdrVoteType>(model.Vote);
+            adr.Votes = (await adrVoteReadRepository.GetByAdrIdAsync(adr.Id, cancellationToken)).ToList();
+            adr.Votes.First(x => x.Id == vote.Id).Value = mapper.Map<AdrVoteType>(model.Vote);
             adrVoteWriteRepository.Update(vote);
         }
 
@@ -259,6 +265,8 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 
         var vote = await adrVoteReadRepository.GetByAdrAndUserIdAsync(adr.Id, model.UserId, cancellationToken)
             .OrThrowIfNull(() => new AdrEntityNotFoundException<AdrVote>(adr.Id));
+
+        adr.Votes.Remove(vote!);
         adrVoteWriteRepository.Delete(vote!);
 
         await ApplyVoteStatusAsync(adr, cancellationToken);
@@ -292,7 +300,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 
     private async Task ApplyVoteStatusAsync(Adr adr, CancellationToken cancellationToken)
     {
-        var score = await ComputeScoreAsync(adr.Id, cancellationToken);
+        var score = await ComputeScoreAsync(adr, cancellationToken);
         if (score < 0 && adr.Status is AdrStatus.Approved or AdrStatus.NeedsRevision)
         {
             adr.Status = AdrStatus.NeedsRevision;
@@ -313,11 +321,8 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         return settings?.LikesRequiredForApproval ?? DefaultLikesRequiredForApproval;
     }
 
-    private async Task<int> ComputeScoreAsync(Guid adrId, CancellationToken cancellationToken)
-    {
-        var votes = await adrVoteReadRepository.GetByAdrIdAsync(adrId, cancellationToken);
-        return votes.Sum(x => x.Value == AdrVoteType.Like ? 1 : -1);
-    }
+    private async Task<int> ComputeScoreAsync(Adr adr, CancellationToken cancellationToken)
+        => adr.Votes.Sum(x => x.Value == AdrVoteType.Like ? 1 : -1);
 
     private async Task<IReadOnlyCollection<AdrModel>> MapListAsync(IReadOnlyCollection<Adr> adrs, Guid userId, CancellationToken cancellationToken)
     {
@@ -333,7 +338,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     private async Task FillSectionsAsync(AdrModel model, CancellationToken cancellationToken)
     {
         var sections = await adrSectionReadRepository.GetByAdrIdAsync(model.Id, cancellationToken);
-        model.Sections = mapper.Map<ICollection<AdrSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
+        model.Sections = mapper.Map<IReadOnlyCollection<AdrSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
     }
 
     private async Task FillComputedAsync(AdrModel model, Guid userId, CancellationToken cancellationToken)

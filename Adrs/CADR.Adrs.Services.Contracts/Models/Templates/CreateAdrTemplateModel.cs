@@ -23,5 +23,5 @@ public class CreateAdrTemplateModel
     /// <summary>
     /// Разделы шаблона
     /// </summary>
-    public ICollection<CreateAdrTemplateSectionModel> Sections { get; set; } = [];
+    public IReadOnlyCollection<CreateAdrTemplateSectionModel> Sections { get; set; } = [];
 }
