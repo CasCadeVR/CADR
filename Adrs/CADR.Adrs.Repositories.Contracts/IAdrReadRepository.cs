@@ -1,4 +1,5 @@
 ﻿using CADR.Adrs.Entities;
+using CADR.Adrs.Entities.Enums;
 
 namespace CADR.Adrs.Repositories.Contracts;
 
@@ -26,6 +27,16 @@ public interface IAdrReadRepository
     /// Получает список ADR, созданные автором
     /// </summary>
     Task<IReadOnlyCollection<Adr>> GetByAuthorIdAsync(Guid organizationId, Guid authorId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получить список недавно обновлённых ADR
+    /// </summary>
+    Task<IReadOnlyCollection<Adr>> GetRecentAsync(Guid organizationId, int maxCount, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получить список ADR, фильтрованных по статусу
+    /// </summary>
+    Task<IReadOnlyCollection<Adr>> GetByStatusesAsync(Guid organizationId, IReadOnlyCollection<AdrStatus> statuses, CancellationToken cancellationToken);
 
     /// <summary>
     /// Получает максимальный номер последней ADR

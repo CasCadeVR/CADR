@@ -2,6 +2,7 @@ using System.Text;
 using CADR.Administrations.Repositories.Contracts;
 using CADR.Administrations.Repositories.Contracts.Extensions;
 using CADR.Adrs.Entities;
+using CADR.Adrs.Entities.Enums;
 using CADR.Adrs.Repositories.Contracts;
 using CADR.Adrs.Services.Contracts.Exceptions;
 using CADR.Adrs.Services.Contracts.Interfaces;
@@ -34,6 +35,25 @@ internal sealed class AdrExportService : IAdrExportService, IAdrsServiceAnchor
             .OrThrowIfNull(() => new AdrEntityNotFoundException<Adr>(adrId));
         await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, adr!.OrganizationId, cancellationToken);
 
+        return await RenderAdrMarkdownAsync(adr, cancellationToken);
+    }
+
+    async Task<string> IAdrExportService.ExportApprovedToMarkdownAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken)
+    {
+        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
+        var adrs = await adrReadRepository.GetByStatusesAsync(organizationId, [AdrStatus.Approved], cancellationToken);
+
+        var documents = new List<string>(adrs.Count);
+        foreach (var adr in adrs.OrderBy(x => x.Number))
+        {
+            documents.Add(await RenderAdrMarkdownAsync(adr, cancellationToken));
+        }
+
+        return string.Join($"{Environment.NewLine}---{Environment.NewLine}", documents);
+    }
+
+    private async Task<string> RenderAdrMarkdownAsync(Adr adr, CancellationToken cancellationToken)
+    {
         var sections = await adrSectionReadRepository.GetByAdrIdAsync(adr.Id, cancellationToken);
         var author = await userReadRepository.GetByIdAsync(adr.AuthorId, cancellationToken);
 

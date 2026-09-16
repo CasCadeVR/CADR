@@ -37,7 +37,8 @@ public class AdrManagerTests : CadrContextInMemory
 
         adrManager = new AdrManager(unitOfWorkMock.AdrUnitOfWork,
             config.CreateMapper(),
-            unitOfWorkMock.UserOrganizationReadRepository);
+            unitOfWorkMock.UserOrganizationReadRepository,
+            unitOfWorkMock.UserReadRepository);
     }
 
     /// <summary>
@@ -167,8 +168,8 @@ public class AdrManagerTests : CadrContextInMemory
             .HaveCount(2)
             .And.BeEquivalentTo(new[]
             {
-                new { Position = 1, templateSection1.Title, Content = templateSection1.Placeholder, },
-                new { Position = 2, templateSection2.Title, Content = templateSection2.Placeholder, },
+                new { Position = 1, templateSection1.Title, templateSection1.Hint, templateSection1.Placeholder, },
+                new { Position = 2, templateSection2.Title, templateSection2.Hint, templateSection2.Placeholder, },
             });
     }
 
@@ -785,6 +786,253 @@ public class AdrManagerTests : CadrContextInMemory
 
         // Assert
         await act.Should().ThrowAsync<AdrEntityNotFoundException<AdrVote>>();
+    }
+
+    /// <summary>
+    /// Получение списка последних ADR возвращает самые свежие активные с учётом лимита
+    /// </summary>
+    [Fact]
+    public async Task GetRecentShouldWork()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var now = DateTimeOffset.UtcNow;
+        var oldest = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.UpdatedAt = now.AddDays(-3);
+        });
+        var middle = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.UpdatedAt = now.AddDays(-2);
+        });
+        var newest = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Proposed;
+            x.UpdatedAt = now.AddDays(-1);
+        });
+        var deleted = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.UpdatedAt = now;
+            x.DeletedAt = now;
+        });
+        await Context.AddRangeAsync(oldest, middle, newest, deleted);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrManager.GetRecentAsync(organization.Id, user.Id, 2, CancellationToken.None);
+
+        // Assert
+        result.Select(x => x.Id).Should()
+            .BeEquivalentTo(new[] { newest.Id, middle.Id }, options => options.WithStrictOrdering());
+    }
+
+    /// <summary>
+    /// Получение списка последних ADR выдаёт ошибку: пользователь не состоит в организации
+    /// </summary>
+    [Fact]
+    public async Task GetRecentShouldThrowNotMember()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        await Context.AddAsync(organization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        Func<Task> act = () => adrManager.GetRecentAsync(organization.Id, Guid.NewGuid(), 10, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrAccessException>();
+    }
+
+    /// <summary>
+    /// Получение списка ADR по статусам возвращает только подходящие активные ADR
+    /// </summary>
+    [Fact]
+    public async Task GetByStatusesShouldWork()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var draft = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.Number = 1;
+        });
+        var proposed = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Proposed;
+            x.Number = 2;
+        });
+        var approved = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Approved;
+            x.Number = 3;
+        });
+        var needsRevision = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.NeedsRevision;
+            x.Number = 4;
+        });
+        var deletedProposed = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Proposed;
+            x.Number = 5;
+            x.DeletedAt = DateTimeOffset.UtcNow;
+        });
+        await Context.AddRangeAsync(draft, proposed, approved, needsRevision, deletedProposed);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrManager.GetByStatusesAsync(organization.Id,
+            new[] { ContractEnums.AdrStatus.Proposed, ContractEnums.AdrStatus.NeedsRevision },
+            user.Id,
+            CancellationToken.None);
+
+        // Assert
+        result.Select(x => x.Id).Should()
+            .BeEquivalentTo(new[] { proposed.Id, needsRevision.Id }, options => options.WithStrictOrdering());
+    }
+
+    /// <summary>
+    /// Получение списка ADR по статусам выдаёт ошибку: пользователь не состоит в организации
+    /// </summary>
+    [Fact]
+    public async Task GetByStatusesShouldThrowNotMember()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        await Context.AddAsync(organization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        Func<Task> act = () => adrManager.GetByStatusesAsync(organization.Id,
+            new[] { ContractEnums.AdrStatus.Proposed },
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrAccessException>();
+    }
+
+    /// <summary>
+    /// Получение ADR возвращает имя и логин автора
+    /// </summary>
+    [Fact]
+    public async Task GetByIdShouldFillAuthor()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var adr = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
+
+        // Act
+        var result = await adrManager.GetByIdAsync(adr.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.AuthorName.Should().Be(user.Name);
+        result.AuthorLogin.Should().Be(user.Login);
+    }
+
+    /// <summary>
+    /// Получение ADR возвращает путь по вложенным папкам от корня к папке ADR
+    /// </summary>
+    [Fact]
+    public async Task GetByIdShouldFillFolderPath()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var rootFolder = TestEntityProvider.Shared.Create<AdrFolder>(x =>
+        {
+            x.OrganizationId = organization.Id;
+        });
+        var childFolder = TestEntityProvider.Shared.Create<AdrFolder>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.ParentAdrFolderId = rootFolder.Id;
+        });
+        var adr = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.ParentAdrFolderId = childFolder.Id;
+        });
+        await Context.AddRangeAsync(rootFolder, childFolder, adr);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrManager.GetByIdAsync(adr.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.FolderPath.Should().NotBeNull();
+        result.FolderPath!.Select(x => x.Id).Should()
+            .BeEquivalentTo(new[] { rootFolder.Id, childFolder.Id }, options => options.WithStrictOrdering());
+    }
+
+    /// <summary>
+    /// Получение ADR возвращает пустой путь, если ADR лежит в корне организации
+    /// </summary>
+    [Fact]
+    public async Task GetByIdShouldReturnEmptyFolderPathForRootAdr()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var adr = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
+
+        // Act
+        var result = await adrManager.GetByIdAsync(adr.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.FolderPath.Should().NotBeNull().And.BeEmpty();
+    }
+
+    /// <summary>
+    /// Получение ADR возвращает пустой путь без ошибки, если папка ADR была удалена
+    /// </summary>
+    [Fact]
+    public async Task GetByIdShouldReturnEmptyFolderPathForDeletedFolder()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var deletedFolder = TestEntityProvider.Shared.Create<AdrFolder>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.DeletedAt = DateTimeOffset.UtcNow;
+        });
+        var adr = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.ParentAdrFolderId = deletedFolder.Id;
+        });
+        await Context.AddRangeAsync(deletedFolder, adr);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrManager.GetByIdAsync(adr.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.FolderPath.Should().NotBeNull().And.BeEmpty();
     }
 
     private async Task<(Organization organization, User user)> SeedOrganizationUserAsync(Role role)

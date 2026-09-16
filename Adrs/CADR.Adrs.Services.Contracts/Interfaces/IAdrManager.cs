@@ -1,4 +1,5 @@
 using CADR.Adrs.Services.Contracts.Models.Adrs;
+using CADR.Adrs.Services.Contracts.Models.Enums;
 
 namespace CADR.Adrs.Services.Contracts.Interfaces;
 
@@ -31,6 +32,16 @@ public interface IAdrManager
     /// Получает список ADR автора в организации
     /// </summary>
     Task<IEnumerable<AdrModel>> GetByAuthorIdAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получает список недавно добавленных или обновлённых ADR организации
+    /// </summary>
+    Task<IEnumerable<AdrModel>> GetRecentAsync(Guid organizationId, Guid userId, int maxCount, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получает список ADR организации, отфильтрованных по статусам
+    /// </summary>
+    Task<IEnumerable<AdrModel>> GetByStatusesAsync(Guid organizationId, IReadOnlyCollection<AdrStatus> statuses, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Обновляет существующий ADR вместе с разделами

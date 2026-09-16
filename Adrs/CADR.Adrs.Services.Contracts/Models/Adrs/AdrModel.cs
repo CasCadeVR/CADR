@@ -1,4 +1,5 @@
 ﻿using CADR.Adrs.Services.Contracts.Models.Enums;
+using CADR.Adrs.Services.Contracts.Models.Folders;
 
 namespace CADR.Adrs.Services.Contracts.Models.Adrs;
 
@@ -43,9 +44,27 @@ public class AdrModel
     public Guid AuthorId { get; set; }
 
     /// <summary>
+    /// Имя автора ADR
+    /// </summary>
+    public string AuthorName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Логин автора ADR
+    /// </summary>
+    public string AuthorLogin { get; set; } = string.Empty;
+
+    /// <summary>
     /// Идентификатор родителя (папки)
     /// </summary>
     public Guid? ParentAdrFolderId { get; set; }
+
+    /// <summary>
+    /// Путь к папке ADR от корня организации (для хлебных крошек)
+    /// </summary>
+    /// <remarks>
+    /// Заполняется только в ответах на чтение одного ADR; пустая коллекция - ADR находится в корне
+    /// </remarks>
+    public IReadOnlyCollection<AdrFolderModel>? FolderPath { get; set; }
 
     /// <summary>
     /// Идентификатор шаблона, по которому построен ADR

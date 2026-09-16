@@ -18,6 +18,11 @@ public interface IAdrFolderManager
     Task<IEnumerable<AdrFolderModel>> GetByOrganizationIdAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Получает путь к папке от корня организации (цепочку родительских папок)
+    /// </summary>
+    Task<IEnumerable<AdrFolderModel>> GetPathAsync(Guid organizationId, Guid? folderId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Обновляет существующую папку ADR (переименование, перемещение)
     /// </summary>
     Task<AdrFolderModel> UpdateAsync(UpdateAdrFolderModel model, CancellationToken cancellationToken);

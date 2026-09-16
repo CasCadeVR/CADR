@@ -8,10 +8,14 @@ using CADR.Adrs.Repositories.Contracts;
 using CADR.Adrs.Services.Contracts.Exceptions;
 using CADR.Adrs.Services.Contracts.Interfaces;
 using CADR.Adrs.Services.Contracts.Models.Adrs;
+using CADR.Adrs.Services.Contracts.Models.Folders;
+using CADR.Adrs.Services.Folders;
 using CADR.Adrs.Services.Resources;
 using CADR.Common.Core.Extensions;
 
 namespace CADR.Adrs.Services.Adrs;
+
+using ContractEnums = Contracts.Models.Enums;
 
 /// <inheritdoc cref="IAdrManager"/>
 internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
@@ -29,12 +33,13 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     private readonly IAdrTemplateSectionReadRepository adrTemplateSectionReadRepository;
     private readonly IAdrOrganizationSettingsReadRepository adrOrganizationSettingsReadRepository;
     private readonly IUserOrganizationReadRepository userOrganizationReadRepository;
+    private readonly IUserReadRepository userReadRepository;
     private readonly IMapper mapper;
 
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrManager"/>
     /// </summary>
-    public AdrManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
+    public AdrManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
@@ -48,6 +53,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         adrTemplateSectionReadRepository = adrUnitOfWork.AdrTemplateSectionReadRepository;
         adrOrganizationSettingsReadRepository = adrUnitOfWork.AdrOrganizationSettingsReadRepository;
         this.userOrganizationReadRepository = userOrganizationReadRepository;
+        this.userReadRepository = userReadRepository;
         this.mapper = mapper;
     }
 
@@ -95,7 +101,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
                     Id = Guid.NewGuid(),
                     Position = templateSection.Position,
                     Title = templateSection.Title,
-                    Content = templateSection.Placeholder,
                     AdrId = adr.Id,
                 };
 
@@ -109,6 +114,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 
         var result = mapper.Map<AdrModel>(adr);
         await FillSectionsAsync(result, cancellationToken);
+        await FillFolderPathAsync(result, cancellationToken);
         await FillComputedAsync(result, model.AuthorId, cancellationToken);
         return result;
     }
@@ -120,6 +126,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 
         var result = mapper.Map<AdrModel>(adr);
         await FillSectionsAsync(result, cancellationToken);
+        await FillFolderPathAsync(result, cancellationToken);
         await FillComputedAsync(result, userId, cancellationToken);
         return result;
     }
@@ -142,6 +149,23 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     {
         await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
         var adrs = await adrReadRepository.GetByAuthorIdAsync(organizationId, userId, cancellationToken);
+        return await MapListAsync(adrs, userId, cancellationToken);
+    }
+
+    async Task<IEnumerable<AdrModel>> IAdrManager.GetRecentAsync(Guid organizationId, Guid userId, int maxCount, CancellationToken cancellationToken)
+    {
+        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
+        var adrs = await adrReadRepository.GetRecentAsync(organizationId, maxCount, cancellationToken);
+        return await MapListAsync(adrs, userId, cancellationToken);
+    }
+
+    async Task<IEnumerable<AdrModel>> IAdrManager.GetByStatusesAsync(Guid organizationId, IReadOnlyCollection<ContractEnums.AdrStatus> statuses, Guid userId, CancellationToken cancellationToken)
+    {
+        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
+        var entityStatuses = statuses
+            .Select(x => mapper.Map<AdrStatus>(x))
+            .ToReadOnlyCollection();
+        var adrs = await adrReadRepository.GetByStatusesAsync(organizationId, entityStatuses, cancellationToken);
         return await MapListAsync(adrs, userId, cancellationToken);
     }
 
@@ -186,6 +210,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 
         var result = mapper.Map<AdrModel>(adr);
         await FillSectionsAsync(result, cancellationToken);
+        await FillFolderPathAsync(result, cancellationToken);
         await FillComputedAsync(result, model.UserId, cancellationToken);
         return result;
     }
@@ -338,7 +363,39 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     private async Task FillSectionsAsync(AdrModel model, CancellationToken cancellationToken)
     {
         var sections = await adrSectionReadRepository.GetByAdrIdAsync(model.Id, cancellationToken);
-        model.Sections = mapper.Map<IReadOnlyCollection<AdrSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
+        var sectionModels = mapper
+            .Map<IReadOnlyCollection<AdrSectionModel>>(sections.OrderBy(x => x.Position).ToReadOnlyCollection());
+
+        if (model.TemplateId.HasValue)
+        {
+            var templateSections = await adrTemplateSectionReadRepository
+                .GetByTemplateIdAsync(model.TemplateId.Value, cancellationToken);
+            var templateSectionsByPosition = templateSections.ToDictionary(x => x.Position);
+            foreach (var sectionModel in sectionModels)
+            {
+                if (templateSectionsByPosition.TryGetValue(sectionModel.Position, out var templateSection))
+                {
+                    sectionModel.Hint = templateSection.Hint;
+                    sectionModel.Placeholder = templateSection.Placeholder;
+                }
+            }
+        }
+        model.Sections = sectionModels;
+    }
+
+    private async Task FillFolderPathAsync(AdrModel model, CancellationToken cancellationToken)
+    {
+        if (!model.ParentAdrFolderId.HasValue)
+        {
+            model.FolderPath = [];
+            return;
+        }
+
+        var organizationFolders = await adrFolderReadRepository.GetByOrganizationIdAsync(model.OrganizationId, cancellationToken);
+        var folderById = organizationFolders.ToDictionary(x => x.Id);
+        model.FolderPath = folderById.TryGetValue(model.ParentAdrFolderId.Value, out var folder)
+            ? mapper.Map<IReadOnlyCollection<AdrFolderModel>>(AdrFolderTree.GetPath(folder, folderById))
+            : [];
     }
 
     private async Task FillComputedAsync(AdrModel model, Guid userId, CancellationToken cancellationToken)
@@ -346,7 +403,11 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         var votes = await adrVoteReadRepository.GetByAdrIdAsync(model.Id, cancellationToken);
         model.Score = votes.Sum(x => x.Value == AdrVoteType.Like ? 1 : -1);
         var userVote = votes.FirstOrDefault(x => x.UserId == userId);
-        model.UserVote = userVote == null ? null : mapper.Map<CADR.Adrs.Services.Contracts.Models.Enums.AdrVoteType>(userVote.Value);
+        model.UserVote = userVote == null ? null : mapper.Map<ContractEnums.AdrVoteType>(userVote.Value);
+
+        var author = await userReadRepository.GetByIdAsync(model.AuthorId, cancellationToken);
+        model.AuthorName = author?.Name ?? string.Empty;
+        model.AuthorLogin = author?.Login ?? string.Empty;
     }
 
     private static bool IsTransitionAllowed(AdrStatus current, AdrStatus target, Role role, bool isAuthor)

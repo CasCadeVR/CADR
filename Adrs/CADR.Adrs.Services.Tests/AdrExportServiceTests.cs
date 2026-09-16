@@ -123,4 +123,85 @@ public class AdrExportServiceTests : CadrContextInMemory
         // Assert
         await act.Should().ThrowAsync<AdrAccessException>();
     }
+
+    /// <summary>
+    /// Экспорт утверждённых ADR организации в общий документ работает
+    /// </summary>
+    [Fact]
+    public async Task ExportApprovedShouldWork()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        var user = TestEntityProvider.Shared.Create<User>();
+        var approved1 = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Approved;
+            x.Number = 2;
+        });
+        var approved2 = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Approved;
+            x.Number = 1;
+        });
+        var draft = TestEntityProvider.Shared.Create<Adr>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.AuthorId = user.Id;
+            x.Status = EntityEnums.AdrStatus.Draft;
+            x.Number = 3;
+        });
+        var draftSection = TestEntityProvider.Shared.Create<AdrSection>(x =>
+        {
+            x.AdrId = draft.Id;
+            x.Position = 1;
+        });
+        await Context.AddRangeAsync(organization,
+            user,
+            approved1,
+            approved2,
+            draft,
+            draftSection,
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = user.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrExportService.ExportApprovedToMarkdownAsync(organization.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.Should()
+            .NotBeNullOrWhiteSpace()
+            .And.Contain($"# {approved2.Number}. {approved2.Title}")
+            .And.Contain($"# {approved1.Number}. {approved1.Title}")
+            .And.Contain("---")
+            .And.NotContain(draft.Title)
+            .And.NotContain(draftSection.Content);
+        result.IndexOf(approved2.Title, StringComparison.Ordinal).Should().BeLessThan(result.IndexOf(approved1.Title, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Экспорт утверждённых ADR выдаёт ошибку: пользователь не состоит в организации
+    /// </summary>
+    [Fact]
+    public async Task ExportApprovedShouldThrowNotMember()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        await Context.AddAsync(organization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        Func<Task> act = () => adrExportService.ExportApprovedToMarkdownAsync(organization.Id, Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrAccessException>();
+    }
 }

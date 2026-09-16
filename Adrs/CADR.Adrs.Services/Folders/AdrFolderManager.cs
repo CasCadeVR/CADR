@@ -69,6 +69,25 @@ internal sealed class AdrFolderManager : IAdrFolderManager, IAdrsServiceAnchor
         return mapper.Map<IEnumerable<AdrFolderModel>>(folders);
     }
 
+    async Task<IEnumerable<AdrFolderModel>> IAdrFolderManager.GetPathAsync(Guid organizationId, Guid? folderId, Guid userId, CancellationToken cancellationToken)
+    {
+        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
+        if (!folderId.HasValue)
+        {
+            return [];
+        }
+
+        var organizationFolders = await adrFolderReadRepository.GetByOrganizationIdAsync(organizationId, cancellationToken);
+        var folderById = organizationFolders.ToDictionary(x => x.Id);
+        if (!folderById.TryGetValue(folderId.Value, out var folder))
+        {
+            throw new AdrEntityNotFoundException<AdrFolder>(folderId.Value);
+        }
+
+        var path = AdrFolderTree.GetPath(folder, folderById);
+        return mapper.Map<IEnumerable<AdrFolderModel>>(path);
+    }
+
     async Task<AdrFolderModel> IAdrFolderManager.UpdateAsync(UpdateAdrFolderModel model, CancellationToken cancellationToken)
     {
         var folder = await adrFolderReadRepository.GetActiveByIdAsync(model.Id, cancellationToken)

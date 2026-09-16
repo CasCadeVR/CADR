@@ -18,11 +18,14 @@ public class AdrServiceProfile : Profile
     /// </summary>
     public AdrServiceProfile()
     {
-        CreateMap<Entities.AdrSection, AdrSectionModel>(MemberList.Destination);
+        CreateMap<Entities.AdrSection, AdrSectionModel>(MemberList.Destination)
+            .ForMember(x => x.Hint, opt => opt.Ignore())
+            .ForMember(x => x.Placeholder, opt => opt.Ignore());
 
         CreateMap<Entities.Adr, AdrModel>(MemberList.Destination)
             .ForMember(x => x.Score, opt => opt.Ignore())
             .ForMember(x => x.UserVote, opt => opt.Ignore())
+            .ForMember(x => x.FolderPath, opt => opt.Ignore())
             .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections));
 
         CreateMap<Entities.AdrFolder, AdrFolderModel>(MemberList.Destination);

@@ -1,4 +1,5 @@
 ﻿using CADR.Adrs.Entities;
+using CADR.Adrs.Entities.Enums;
 using CADR.Adrs.Repositories.Contracts;
 using CADR.Common.Repositories;
 using CADR.Context.Contracts;
@@ -43,6 +44,22 @@ internal sealed class AdrReadRepository : IAdrReadRepository, IAdrsRepositoryAnc
         => reader.Read<Adr>()
             .Where(x => x.OrganizationId == organizationId)
             .NotDeletedAt()
+            .ToReadOnlyCollectionAsync(cancellationToken);
+
+    Task<IReadOnlyCollection<Adr>> IAdrReadRepository.GetRecentAsync(Guid organizationId, int maxCount, CancellationToken cancellationToken)
+        => reader.Read<Adr>()
+            .Where(x => x.OrganizationId == organizationId)
+            .NotDeletedAt()
+            .OrderByDescending(x => x.UpdatedAt)
+            .Take(maxCount)
+            .ToReadOnlyCollectionAsync(cancellationToken);
+
+    Task<IReadOnlyCollection<Adr>> IAdrReadRepository.GetByStatusesAsync(Guid organizationId, IReadOnlyCollection<AdrStatus> statuses, CancellationToken cancellationToken)
+        => reader.Read<Adr>()
+            .Where(x => x.OrganizationId == organizationId)
+            .NotDeletedAt()
+            .Where(x => statuses.Contains(x.Status))
+            .OrderBy(x => x.Number)
             .ToReadOnlyCollectionAsync(cancellationToken);
 
     Task<int> IAdrReadRepository.GetCountByFolderIdsAsync(IReadOnlyCollection<Guid> folderIds, CancellationToken cancellationToken)

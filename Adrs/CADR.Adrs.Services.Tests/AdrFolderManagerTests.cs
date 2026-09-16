@@ -493,4 +493,128 @@ public class AdrFolderManagerTests : CadrContextInMemory
         // Assert
         await act.Should().ThrowAsync<AdrAccessException>();
     }
+
+    /// <summary>
+    /// Получение пути к папке возвращает цепочку родителей от корня
+    /// </summary>
+    [Fact]
+    public async Task GetPathShouldWork()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        var user = TestEntityProvider.Shared.Create<User>();
+        var root = TestEntityProvider.Shared.Create<AdrFolder>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.ParentAdrFolderId = null;
+        });
+        var child = TestEntityProvider.Shared.Create<AdrFolder>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.ParentAdrFolderId = root.Id;
+        });
+        await Context.AddRangeAsync(organization,
+            user,
+            root,
+            child,
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = user.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrFolderManager.GetPathAsync(organization.Id, child.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.Select(x => x.Id).Should()
+            .BeEquivalentTo(new[] { root.Id, child.Id }, options => options.WithStrictOrdering());
+    }
+
+    /// <summary>
+    /// Получение пути к корню возвращает пустой путь
+    /// </summary>
+    [Fact]
+    public async Task GetPathShouldReturnEmptyForRoot()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        var user = TestEntityProvider.Shared.Create<User>();
+        await Context.AddRangeAsync(organization,
+            user,
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = user.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrFolderManager.GetPathAsync(organization.Id, null, user.Id, CancellationToken.None);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Получение пути выдаёт ошибку: папка не найдена
+    /// </summary>
+    [Fact]
+    public async Task GetPathShouldThrowNotFound()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        var user = TestEntityProvider.Shared.Create<User>();
+        await Context.AddRangeAsync(organization,
+            user,
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = user.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        await UnitOfWork.SaveChangesAsync();
+        var folderId = Guid.NewGuid();
+
+        // Act
+        Func<Task> act = () => adrFolderManager.GetPathAsync(organization.Id, folderId, user.Id, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<AdrEntityNotFoundException<AdrFolder>>()
+            .WithMessage($"*{folderId}*");
+    }
+
+    /// <summary>
+    /// Получение пути выдаёт ошибку: папка из другой организации
+    /// </summary>
+    [Fact]
+    public async Task GetPathShouldThrowNotFoundForOtherOrganizationFolder()
+    {
+        //Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>();
+        var otherOrganization = TestEntityProvider.Shared.Create<Organization>();
+        var user = TestEntityProvider.Shared.Create<User>();
+        var otherFolder = TestEntityProvider.Shared.Create<AdrFolder>(x => x.OrganizationId = otherOrganization.Id);
+        await Context.AddRangeAsync(organization,
+            otherOrganization,
+            user,
+            otherFolder,
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = user.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        Func<Task> act = () => adrFolderManager.GetPathAsync(organization.Id, otherFolder.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrEntityNotFoundException<AdrFolder>>();
+    }
 }
