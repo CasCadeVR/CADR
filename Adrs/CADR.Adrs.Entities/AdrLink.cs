@@ -9,7 +9,7 @@ namespace CADR.Adrs.Entities;
 public class AdrLink : BaseAuditEntity
 {
     /// <summary>
-    /// Голос
+    /// Тип связи
     /// </summary>
     public AdrLinkType Type { get; set; }
 

@@ -22,9 +22,9 @@ public class AdrCommentConfiguration : IEntityTypeConfiguration<AdrComment>
             .HasForeignKey(x => x.AdrId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne(x => x.User)
+        builder.HasOne(x => x.Author)
             .WithMany()
-            .HasForeignKey(x => x.UserId)
+            .HasForeignKey(x => x.AuthorId)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

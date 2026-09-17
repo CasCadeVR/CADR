@@ -20,6 +20,12 @@ internal sealed class AdrLinkReadRepository : IAdrLinkReadRepository, IAdrsRepos
         this.reader = reader;
     }
 
+    Task<AdrLink?> IAdrLinkReadRepository.GetActiveByIdAsync(Guid id, CancellationToken cancellationToken)
+        => reader.Read<AdrLink>()
+            .ById(id)
+            .NotDeletedAt()
+            .SingleOrDefaultAsync(cancellationToken);
+
     Task<IReadOnlyCollection<AdrLink>> IAdrLinkReadRepository.GetBySourceAdrIdAsync(Guid adrId, CancellationToken cancellationToken)
         => reader.Read<AdrLink>()
             .Where(x => x.SourceAdrId == adrId)

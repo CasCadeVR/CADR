@@ -9,6 +9,11 @@ namespace CADR.Adrs.Repositories.Contracts;
 public interface IAdrLinkReadRepository
 {
     /// <summary>
+    /// Получает активную <see cref="AdrLink"/> по идентификатору
+    /// </summary>
+    Task<AdrLink?> GetActiveByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Получает список всех связей, использующих этот ADR
     /// </summary>
     Task<IReadOnlyCollection<AdrLink>> GetBySourceAdrIdAsync(Guid adrId, CancellationToken cancellationToken);
