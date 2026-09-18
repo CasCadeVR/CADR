@@ -24,25 +24,16 @@ public class AdrMapperProfile : Profile
     /// </summary>
     public AdrMapperProfile()
     {
-        CreateMap<AdrSectionModel, AdrSectionApiModel>(MemberList.Destination)
-             .ForMember(x => x.Hint, opt => opt.Ignore())
-             .ForMember(x => x.Placeholder, opt => opt.Ignore());
+        CreateMap<AdrSectionModel, AdrSectionApiModel>(MemberList.Destination);
 
         CreateMap<AdrModel, AdrApiModel>(MemberList.Destination)
-            .ForMember(x => x.Score, opt => opt.Ignore())
-            .ForMember(x => x.UserVote, opt => opt.Ignore())
-            .ForMember(x => x.FolderPath, opt => opt.Ignore())
             .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections));
 
         CreateMap<AdrFolderModel, AdrFolderApiModel>(MemberList.Destination);
 
-        CreateMap<AdrCommentModel, AdrCommentApiModel>(MemberList.Destination)
-            .ForMember(x => x.AuthorName, opt => opt.Ignore())
-            .ForMember(x => x.AuthorLogin, opt => opt.Ignore());
+        CreateMap<AdrCommentModel, AdrCommentApiModel>(MemberList.Destination);
 
-        CreateMap<AdrLinkModel, AdrLinkApiModel>(MemberList.Destination)
-            .ForMember(x => x.TargetAdrNumber, opt => opt.Ignore())
-            .ForMember(x => x.TargetAdrName, opt => opt.Ignore());
+        CreateMap<AdrLinkModel, AdrLinkApiModel>(MemberList.Destination);
 
         CreateMap<AdrTemplateSectionModel, AdrTemplateSectionApiModel>(MemberList.Destination);
 
@@ -51,6 +42,30 @@ public class AdrMapperProfile : Profile
             .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections));
 
         CreateMap<AdrOrganizationSettingsModel, AdrOrganizationSettingsApiModel>(MemberList.Destination);
+
+        CreateMap<UpdateAdrOrganizationSettingsApiModel, UpdateAdrOrganizationSettingsModel>(MemberList.Destination);
+
+        CreateMap<CreateAdrApiModel, CreateAdrModel>(MemberList.Destination);
+        CreateMap<UpdateAdrApiModel, UpdateAdrModel>(MemberList.Destination);
+        CreateMap<ChangeAdrStatusApiModel, ChangeAdrStatusModel>(MemberList.Destination);
+        CreateMap<WithdrawVoteAdrApiModel, WithdrawVoteAdrModel>(MemberList.Destination);
+        CreateMap<VoteAdrApiModel, VoteAdrModel>(MemberList.Destination);
+
+        CreateMap<AdrSectionApiModel, AdrSectionModel>(MemberList.Destination);
+        CreateMap<AdrFolderApiModel, AdrFolderModel>(MemberList.Destination);
+
+        CreateMap<CreateAdrCommentApiModel, CreateAdrCommentModel>(MemberList.Destination);
+        CreateMap<UpdateAdrCommentApiModel, UpdateAdrCommentModel>(MemberList.Destination);
+
+        CreateMap<CreateAdrFolderApiModel, CreateAdrFolderModel>(MemberList.Destination);
+        CreateMap<UpdateAdrFolderApiModel, UpdateAdrFolderModel>(MemberList.Destination);
+
+        CreateMap<CreateAdrLinkApiModel, CreateAdrLinkModel>(MemberList.Destination);
+
+        CreateMap<CreateAdrTemplateSectionApiModel, CreateAdrTemplateSectionModel>(MemberList.Destination);
+        CreateMap<CreateAdrTemplateApiModel, CreateAdrTemplateModel>(MemberList.Destination);
+        CreateMap<UpdateAdrTemplateApiModel, UpdateAdrTemplateModel>(MemberList.Destination)
+            .ForMember(x => x.IsBuiltIn, opt => opt.MapFrom(x => x.OrganizationId == null));
 
         CreateMap<AdrStatus, Models.Enums.AdrStatusApi>()
             .ConvertUsingEnumMapping(opt => opt.MapByValue());

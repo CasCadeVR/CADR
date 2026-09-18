@@ -18,20 +18,23 @@ namespace CADR.Adrs.Api.Controllers;
 [Authorize]
 [ApiExplorerSettings(GroupName = $"{AdrsConstants.DocPrefix}v1")]
 [Route(AdrsConstants.DefaultControllerRoute)]
-public class OrganizationIntegrationSettingsController : ControllerBase
+public class OrganizationAdrSettingsController : ControllerBase
 {
     private readonly IAdrOrganizationSettingsManager adrOrganizationSettingsManager;
+    private readonly IAdrValidateService validateService;
     private readonly IIdentityProvider identityProvider;
     private readonly IMapper mapper;
 
     /// <summary>
-    /// Инициализирует новый экземпляр <see cref="OrganizationIntegrationSettingsController"/>
+    /// Инициализирует новый экземпляр <see cref="OrganizationAdrSettingsController"/>
     /// </summary>
-    public OrganizationIntegrationSettingsController(IAdrOrganizationSettingsManager adrOrganizationSettingsManager,
+    public OrganizationAdrSettingsController(IAdrOrganizationSettingsManager adrOrganizationSettingsManager,
+        IAdrValidateService validateService,
         IIdentityProvider identityProvider,
         IMapper mapper)
     {
         this.adrOrganizationSettingsManager = adrOrganizationSettingsManager;
+        this.validateService = validateService;
         this.identityProvider = identityProvider;
         this.mapper = mapper;
     }
@@ -43,11 +46,13 @@ public class OrganizationIntegrationSettingsController : ControllerBase
     [ApiOk(typeof(AdrOrganizationSettingsApiModel))]
     [ApiUnauthorized]
     [ApiForbidden]
+    [ApiValidation]
     [ApiBad]
     [SwaggerOperation(OperationId = "AdrOrganizationSettingsSave")]
     public async Task<IActionResult> Save(UpdateAdrOrganizationSettingsApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrOrganizationSettingsModel>(request);
+        await validateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
         var result = await adrOrganizationSettingsManager.UpdateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrOrganizationSettingsApiModel>(result));
@@ -64,6 +69,6 @@ public class OrganizationIntegrationSettingsController : ControllerBase
     public async Task<IActionResult> GetAdrSettingsByOrganizationId(Guid organizationId, CancellationToken cancellationToken)
     {
         var result = await adrOrganizationSettingsManager.GetByOrganizationIdAsync(organizationId, identityProvider.Id, cancellationToken);
-        return Ok(mapper.Map<IEnumerable<AdrOrganizationSettingsApiModel>>(result));
+        return Ok(mapper.Map<AdrOrganizationSettingsApiModel>(result));
     }
 }

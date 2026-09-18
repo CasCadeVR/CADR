@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using CADR.Administrations.Api.Infrastructures;
+using CADR.Adrs.Api.Infrastructures;
 
 namespace CADR.Api.Infrastructures;
 
@@ -14,7 +15,8 @@ static internal class DocumentationExtensions
         applicationBuilder.UseSwagger();
         applicationBuilder.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpointAccount(apiVersionDescriptionProvider);
+            options.SwaggerEndpointAdministrations(apiVersionDescriptionProvider);
+            options.SwaggerEndpointAdrs(apiVersionDescriptionProvider);
             options.RoutePrefix = string.Empty;
             options.EnablePersistAuthorization();
         });

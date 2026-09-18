@@ -21,7 +21,7 @@ internal sealed class AdrExportService : IAdrExportService, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrExportService"/>
     /// </summary>
-    public AdrExportService(IAdrUnitOfWork adrUnitOfWork, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
+    public AdrExportService(IAdrsUnitOfWork adrUnitOfWork, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
     {
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
         adrSectionReadRepository = adrUnitOfWork.AdrSectionReadRepository;

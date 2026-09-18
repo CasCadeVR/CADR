@@ -1035,6 +1035,64 @@ public class AdrManagerTests : CadrContextInMemory
         result.FolderPath.Should().NotBeNull().And.BeEmpty();
     }
 
+    /// <summary>
+    /// Получение списка ADR автора возвращает только ADR указанного автора и заполняет голос запрашивающего
+    /// </summary>
+    [Fact]
+    public async Task GetByAuthorShouldWork()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var author = TestEntityProvider.Shared.Create<User>();
+        await Context.AddAsync(author);
+        await Context.AddRangeAsync(
+            TestEntityProvider.Shared.Create<UserOrganization>(x =>
+            {
+                x.UserId = author.Id;
+                x.OrganizationId = organization.Id;
+                x.Role = Role.User;
+            }));
+        var authorAdr1 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+        var authorAdr2 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+        await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft, asDeleted: true);
+        await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
+        var like = TestEntityProvider.Shared.Create<AdrVote>(x =>
+        {
+            x.AdrId = authorAdr1.Id;
+            x.UserId = user.Id;
+            x.Value = EntityEnums.AdrVoteType.Like;
+        });
+        await Context.AddAsync(like);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await adrManager.GetByAuthorIdAsync(organization.Id, author.Id, user.Id, CancellationToken.None);
+
+        // Assert
+        result.Select(x => x.Id).Should()
+            .NotBeEmpty()
+            .And.BeEquivalentTo(new[] { authorAdr1.Id, authorAdr2.Id });
+        result.First(x => x.Id == authorAdr1.Id).UserVote.Should().Be(ContractEnums.AdrVoteType.Like);
+        result.First(x => x.Id == authorAdr1.Id).Score.Should().Be(1);
+    }
+
+    /// <summary>
+    /// Получение списка ADR автора выдаёт ошибку: запрашивающий не состоит в организации
+    /// </summary>
+    [Fact]
+    public async Task GetByAuthorShouldThrowNotMember()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var adr = await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
+
+        // Act
+        Func<Task> act = () => adrManager.GetByAuthorIdAsync(organization.Id, user.Id, Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrAccessException>();
+    }
+
     private async Task<(Organization organization, User user)> SeedOrganizationUserAsync(Role role)
     {
         var organization = TestEntityProvider.Shared.Create<Organization>();

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Administrations\CADR.Administrations.Api\CADR.Administrations.Api.csproj" />
+    <ProjectReference Include="..\Adrs\CADR.Adrs.Api\CADR.Adrs.Api.csproj" />
     <ProjectReference Include="..\Common\CADR.Common.Core\CADR.Common.Core.csproj" />
     <ProjectReference Include="..\Common\CADR.Common.Mvc\CADR.Common.Mvc.csproj" />
     <ProjectReference Include="..\DataAccess\CADR.Context\CADR.Context.csproj" />

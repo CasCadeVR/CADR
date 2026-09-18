@@ -18,14 +18,14 @@ public static class DocumentationExtensions
     /// Определяет один или несколько документов, которые будут созданы
     /// генератором Swagger для работы с учётными записями
     /// </summary>
-    public static void SwaggerDocAccount(this SwaggerGenOptions swaggerGenOptions,
+    public static void SwaggerDocAdministrations(this SwaggerGenOptions swaggerGenOptions,
         IApiVersionDescriptionProvider provider)
         => swaggerGenOptions.BuildSwaggerDoc(GetBuilderConfiguration(provider)).Build();
 
     /// <summary>
     /// Добавляет swagger json endpoint для работы с учётными записями
     /// </summary>
-    public static void SwaggerEndpointAccount(this SwaggerUIOptions options,
+    public static void SwaggerEndpointAdministrations(this SwaggerUIOptions options,
         IApiVersionDescriptionProvider provider)
         => options.BuildSwaggerEndpoint(GetBuilderConfiguration(provider)).Build();
 

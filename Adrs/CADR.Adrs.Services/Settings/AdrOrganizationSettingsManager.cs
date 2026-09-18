@@ -13,7 +13,7 @@ namespace CADR.Adrs.Services.Settings;
 internal sealed class AdrOrganizationSettingsManager : IAdrOrganizationSettingsManager, IAdrsServiceAnchor
 {
     private const int DefaultLikesRequiredForApproval = 1;
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrOrganizationSettingsReadRepository adrOrganizationSettingsReadRepository;
     private readonly IAdrOrganizationSettingsWriteRepository adrOrganizationSettingsWriteRepository;
     private readonly IUserOrganizationReadRepository userOrganizationReadRepository;
@@ -22,7 +22,7 @@ internal sealed class AdrOrganizationSettingsManager : IAdrOrganizationSettingsM
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrOrganizationSettingsManager"/>
     /// </summary>
-    public AdrOrganizationSettingsManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
+    public AdrOrganizationSettingsManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrOrganizationSettingsReadRepository = adrUnitOfWork.AdrOrganizationSettingsReadRepository;

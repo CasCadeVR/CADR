@@ -1,5 +1,6 @@
 using AutoMapper;
 using CADR.Administrations.Api.DI;
+using CADR.Adrs.Api.DI;
 using CADR.Api.Infrastructures;
 using CADR.Api.Stubs;
 using CADR.Common.Core.Implementations;
@@ -21,6 +22,7 @@ public class ApiModule : Module
         services.AddHttpContextAccessor();
 
         services.RegisterModule<AdministrationModule>();
+        services.RegisterModule<AdrsModule>();
 
         RegisterAutoMapper(services);
         RegisterStubs(services);

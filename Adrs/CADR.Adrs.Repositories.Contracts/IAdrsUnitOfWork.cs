@@ -5,7 +5,7 @@ namespace CADR.Adrs.Repositories.Contracts;
 /// <summary>
 /// <see cref="IUnitOfWork"/> для раздела ADR
 /// </summary>
-public interface IAdrUnitOfWork : IUnitOfWork
+public interface IAdrsUnitOfWork : IUnitOfWork
 {
     /// <inheritdoc cref="IAdrCommentReadRepository"/>
     IAdrCommentReadRepository AdrCommentReadRepository { get; }

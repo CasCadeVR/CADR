@@ -5,6 +5,7 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using CADR.Administrations.Api.Controllers;
 using CADR.Administrations.Api.Infrastructures;
+using CADR.Adrs.Api.Infrastructures;
 using CADR.Api.DI;
 using CADR.Api.Infrastructures;
 using CADR.Common.Mvc.Extensions;
@@ -36,6 +37,7 @@ var controllers = builder.Services.AddControllers(config =>
     config.Filters.Add<ApiExceptionFilter>();
     config.Filters.Add<AdministrationExceptionFilter>();
     config.Filters.Add<CryptographicExceptionFilter>();
+    config.Filters.Add<AdrsExceptionFilter>();
 })
     .AddNewtonsoftJson(options => options.SerializerSettings.Converters.Add(new StringEnumConverter()))
     .AddApplicationPart(accountAssembly);

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Asp.Versioning.ApiExplorer;
+using CADR.Adrs.Api.Controllers;
 using CADR.Adrs.Api.Resources;
 using CADR.Common.Mvc.Extensions;
 using CADR.Common.Mvc.Models;
@@ -17,14 +18,14 @@ public static class DocumentationExtensions
     /// Определяет один или несколько документов, которые будут созданы
     /// генератором Swagger для работы с ADR
     /// </summary>
-    public static void SwaggerDocAccount(this SwaggerGenOptions swaggerGenOptions,
+    public static void SwaggerDocAdrs(this SwaggerGenOptions swaggerGenOptions,
         IApiVersionDescriptionProvider provider)
         => swaggerGenOptions.BuildSwaggerDoc(GetBuilderConfiguration(provider)).Build();
 
     /// <summary>
     /// Добавляет swagger json endpoint для работы с ADR
     /// </summary>
-    public static void SwaggerEndpointAccount(this SwaggerUIOptions options,
+    public static void SwaggerEndpointAdrs(this SwaggerUIOptions options,
         IApiVersionDescriptionProvider provider)
         => options.BuildSwaggerEndpoint(GetBuilderConfiguration(provider)).Build();
 
@@ -32,7 +33,7 @@ public static class DocumentationExtensions
         => new()
         {
             ApiVersionDescriptionProvider = provider,
-            TargetAssembly = Assembly.GetAssembly(typeof(AccountController)),
+            TargetAssembly = Assembly.GetAssembly(typeof(AdrController)),
             DocName = AdrsConstants.DocName,
             DocPrefix = AdrsConstants.DocPrefix,
             Description = "API по работе с ADR",
