@@ -42,6 +42,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("a6503c25-bb02-4b3b-82b4-abe7576c2581"),
                 Title = contextSection.Title,
                 Hint = contextSection.Hint,
                 Placeholder = contextSection.Placeholder,
@@ -55,6 +56,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("0f1f1d4a-4898-4ee0-8ff2-ae34ab95ea6c"),
                 Title = solutionSection.Title,
                 Hint = solutionSection.Hint,
                 Placeholder = solutionSection.Placeholder,
@@ -68,6 +70,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("c9cbb06f-d455-4ef9-8435-8832fcbb66fd"),
                 Title = consequencesSection.Title,
                 Hint = consequencesSection.Hint,
                 Placeholder = consequencesSection.Placeholder,
@@ -83,6 +86,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("68d5fdba-fe6d-451c-bd18-bc64b3a180cf"),
                 Title = contextSection.Title,
                 Hint = contextSection.Hint,
                 Placeholder = contextSection.Placeholder,
@@ -96,6 +100,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("4b1e7519-e638-4d05-bec8-78342634e730"),
                 Title = solutionSection.Title,
                 Hint = solutionSection.Hint,
                 Placeholder = solutionSection.Placeholder,
@@ -109,6 +114,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("ee962af1-c86b-45fe-ab22-4a8110a160f5"),
                 Title = consequencesSection.Title,
                 Hint = consequencesSection.Hint,
                 Placeholder = consequencesSection.Placeholder,
@@ -122,6 +128,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("d5b7e4b1-7032-4ce5-993a-2e8da86c5709"),
                 Title = "Соблюдение требований",
                 Hint = "Как я обеспечу соблюдение этого решения?",
                 Placeholder = "Чтобы убедиться, что решение «{название решения}» соблюдается на практике, мы будем" +
@@ -141,6 +148,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("500bf9b4-349b-490e-a475-49ba1da3bdc9"),
                 Title = "Плюсы и минусы вариантов",
                 Hint = "Перечислите все рассмотренные варианты",
                 Placeholder = "{название варианта 1}\r\n{пример | описание | ссылка на дополнительную информацию | …}" +
@@ -157,6 +165,7 @@ public class AdrTemplateSectionSeeder : IEntityTypeConfiguration<AdrTemplateSect
 
             new AdrTemplateSection()
             {
+                Id = Guid.Parse("ec56b0ef-3a7d-44b0-a2ca-0b74e2f1023e"),
                 Title = "Дополнительная информация",
                 Hint = "Укажите всё, что усиливает доверие к решению и помогает в дальнейшем",
                 Placeholder = "{дополнительные доказательства или обоснование уверенности в принятом решении, например: результаты расчётов | прототип | обратная связь {от кого} | …}" +
