@@ -1,4 +1,4 @@
-﻿namespace CADR.Adrs.Entities.Configurations;
+﻿namespace CADR.Adrs.Entities.Configurations.Configurations;
 
 /// <summary>
 /// Якорный класс для сканирования сборки

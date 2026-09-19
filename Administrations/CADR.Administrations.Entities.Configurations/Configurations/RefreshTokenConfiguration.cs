@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CADR.Administrations.Entities.Configurations;
+namespace CADR.Administrations.Entities.Configurations.Configurations;
 
 /// <summary>
 /// Конфигурация <see cref="RefreshToken"/>

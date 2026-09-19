@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CADR.Adrs.Entities.Configurations;
+namespace CADR.Adrs.Entities.Configurations.Configurations;
 
 /// <summary>Конфигурация <see cref="AdrSection"/></summary>
 public class AdrSectionConfiguration : IEntityTypeConfiguration<AdrSection>

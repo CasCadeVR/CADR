@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CADR.Adrs.Entities.Configurations;
+namespace CADR.Adrs.Entities.Configurations.Configurations;
 
 /// <summary>Конфигурация <see cref="AdrVote"/></summary>
 public class AdrVoteConfiguration : IEntityTypeConfiguration<AdrVote>

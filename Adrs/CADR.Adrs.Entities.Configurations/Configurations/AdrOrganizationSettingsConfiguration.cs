@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CADR.Adrs.Entities.Configurations;
+namespace CADR.Adrs.Entities.Configurations.Configurations;
 
 /// <summary>Конфигурация <see cref="AdrOrganizationSettings"/></summary>
 public class AdrOrganizationSettingsConfiguration : IEntityTypeConfiguration<AdrOrganizationSettings>

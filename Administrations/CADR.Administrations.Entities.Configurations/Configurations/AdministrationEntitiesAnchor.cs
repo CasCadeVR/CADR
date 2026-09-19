@@ -1,4 +1,4 @@
-﻿namespace CADR.Administrations.Entities.Configurations;
+﻿namespace CADR.Administrations.Entities.Configurations.Configurations;
 
 /// <summary>
 /// Якорный класс для сканирования сборки
