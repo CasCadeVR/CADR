@@ -21,7 +21,7 @@ using ContractEnums = Contracts.Models.Enums;
 internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
 {
     private const int DefaultLikesRequiredForApproval = 1;
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrReadRepository adrReadRepository;
     private readonly IAdrWriteRepository adrWriteRepository;
     private readonly IAdrSectionReadRepository adrSectionReadRepository;
@@ -39,7 +39,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrManager"/>
     /// </summary>
-    public AdrManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
+    public AdrManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
@@ -145,11 +145,11 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         return await MapListAsync(adrs, userId, cancellationToken);
     }
 
-    async Task<IEnumerable<AdrModel>> IAdrManager.GetByAuthorIdAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken)
+    async Task<IEnumerable<AdrModel>> IAdrManager.GetByAuthorIdAsync(Guid organizationId, Guid authorId, Guid requesterId, CancellationToken cancellationToken)
     {
-        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(userId, organizationId, cancellationToken);
-        var adrs = await adrReadRepository.GetByAuthorIdAsync(organizationId, userId, cancellationToken);
-        return await MapListAsync(adrs, userId, cancellationToken);
+        await userOrganizationReadRepository.ThrowIfNotMemberAsync<AdrAccessException>(requesterId, organizationId, cancellationToken);
+        var adrs = await adrReadRepository.GetByAuthorIdAsync(organizationId, authorId, cancellationToken);
+        return await MapListAsync(adrs, requesterId, cancellationToken);
     }
 
     async Task<IEnumerable<AdrModel>> IAdrManager.GetRecentAsync(Guid organizationId, Guid userId, int maxCount, CancellationToken cancellationToken)

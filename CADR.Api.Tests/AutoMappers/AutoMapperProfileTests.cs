@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.Extensions.EnumMapping;
 using CADR.Administrations.Api.AutoMappers;
+using CADR.Adrs.Api.AutoMappers;
 using Xunit;
 
 namespace CADR.Api.Tests.AutoMappers;
@@ -21,6 +22,7 @@ public class AutoMapperProfileTests
         {
             opts.EnableEnumMappingValidation();
             opts.AddProfile<AdministrationMapperProfile>();
+            opts.AddProfile<AdrMapperProfile>();
         });
 
         mapper = config.CreateMapper();

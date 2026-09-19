@@ -14,7 +14,7 @@ namespace CADR.Adrs.Services.Links;
 /// <inheritdoc cref="IAdrLinkManager"/>
 internal sealed class AdrLinkManager : IAdrLinkManager, IAdrsServiceAnchor
 {
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrReadRepository adrReadRepository;
     private readonly IAdrLinkReadRepository adrLinkReadRepository;
     private readonly IAdrLinkWriteRepository adrLinkWriteRepository;
@@ -24,7 +24,7 @@ internal sealed class AdrLinkManager : IAdrLinkManager, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrLinkManager"/>
     /// </summary>
-    public AdrLinkManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
+    public AdrLinkManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;

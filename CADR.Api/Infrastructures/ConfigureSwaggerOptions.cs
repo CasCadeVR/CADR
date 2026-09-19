@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using CADR.Administrations.Api.Infrastructures;
+using CADR.Adrs.Api.Infrastructures;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -13,7 +14,7 @@ public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
     private readonly IApiVersionDescriptionProvider provider;
 
     /// <summary>
-    /// Инициализирует новый эеземпляр <see cref="ConfigureSwaggerOptions"/>
+    /// Инициализирует новый экземпляр <see cref="ConfigureSwaggerOptions"/>
     /// </summary>
     public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider)
     {
@@ -25,7 +26,8 @@ public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
     /// </summary>
     public void Configure(SwaggerGenOptions options)
     {
-        options.SwaggerDocAccount(provider);
+        options.SwaggerDocAdministrations(provider);
+        options.SwaggerDocAdrs(provider);
     }
 
     /// <summary>

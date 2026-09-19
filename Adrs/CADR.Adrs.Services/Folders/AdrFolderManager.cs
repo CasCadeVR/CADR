@@ -14,7 +14,7 @@ namespace CADR.Adrs.Services.Folders;
 /// <inheritdoc cref="IAdrFolderManager"/>
 internal sealed class AdrFolderManager : IAdrFolderManager, IAdrsServiceAnchor
 {
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrReadRepository adrReadRepository;
     private readonly IAdrWriteRepository adrWriteRepository;
     private readonly IAdrFolderReadRepository adrFolderReadRepository;
@@ -25,7 +25,7 @@ internal sealed class AdrFolderManager : IAdrFolderManager, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrFolderManager"/>
     /// </summary>
-    public AdrFolderManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
+    public AdrFolderManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
