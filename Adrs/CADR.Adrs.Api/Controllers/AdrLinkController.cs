@@ -67,8 +67,8 @@ public class AdrLinkController : ControllerBase
     public async Task<IActionResult> Create(CreateAdrLinkApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<CreateAdrLinkModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrLinkManager.CreateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrLinkApiModel>(result));
     }

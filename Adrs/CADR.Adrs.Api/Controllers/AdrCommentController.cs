@@ -66,8 +66,8 @@ public class AdrCommentController : ControllerBase
     public async Task<IActionResult> Create(CreateAdrCommentApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<CreateAdrCommentModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrCommentManager.CreateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrCommentApiModel>(result));
     }
@@ -85,8 +85,8 @@ public class AdrCommentController : ControllerBase
     public async Task<IActionResult> Update(UpdateAdrCommentApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrCommentModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrCommentManager.UpdateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrCommentApiModel>(result));
     }

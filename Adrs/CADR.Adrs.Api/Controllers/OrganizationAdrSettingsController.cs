@@ -52,8 +52,8 @@ public class OrganizationAdrSettingsController : ControllerBase
     public async Task<IActionResult> Save(UpdateAdrOrganizationSettingsApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrOrganizationSettingsModel>(request);
-        await validateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await validateService.ValidateAsync(model, cancellationToken);
         var result = await adrOrganizationSettingsManager.UpdateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrOrganizationSettingsApiModel>(result));
     }

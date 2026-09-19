@@ -92,8 +92,8 @@ public class AdrController : ControllerBase
     public async Task<IActionResult> Update(UpdateAdrApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrManager.UpdateAdrAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrApiModel>(result));
     }

@@ -81,8 +81,8 @@ public class AdrTemplateController : ControllerBase
     public async Task<IActionResult> Create(CreateAdrTemplateApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<CreateAdrTemplateModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrTemplateManager.CreateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrTemplateApiModel>(result));
     }
@@ -101,8 +101,8 @@ public class AdrTemplateController : ControllerBase
     public async Task<IActionResult> Update(UpdateAdrTemplateApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrTemplateModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrTemplateManager.UpdateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrTemplateApiModel>(result));
     }

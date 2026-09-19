@@ -95,8 +95,8 @@ public class AdrFolderController : ControllerBase
     public async Task<IActionResult> Create(CreateAdrFolderApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<CreateAdrFolderModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrFolderManager.CreateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrFolderApiModel>(result));
     }
@@ -115,8 +115,8 @@ public class AdrFolderController : ControllerBase
     public async Task<IActionResult> Update(UpdateAdrFolderApiModel request, CancellationToken cancellationToken)
     {
         var model = mapper.Map<UpdateAdrFolderModel>(request);
-        await adrValidateService.ValidateAsync(model, cancellationToken);
         model.UserId = identityProvider.Id;
+        await adrValidateService.ValidateAsync(model, cancellationToken);
         var result = await adrFolderManager.UpdateAsync(model, cancellationToken);
         return Ok(mapper.Map<AdrFolderApiModel>(result));
     }
