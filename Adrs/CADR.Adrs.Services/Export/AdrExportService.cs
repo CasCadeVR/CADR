@@ -63,9 +63,11 @@ internal sealed class AdrExportService : IAdrExportService, IAdrsServiceAnchor
         builder.AppendLine($"**Статус:** {adr.Status}");
         if (author != null)
         {
+            builder.AppendLine();
             builder.AppendLine($"**Автор:** {author.Name}");
         }
 
+        builder.AppendLine();
         builder.AppendLine($"**Дата создания:** {adr.CreatedAt.UtcDateTime:d}");
         foreach (var section in sections.OrderBy(x => x.Position))
         {

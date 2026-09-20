@@ -104,6 +104,9 @@ public class AdrControllerTests
                 new() { Position = 1, Title = $"Section1{Guid.NewGuid():N}", Content = $"Content1{Guid.NewGuid():N}" },
                 new() { Position = 2, Title = $"Section2{Guid.NewGuid():N}", Content = $"Content2{Guid.NewGuid():N}" },
             },
+            AuthorId = created.AuthorId,
+            AuthorLogin = created.AuthorLogin,
+            AuthorName = created.AuthorName,
         };
 
         // Act
@@ -172,7 +175,7 @@ public class AdrControllerTests
             .Excluding(x => x.Id)
             .Excluding(x => x.TemplateId)
             .WithStrictOrdering());
-        createResult.Sections.Should().OnlyContain(x => x.Content == null);
+        createResult.Sections.Should().OnlyContain(x => x.Content == string.Empty);
         getResult.Sections.Should().BeEquivalentTo(template.Sections, options => options
             .Excluding(x => x.Id)
             .Excluding(x => x.TemplateId)

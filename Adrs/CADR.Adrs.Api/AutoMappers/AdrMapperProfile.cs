@@ -35,7 +35,8 @@ public class AdrMapperProfile : Profile
 
         CreateMap<AdrLinkModel, AdrLinkApiModel>(MemberList.Destination);
 
-        CreateMap<AdrTemplateSectionModel, AdrTemplateSectionApiModel>(MemberList.Destination);
+        CreateMap<AdrTemplateSectionModel, AdrTemplateSectionApiModel>(MemberList.Destination)
+            .ReverseMap();
 
         CreateMap<AdrTemplateModel, AdrTemplateApiModel>(MemberList.Destination)
             .ForMember(x => x.IsBuiltIn, opt => opt.MapFrom(x => x.OrganizationId == null))
@@ -65,6 +66,7 @@ public class AdrMapperProfile : Profile
         CreateMap<CreateAdrTemplateSectionApiModel, CreateAdrTemplateSectionModel>(MemberList.Destination);
         CreateMap<CreateAdrTemplateApiModel, CreateAdrTemplateModel>(MemberList.Destination);
         CreateMap<UpdateAdrTemplateApiModel, UpdateAdrTemplateModel>(MemberList.Destination)
+            .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections))
             .ForMember(x => x.IsBuiltIn, opt => opt.MapFrom(x => x.OrganizationId == null));
 
         CreateMap<AdrStatus, Models.Enums.AdrStatusApi>()

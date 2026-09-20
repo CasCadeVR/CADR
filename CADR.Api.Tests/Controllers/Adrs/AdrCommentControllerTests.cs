@@ -67,6 +67,9 @@ public class AdrCommentControllerTests
             Id = comment.Id,
             Text = $"NewText{Guid.NewGuid():N}",
             AdrId = adr.Id,
+            AuthorId = comment.AuthorId,
+            AuthorName = comment.AuthorName,
+            AuthorLogin = comment.AuthorLogin,
         };
 
         // Act
