@@ -12,6 +12,7 @@
     <Project Path="Administrations/CADR.Administrations.Services/CADR.Administrations.Services.csproj" Id="ffc714a7-b640-47b1-a159-e3892665451d" />
   </Folder>
   <Folder Name="/Adrs/">
+    <Project Path="Adrs/CADR.Adrs.Api/CADR.Adrs.Api.csproj" Id="1b9efa74-1d70-416e-9f99-8d11c8ef23d7" />
     <Project Path="Adrs/CADR.Adrs.Entities.Configurations/CADR.Adrs.Entities.Configurations.csproj" Id="fafcdef4-e898-4c07-a67c-4d0390be0ce2" />
     <Project Path="Adrs/CADR.Adrs.Entities/CADR.Adrs.Entities.csproj" Id="fbba446b-9c1f-4f66-b6a1-b0a29a152af3" />
     <Project Path="Adrs/CADR.Adrs.Repositories.Contracts/CADR.Adrs.Repositories.Contracts.csproj" Id="91b66226-493c-4352-b73a-bca5fd99a7f0" />

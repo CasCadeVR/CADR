@@ -14,7 +14,7 @@ namespace CADR.Adrs.Services.Templates;
 /// <inheritdoc cref="IAdrTemplateManager"/>
 internal sealed class AdrTemplateManager : IAdrTemplateManager, IAdrsServiceAnchor
 {
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrTemplateReadRepository adrTemplateReadRepository;
     private readonly IAdrTemplateWriteRepository adrTemplateWriteRepository;
     private readonly IAdrTemplateSectionReadRepository adrTemplateSectionReadRepository;
@@ -25,7 +25,7 @@ internal sealed class AdrTemplateManager : IAdrTemplateManager, IAdrsServiceAnch
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrTemplateManager"/>
     /// </summary>
-    public AdrTemplateManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
+    public AdrTemplateManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrTemplateReadRepository = adrUnitOfWork.AdrTemplateReadRepository;

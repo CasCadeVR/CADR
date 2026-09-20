@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using CADR.Administrations.Entities.Configurations;
-using CADR.Adrs.Entities.Configurations;
+using CADR.Administrations.Entities.Configurations.Configurations;
+using CADR.Adrs.Entities.Configurations.Configurations;
 using CADR.Context.Contracts;
 using CADR.Context.Extensions;
 using Microsoft.EntityFrameworkCore;

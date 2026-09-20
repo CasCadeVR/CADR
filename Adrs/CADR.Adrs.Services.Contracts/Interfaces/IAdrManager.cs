@@ -31,7 +31,7 @@ public interface IAdrManager
     /// <summary>
     /// Получает список ADR автора в организации
     /// </summary>
-    Task<IEnumerable<AdrModel>> GetByAuthorIdAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
+    Task<IEnumerable<AdrModel>> GetByAuthorIdAsync(Guid organizationId, Guid authorId, Guid requesterId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Получает список недавно добавленных или обновлённых ADR организации

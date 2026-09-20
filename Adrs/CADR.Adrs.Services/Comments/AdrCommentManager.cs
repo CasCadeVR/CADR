@@ -13,7 +13,7 @@ namespace CADR.Adrs.Services.Comments;
 /// <inheritdoc cref="IAdrCommentManager"/>
 internal sealed class AdrCommentManager : IAdrCommentManager, IAdrsServiceAnchor
 {
-    private readonly IAdrUnitOfWork unitOfWork;
+    private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrReadRepository adrReadRepository;
     private readonly IAdrCommentReadRepository adrCommentReadRepository;
     private readonly IAdrCommentWriteRepository adrCommentWriteRepository;
@@ -24,7 +24,7 @@ internal sealed class AdrCommentManager : IAdrCommentManager, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrCommentManager"/>
     /// </summary>
-    public AdrCommentManager(IAdrUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
+    public AdrCommentManager(IAdrsUnitOfWork adrUnitOfWork, IMapper mapper, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
     {
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;

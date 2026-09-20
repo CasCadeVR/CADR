@@ -15,7 +15,7 @@ public class TestUnitOfWork
     /// <summary>
     /// UoF из Adrs
     /// </summary>
-    public IAdrUnitOfWork AdrUnitOfWork { get; }
+    public IAdrsUnitOfWork AdrUnitOfWork { get; }
 
     /// <summary>
     /// Репозиторий на чтение <see cref="CADR.Administrations.Entities.UserOrganization"/>
@@ -32,7 +32,7 @@ public class TestUnitOfWork
     /// </summary>
     public TestUnitOfWork(IDbWriterContext writerContext, IReader reader, IUnitOfWork unitOfWork)
     {
-        var adrUnitOfWorkMock = new Mock<IAdrUnitOfWork>();
+        var adrUnitOfWorkMock = new Mock<IAdrsUnitOfWork>();
         adrUnitOfWorkMock.Setup(x => x.AdrCommentReadRepository).Returns(new AdrCommentReadRepository(reader));
         adrUnitOfWorkMock.Setup(x => x.AdrCommentWriteRepository).Returns(new AdrCommentWriteRepository(writerContext));
         adrUnitOfWorkMock.Setup(x => x.AdrFolderReadRepository).Returns(new AdrFolderReadRepository(reader));

@@ -21,7 +21,7 @@ internal sealed class AdrExportService : IAdrExportService, IAdrsServiceAnchor
     /// <summary>
     /// Инициализирует новый экземпляр <see cref="AdrExportService"/>
     /// </summary>
-    public AdrExportService(IAdrUnitOfWork adrUnitOfWork, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
+    public AdrExportService(IAdrsUnitOfWork adrUnitOfWork, IUserOrganizationReadRepository userOrganizationReadRepository, IUserReadRepository userReadRepository)
     {
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
         adrSectionReadRepository = adrUnitOfWork.AdrSectionReadRepository;
@@ -63,9 +63,11 @@ internal sealed class AdrExportService : IAdrExportService, IAdrsServiceAnchor
         builder.AppendLine($"**Статус:** {adr.Status}");
         if (author != null)
         {
+            builder.AppendLine();
             builder.AppendLine($"**Автор:** {author.Name}");
         }
 
+        builder.AppendLine();
         builder.AppendLine($"**Дата создания:** {adr.CreatedAt.UtcDateTime:d}");
         foreach (var section in sections.OrderBy(x => x.Position))
         {
