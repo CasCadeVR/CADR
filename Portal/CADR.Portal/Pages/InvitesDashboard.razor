@@ -1,4 +1,4 @@
-﻿@attribute [Route(Routes.Dashboard)]
+﻿@attribute [Route(Routes.InvitesDashboard)]
 
 @using CADR.Api.Client
 @using CADR.Portal.Contracts.Interfaces
@@ -42,6 +42,7 @@
 @code {
 	private readonly CancellationTokenSource cancellationTokenSource = new();
 	private IReadOnlyCollection<InviteForUserApiResponse>? invites;
+	private ReadOnlyCollection<OrganizationApiModel>? organizations;
 	private bool isLoaded = false;
 	private bool hasOrganizations;
 
@@ -51,7 +52,7 @@
 		await LoadItemsAsync();
 		if (invites?.FirstOrDefault() is null)
 		{
-			//await TryRedirectToTeamDashboard();
+			await TryRedirectToOrganizationDashboard();
 		}
 		await base.OnInitializedAsync();
 	}
@@ -62,10 +63,20 @@
 		StateHasChanged();
 		var invitesCollection = await ApiClient.InviteGetByUserIdAsync(cancellationTokenSource.Token);
 		invites = new ReadOnlyCollection<InviteForUserApiResponse>(invitesCollection.ToList());
-		var organizations = await ApiClient.OrganizationGetAsync(cancellationTokenSource.Token);
+		var organizationsCollection = await ApiClient.OrganizationGetAsync(cancellationTokenSource.Token);
+		organizations = new ReadOnlyCollection<OrganizationApiModel>(organizationsCollection.ToList());
 		hasOrganizations = organizations.Count != 0;
 		isLoaded = true;
 		StateHasChanged();
+	}
+
+	private async Task TryRedirectToOrganizationDashboard()
+	{
+		if (organizations?.Count != 0)
+		{
+			var organizationId = organizations!.Count > 0 ? organizations[0].Id : organizations[0].Id;
+			NavigationManager.NavigateTo(string.Format(Routes.Administration.Organization.DashboardFormat, organizationId));
+		}
 	}
 
 	/// <inheritdoc />

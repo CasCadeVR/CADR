@@ -1,4 +1,6 @@
-﻿namespace CADR.Administrations.Services.Contracts.Models.Organizations;
+﻿using CADR.Administrations.Services.Contracts.Models.Enums;
+
+namespace CADR.Administrations.Services.Contracts.Models.Organizations;
 
 /// <summary>
 /// Модель организации
@@ -21,8 +23,7 @@ public class OrganizationModel
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Флаг, указывающий, является ли пользователь, запрашиваемый организацию
-    /// её администратором
+    /// Роль запрашивающего пользователя
     /// </summary>
-    public bool UserIsAdmin { get; set; }
+    public UserRole RequestingUserRole { get; set; }
 }

@@ -1,0 +1,42 @@
+﻿@attribute [Route(Routes.Administration.Organization.Dashboard)]
+
+@using CADR.Portal.Contracts.Interfaces
+@using AutoMapper
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
+@inject IMapper Mapper
+
+<PageTitle>Пользователи организации</PageTitle>
+@if (isLoaded)
+{
+	<Header>@currentOrganization?.Name</Header>
+}
+
+@code {
+	private bool isLoaded;
+	private OrganizationApiModel? currentOrganization;
+
+    /// <summary>
+    /// Идентификатор организации
+    /// </summary>
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+		isLoaded = true;
+		StateHasChanged();
+	}
+}

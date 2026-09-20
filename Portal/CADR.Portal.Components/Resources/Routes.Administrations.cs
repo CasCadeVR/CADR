@@ -56,6 +56,16 @@ public static partial class Routes
             /// Список приглашений организации
             /// </summary>
             public const string Invites = $"{Prefix}/{{0}}/invites";
+
+            /// <summary>
+            /// Главная страница организации
+            /// </summary>
+            public const string Dashboard = $"{Prefix}/{{organizationId:guid}}/dashboard";
+
+            /// <summary>
+            /// Главная страница организации. Константа для форматирования
+            /// </summary>
+            public const string DashboardFormat = $"{Prefix}/{{0}}/dashboard";
         }
     }
 }

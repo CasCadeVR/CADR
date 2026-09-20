@@ -71,7 +71,7 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
         var result = mapper.Map<IEnumerable<OrganizationModel>>(items).ToReadOnlyCollection();
         foreach (var organizationModel in result)
         {
-            organizationModel.UserIsAdmin = userOrganizationRoles[organizationModel.Id] == Role.Admin;
+            organizationModel.RequestingUserRole = mapper.Map<UserRole>(userOrganizationRoles[organizationModel.Id]);
         }
 
         return result;
@@ -84,7 +84,7 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
         var userOrganization = await userOrganizationReadRepository.GetByUserAndOrganizationIdAsync(userId, id, cancellationToken);
 
         var result = mapper.Map<OrganizationModel>(item);
-        result.UserIsAdmin = userOrganization!.Role == Role.Admin;
+        result.RequestingUserRole = mapper.Map<UserRole>(userOrganization!.Role);
 
         return result;
     }

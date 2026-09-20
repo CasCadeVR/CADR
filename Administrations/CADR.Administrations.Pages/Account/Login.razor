@@ -84,7 +84,7 @@
 
     private void NavigateTo()
         => NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl)
-            ? Routes.Dashboard
+            ? Routes.InvitesDashboard
             : ReturnUrl);
 
     /// <inheritdoc />

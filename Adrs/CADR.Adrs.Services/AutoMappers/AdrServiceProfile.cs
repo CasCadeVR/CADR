@@ -26,6 +26,8 @@ public class AdrServiceProfile : Profile
             .ForMember(x => x.Score, opt => opt.Ignore())
             .ForMember(x => x.UserVote, opt => opt.Ignore())
             .ForMember(x => x.FolderPath, opt => opt.Ignore())
+            .ForMember(x => x.CreatedAt, opt => opt.MapFrom(x => x.CreatedAt.UtcDateTime))
+            .ForMember(x => x.UpdatedAt, opt => opt.MapFrom(x => x.UpdatedAt.UtcDateTime))
             .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections));
 
         CreateMap<Entities.AdrFolder, AdrFolderModel>(MemberList.Destination);

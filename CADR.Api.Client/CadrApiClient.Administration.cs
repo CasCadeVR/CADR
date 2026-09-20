@@ -2744,8 +2744,9 @@ namespace CADR.Api.Client
         /// <summary>
         /// Роли пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
         /// <br/>&lt;ul&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и создание ADR&lt;/li&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;1 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
         /// <br/>&lt;/ul&gt;
         /// <br/>
         /// </summary>
@@ -2789,8 +2790,9 @@ namespace CADR.Api.Client
         /// <summary>
         /// Роли пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
         /// <br/>&lt;ul&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и создание ADR&lt;/li&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;1 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
         /// <br/>&lt;/ul&gt;
         /// <br/>
         /// </summary>
@@ -2828,8 +2830,9 @@ namespace CADR.Api.Client
         /// <summary>
         /// Роли пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
         /// <br/>&lt;ul&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и создание ADR&lt;/li&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;1 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
         /// <br/>&lt;/ul&gt;
         /// <br/>
         /// </summary>
@@ -2898,11 +2901,17 @@ namespace CADR.Api.Client
         public string Description { get; set; }
 
         /// <summary>
-        /// Флаг, указывающий, является ли пользователь, запрашиваемый организацию
-        /// <br/>её администратором
+        /// Роль запрашивающего пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
+        /// <br/>&lt;ul&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+        /// <br/>&lt;/ul&gt;
+        /// <br/>
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("userIsAdmin")]
-        public bool UserIsAdmin { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("requestingUserRole")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserRoleApi>))]
+        public UserRoleApi RequestingUserRole { get; set; }
 
     }
 
@@ -2952,8 +2961,9 @@ namespace CADR.Api.Client
         /// <summary>
         /// Роли пользователя&lt;p&gt;Возможные значения:&lt;/p&gt;
         /// <br/>&lt;ul&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и создание ADR&lt;/li&gt;
-        /// <br/>&lt;li&gt;&lt;b&gt;1 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;0 - User&lt;/b&gt;: Просмотр и комментирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;1 - Architect&lt;/b&gt;: Создание и редактирование ADR&lt;/li&gt;
+        /// <br/>&lt;li&gt;&lt;b&gt;2 - Admin&lt;/b&gt;: Учётные записи, организации&lt;/li&gt;
         /// <br/>&lt;/ul&gt;
         /// <br/>
         /// </summary>

@@ -1,12 +1,13 @@
-﻿using CADR.Adrs.Api.Models.Enums;
-using CADR.Adrs.Api.Models.Folders;
+﻿using CADR.Adrs.Pages.Models.Adrs.Adrs;
+using CADR.Adrs.Pages.Models.Adrs.Enums;
+using CADR.Adrs.Pages.Models.Adrs.Folders;
 
-namespace CADR.Adrs.Api.Models.Adrs;
+namespace CADR.Adrs.Pages.Models.Adrs;
 
 /// <summary>
-/// API Модель ADR
+/// Модель ADR
 /// </summary>
-public class AdrApiModel
+public class AdrModel
 {
     /// <summary>
     /// Идентификатор
@@ -26,7 +27,7 @@ public class AdrApiModel
     /// <summary>
     /// Статус ADR
     /// </summary>
-    public AdrStatusApi Status { get; set; }
+    public AdrStatus Status { get; set; }
 
     /// <summary>
     /// Текущий авторитет ADR
@@ -64,7 +65,7 @@ public class AdrApiModel
     /// <remarks>
     /// Заполняется только в ответах на чтение одного ADR; пустая коллекция - ADR находится в корне
     /// </remarks>
-    public IReadOnlyCollection<AdrFolderApiModel>? FolderPath { get; set; }
+    public IReadOnlyCollection<AdrFolderModel>? FolderPath { get; set; }
 
     /// <summary>
     /// Идентификатор шаблона, по которому построен ADR
@@ -74,20 +75,10 @@ public class AdrApiModel
     /// <summary>
     /// Голос запрашивающего пользователя
     /// </summary>
-    public AdrVoteTypeApi? UserVote { get; set; }
+    public AdrVoteType? UserVote { get; set; }
 
     /// <summary>
     /// Разделы ADR
     /// </summary>
-    public IReadOnlyCollection<AdrSectionApiModel> Sections { get; set; } = [];
-
-    /// <summary>
-    /// Дата создания
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Дата последнего обновления
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
+    public IReadOnlyCollection<AdrSectionModel> Sections { get; set; } = [];
 }

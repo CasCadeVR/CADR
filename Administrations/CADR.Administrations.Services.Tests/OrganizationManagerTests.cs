@@ -105,9 +105,9 @@ public class OrganizationManagerTests : CadrContextInMemory
             .NotBeEmpty()
             .And.HaveCount(2)
             .And.ContainSingle(x => x.Id == organization1.Id &&
-                                    x.UserIsAdmin)
+                                    x.RequestingUserRole == UserRole.Admin)
             .And.ContainSingle(x => x.Id == organization4.Id &&
-                                    !x.UserIsAdmin);
+                                    x.RequestingUserRole != UserRole.Admin);
     }
 
     /// <summary>
