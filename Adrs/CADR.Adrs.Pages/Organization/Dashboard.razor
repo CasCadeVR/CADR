@@ -1,42 +1,105 @@
 ﻿@attribute [Route(Routes.Administration.Organization.Dashboard)]
 
+@using CADR.Adrs.Pages.Adrs
 @using CADR.Portal.Contracts.Interfaces
 @using AutoMapper
+@using System.Collections.ObjectModel
 
 @inherits DisposableComponentBase
 @inject IPortalCadrApiClient ApiClient
 @inject IPortalIdentity PortalIdentity
 @inject IMapper Mapper
 
-<PageTitle>Пользователи организации</PageTitle>
+<PageTitle>@currentOrganization?.Name</PageTitle>
 @if (isLoaded)
 {
-	<Header>@currentOrganization?.Name</Header>
+	<Container Size="Containers.Default" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+		<Column FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+
+			<Row FlexContentJustify="FlexJustify.End"
+				FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+				<Header Level="1">@currentOrganization?.Name</Header>
+
+				<Button AsLink="true"
+						Url="@(Routes.Adrs.Organization.AdrForm)">
+					<Icon IconType=IconTypes.Plus></Icon> Создать ADR
+				</Button>
+
+				<Button AsLink="true"
+					Url="@(Routes.Adrs.Organization.Root)">
+					<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
+				</Button>
+			</Row>
+
+			@if (recentAdrs?.Count != 0)
+			{
+				<Column>
+					<Container Margin="0 0 0 3">
+						<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
+									RoundedSize="RoundedSizes.Rounded3" Border="1">
+							<Header Level="5">Последние изменения ADR</Header>
+						</Container>
+					</Container>
+
+					<Row Gutter ="3">
+						@for (var i = 0; i < recentAdrs!.Count; i++)
+						{
+							var isLastAndOdd = recentAdrs.Count % 2 == 1 && i == recentAdrs.Count - 1;
+							<AdrCard Model="recentAdrs[i]"/>
+						}
+					</Row>
+				</Column>
+			}
+		</Column>
+	</Container>
 }
 
 @code {
 	private bool isLoaded;
+	private ReadOnlyCollection<AdrApiModel>? recentAdrs;
 	private OrganizationApiModel? currentOrganization;
 
-    /// <summary>
-    /// Идентификатор организации
-    /// </summary>
-    [Parameter]
-    public Guid OrganizationId { get; set; }
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Страница списка ADR
+	/// </summary>
+	[Parameter]
+	public int RecentAdrsPage { get; set; } = 1;
+
+	/// <summary>
+	/// Размер страницы списка ADR
+	/// </summary>
+	[Parameter]
+	public int RecentAdrsSize { get; set; } = 10;
 
 	/// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
-		await LoadItemsAsync();
+		isLoaded = false;
+		StateHasChanged();
+		await LoadOrganizationAsync();
+		if (currentOrganization != null)
+		{
+			await LoadRecentAdrsAsync();
+		}
+		isLoaded = true;
+		StateHasChanged();
 		await base.OnInitializedAsync();
 	}
 
-	private async Task LoadItemsAsync()
+	private async Task LoadOrganizationAsync()
 	{
-		isLoaded = false;
-		StateHasChanged();
 		currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
-		isLoaded = true;
-		StateHasChanged();
+	}
+
+	private async Task LoadRecentAdrsAsync()
+	{
+		var recentAdrsCollection = await ApiClient.AdrGetRecentAsync(currentOrganization!.Id, RecentAdrsSize);
+		recentAdrs = new ReadOnlyCollection<AdrApiModel>(recentAdrsCollection.ToList());
 	}
 }

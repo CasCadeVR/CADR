@@ -3,6 +3,8 @@
 
 @using CADR.Portal.Contracts.Interfaces
 @using CADR.Portal.Components.Enums.Font;
+@using CADR.Portal.Components.Controls.Adrs;
+@using System.Collections.ObjectModel
 
 @inject IPortalIdentity PortalIdentity
 @inject IPortalCadrApiClient ApiClient
@@ -24,22 +26,50 @@
 				Email: @PortalIdentity.Email
 			</Paragraph>
 		</Panel>
+		@if (authorAdrs?.Count != 0)
+			{
+				<Column>
+					<Container Margin="0 0 0 3">
+						<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
+									RoundedSize="RoundedSizes.Rounded3" Border="1">
+							<Header Level="5">Автор этих ADR, </Header>
+						</Container>
+					</Container>
+
+					<Row Gutter ="3">
+						@for (var i = 0; i < authorAdrs!.Count; i++)
+						{
+							var isLastAndOdd = authorAdrs.Count % 2 == 1 && i == authorAdrs.Count - 1;
+							<AdrCard Model="authorAdrs[i]"/>
+						}
+					</Row>
+				</Column>
+			}
 	</Row>
 </Container>
 
 @code {
+	private bool isLoaded;
+	private ReadOnlyCollection<AdrApiModel>? authorAdrs;
 	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
 
 	/// <inheritdoc/>
 	protected override async Task OnInitializedAsync()
 	{
-		await LoadItemsAsync();
+		await LoadAuthorAdrsAsync();
 		await base.OnInitializedAsync();
 	}
 
-	private async Task LoadItemsAsync()
+	private async Task LoadAuthorAdrsAsync()
 	{
-		StateHasChanged();
+		var authorAdrsCollection = await ApiClient.AdrGetByAuthorAsync(OrganizationId, PortalIdentity.UserId);
+		authorAdrs = new ReadOnlyCollection<AdrApiModel>(authorAdrsCollection.ToList());
 	}
 
     /// <inheritdoc />

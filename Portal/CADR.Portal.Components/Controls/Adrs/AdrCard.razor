@@ -1,0 +1,57 @@
+﻿@using CADR.Portal.Components.Resources;
+@using CADR.Portal.Components.Models;
+@using CADR.Api.Client;
+
+<div class="border rounded-3 p-4 h-100">
+    <Header Level="2">@Model.Number - @Model.Title</Header>
+
+	<Header Level="5">Создатель: <a href="@Routes.Administration.Account.Profile">@Model.AuthorName (@@@Model.AuthorLogin)</a> </Header>
+
+	@if (adrPath.Count > 0)
+	{
+		<Paragraph>Путь: </Paragraph>
+		<Breadcrumb Items="adrPath" />
+	}
+
+    <Row FlexContentJustify="FlexJustify.End" FlexItemsAlign="FlexAlign.Center" Padding="* 5" Gutter="lg: 5">
+		<Header Level="5">Статус: @Model.Status</Header>
+		<Header Level="6">@Model.Score</Header>
+	</Row>
+
+	@if (Model.UpdatedAt != null)
+	{
+		<Header Level="6">Последнее обновление: @Model.UpdatedAt</Header>
+	}
+
+	<Button AsLink="true"
+		Url="@(Routes.Adrs.Organization.AdrDetails)">
+		<Icon IconType=IconTypes.Plus></Icon>Подробнее
+	</Button>
+</div>
+
+@code {
+	private IReadOnlyCollection<LinkedItem> adrPath { get; set; } = Array.Empty<LinkedItem>();
+
+	/// <inheritdoc cref="AdrApiModel"/>
+	[Parameter]
+	public AdrApiModel Model { get; set; } = null!;
+
+	/// <inheritdoc />
+	protected override void OnInitialized()
+	{
+		adrPath = Model.FolderPath.Count > 0
+			? Model.FolderPath.Select(x => new LinkedItem()
+				{
+					Caption = x.Name,
+					Url = Routes.Adrs.Organization.Root,
+				}).ToList()
+			: [new LinkedItem()
+			{
+				Caption = "/",
+				IconType = IconTypes.Home,
+				Url = Routes.Adrs.Organization.Root,
+			}];
+
+		base.OnInitialized();
+	}
+}

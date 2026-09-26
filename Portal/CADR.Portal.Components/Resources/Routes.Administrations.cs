@@ -60,7 +60,7 @@ public static partial class Routes
             /// <summary>
             /// Главная страница организации
             /// </summary>
-            public const string Dashboard = $"{Prefix}/{{organizationId:guid}}/dashboard";
+            public const string Dashboard = $"{Prefix}//dashboard";
 
             /// <summary>
             /// Главная страница организации. Константа для форматирования

@@ -20,7 +20,7 @@ public class AdministrationsProfile : Profile
         CreateMap<OrganizationRequestModel, CreateOrganizationApiModel>(MemberList.Destination);
         CreateMap<OrganizationRequestModel, OrganizationApiModel>(MemberList.Destination)
             .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.UserIsAdmin, opt => opt.Ignore());
+            .ForMember(dest => dest.RequestingUserRole, opt => opt.Ignore());
         CreateMap<OrganizationApiModel, OrganizationRequestModel>(MemberList.Destination);
         CreateMap<OrganizationInviteModel, InviteApiModel>(MemberList.Destination)
             .ForMember(x => x.Email, opt => opt.MapFrom(x => x.UserMail))
