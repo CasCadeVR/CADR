@@ -23,7 +23,7 @@
             </a>
         </li>
         <DropdownDivider />
-        <NavDropdownItem Caption="Профиль" IconType="IconTypes.Person" Url="@Routes.Administration.Account.Profile"/>
+		<NavDropdownItem Caption="Профиль" IconType="IconTypes.Person" Url="@string.Format(Routes.Administration.Organization.ProfileFormat, Guid.Empty)" />
         <NavDropdownItem Caption="Организации" IconType="IconTypes.Folder" Url="@Routes.Administration.Organization.List" />
         <DropdownDivider />
         <NavDropdownItem Caption="Выход" IconType="IconTypes.AccountLogout" OnClickAction="LogOffHandler"/>

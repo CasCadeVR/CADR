@@ -5,28 +5,40 @@
 <div class="border rounded-3 p-4 h-100">
     <Header Level="2">@Model.Number - @Model.Title</Header>
 
-	<Header Level="5">Создатель: <a href="@Routes.Administration.Account.Profile">@Model.AuthorName (@@@Model.AuthorLogin)</a> </Header>
+	<Header Level="5">Создатель: <a href="@string.Format(Routes.Administration.Organization.ProfileFormat, Model.OrganizationId)">@Model.AuthorName (@@@Model.AuthorLogin)</a> </Header>
 
 	@if (adrPath.Count > 0)
 	{
-		<Paragraph>Путь: </Paragraph>
-		<Breadcrumb Items="adrPath" />
+		<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+			<Paragraph Column="Columns.TemplateAuto">Путь: </Paragraph>
+			<Breadcrumb Column="Columns.TemplateAuto" Items="adrPath" />
+		</Row>
 	}
 
-    <Row FlexContentJustify="FlexJustify.End" FlexItemsAlign="FlexAlign.Center" Padding="* 5" Gutter="lg: 5">
-		<Header Level="5">Статус: @Model.Status</Header>
-		<Header Level="6">@Model.Score</Header>
+	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+		<Header Column="Columns.TemplateAuto"
+				FlexContentGrow="FlexGrow.Grow1" Level="5">
+			Статус: @Model.Status
+		</Header>
+		<Header Column="Columns.TemplateAuto" Level="2">@Model.Score</Header>
 	</Row>
 
-	@if (Model.UpdatedAt != null)
-	{
-		<Header Level="6">Последнее обновление: @Model.UpdatedAt</Header>
-	}
+	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+		@if (Model.UpdatedAt != null)
+		{
+			<Header Column="Columns.TemplateAuto"
+				FlexContentGrow="FlexGrow.Grow1"
+				Level="6">Последнее обновление: @Model.UpdatedAt
+			</Header>
+		}
 
-	<Button AsLink="true"
-		Url="@(Routes.Adrs.Organization.AdrDetails)">
-		<Icon IconType=IconTypes.Plus></Icon>Подробнее
-	</Button>
+		<Button Padding="2"
+			Column="Columns.TemplateAuto"
+			AsLink="true"
+			Url="@(Routes.Adrs.Organization.AdrDetails)">
+			<Icon IconType=IconTypes.Plus></Icon>Подробнее
+		</Button>
+	</Row>
 </div>
 
 @code {

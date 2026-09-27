@@ -1,4 +1,10 @@
 ﻿@using CADR.Portal.Components.Resources;
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Api.Client;
+
+@implements IDisposable
+
+@inject IRecentOrganizationsProvider RecentOrganizaionsProvider
 
 <AuthorizeView>
 	<Authorized>
@@ -13,6 +19,22 @@
 				<div class="collapse navbar-collapse" id="navbarNavDropdown">
 					<ul class="navbar-nav">
 						<NavMenuItem Caption="Главная" Url="@Routes.InvitesDashboard" />
+
+						@if (isLoaded)
+						{
+							if (recentOrgs?.Count > 0)
+							{
+								foreach (var organization in recentOrgs)
+								{
+									<NavMenuItem Caption="@organization.Name" Url="@string.Format(Routes.Administration.Organization.DashboardFormat, organization.Id)" />
+								}
+							}
+							else
+							{
+								<NavMenuItem Caption="Пусто" IsDisabled="true" />
+							}
+						}
+
 					</ul>
 					<ul class="navbar-nav ms-auto d-flex">
 						@* Надо добавить сюда пункты *@
@@ -32,3 +54,38 @@
 		</nav>
 	</NotAuthorized>
 </AuthorizeView>
+
+@code {
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+	private ICollection<OrganizationApiModel>? recentOrgs;
+	private bool isLoaded = false;
+
+	/// <inheritdoc/>
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		recentOrgs = await RecentOrganizaionsProvider.GetOrganizationsAsync(cancellationTokenSource.Token);
+		isLoaded = true;
+		StateHasChanged();
+	}
+
+	private async Task OnNavMenuDropdownOpen()
+	{
+		recentOrgs = await RecentOrganizaionsProvider.GetOrganizationsAsync(cancellationTokenSource.Token);
+		StateHasChanged();
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+	}
+}

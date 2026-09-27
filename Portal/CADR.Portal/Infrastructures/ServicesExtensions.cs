@@ -47,6 +47,14 @@ public static class ServicesExtensions
     }
 
     /// <summary>
+    /// Регистрирует поставщика недавних организаций для пользователя
+    /// </summary>
+    public static void AddRecentOrganizationsProvider(this IServiceCollection services)
+    {
+        services.AddSingleton<IRecentOrganizationsProvider, RecentOrganizationsProvider>();
+    }
+
+    /// <summary>
     /// Добавляет все необходимые зависимости
     /// </summary>
     public static void AddDependencyInjection(this IServiceCollection services)

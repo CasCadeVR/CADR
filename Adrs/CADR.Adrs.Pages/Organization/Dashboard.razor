@@ -1,8 +1,9 @@
 ﻿@attribute [Route(Routes.Administration.Organization.Dashboard)]
 
-@using CADR.Adrs.Pages.Adrs
+@using CADR.Portal.Components.Controls.Adrs
 @using CADR.Portal.Contracts.Interfaces
 @using AutoMapper
+@using Portal.Components.Enums.Font
 @using System.Collections.ObjectModel
 
 @inherits DisposableComponentBase
@@ -14,43 +15,44 @@
 @if (isLoaded)
 {
 	<Container Size="Containers.Default" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
-		<Column FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+		<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+			<Paragraph FlexContentGrow="FlexGrow.Grow1" Column="Columns.TemplateAuto" FontSize="FontSizes.Size2">
+				@currentOrganization?.Name
+			</Paragraph>
 
-			<Row FlexContentJustify="FlexJustify.End"
-				FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
-				<Header Level="1">@currentOrganization?.Name</Header>
-
-				<Button AsLink="true"
-						Url="@(Routes.Adrs.Organization.AdrForm)">
+			@if (currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
+			{
+				<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+					Color="ThemeColors.Success"
+					Url="@string.Format(Routes.Adrs.Organization.AdrForm, OrganizationId)">
 					<Icon IconType=IconTypes.Plus></Icon> Создать ADR
 				</Button>
-
-				<Button AsLink="true"
-					Url="@(Routes.Adrs.Organization.Root)">
-					<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
-				</Button>
-			</Row>
-
-			@if (recentAdrs?.Count != 0)
-			{
-				<Column>
-					<Container Margin="0 0 0 3">
-						<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
-									RoundedSize="RoundedSizes.Rounded3" Border="1">
-							<Header Level="5">Последние изменения ADR</Header>
-						</Container>
-					</Container>
-
-					<Row Gutter ="3">
-						@for (var i = 0; i < recentAdrs!.Count; i++)
-						{
-							var isLastAndOdd = recentAdrs.Count % 2 == 1 && i == recentAdrs.Count - 1;
-							<AdrCard Model="recentAdrs[i]"/>
-						}
-					</Row>
-				</Column>
 			}
-		</Column>
+
+			<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+					Url="@string.Format(Routes.Adrs.Organization.Root, OrganizationId)">
+				<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
+			</Button>
+		</Row>
+
+		@if (recentAdrs?.Count > 0)
+		{
+			<Column>
+				<Container Margin="0 0 0 3">
+					<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
+						RoundedSize="RoundedSizes.Rounded3" Border="1">
+						<Header Level="5">Последние изменения ADR</Header>
+					</Container>
+				</Container>
+
+				<Row Gutter ="3">
+					@for (var i = 0; i < recentAdrs!.Count; i++)
+					{
+						<AdrCard Model="recentAdrs[i]"/>
+					}
+				</Row>
+			</Column>
+		}
 	</Container>
 }
 

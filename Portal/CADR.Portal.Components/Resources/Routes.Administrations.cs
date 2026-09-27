@@ -23,11 +23,6 @@ public static partial class Routes
             /// Регистрация пользователя
             /// </summary>
             public const string Registration = $"{Prefix}/register";
-
-            /// <summary>
-            /// Профиль пользователя
-            /// </summary>
-            public const string Profile = $"{Prefix}/profile";
         }
 
         /// <summary>
@@ -53,6 +48,16 @@ public static partial class Routes
             public const string Users = $"{Prefix}/{{0}}/users";
 
             /// <summary>
+            /// Профиль пользователя
+            /// </summary>
+            public const string Profile = $"{Prefix}/{{organizationId:guid}}/profile";
+
+            /// <summary>
+            /// Профиль пользователя. Константа для форматирования
+            /// </summary>
+            public const string ProfileFormat = $"{Prefix}/{{0}}/profile";
+
+            /// <summary>
             /// Список приглашений организации
             /// </summary>
             public const string Invites = $"{Prefix}/{{0}}/invites";
@@ -60,7 +65,7 @@ public static partial class Routes
             /// <summary>
             /// Главная страница организации
             /// </summary>
-            public const string Dashboard = $"{Prefix}//dashboard";
+            public const string Dashboard = $"{Prefix}/{{organizationId:guid}}/dashboard";
 
             /// <summary>
             /// Главная страница организации. Константа для форматирования
