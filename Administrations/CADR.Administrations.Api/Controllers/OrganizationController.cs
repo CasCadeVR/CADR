@@ -124,6 +124,20 @@ public class OrganizationController : ControllerBase
     }
 
     /// <summary>
+    /// Получает профиль пользователя организации
+    /// </summary>
+    [HttpGet("{id:guid}/users/{userId:guid}/profile")]
+    [ApiOk(typeof(UserOrganizationApiModel))]
+    [ApiUnauthorized]
+    [ApiNotFound]
+    [SwaggerOperation(OperationId = "OrganizationUserProfile")]
+    public async Task<IActionResult> GetUserProfile(Guid id, Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await organizationManager.GetUserProfileAsync(id, userId, identityProvider.Id, cancellationToken);
+        return Ok(mapper.Map<UserOrganizationApiModel>(result));
+    }
+
+    /// <summary>
     /// Получает пользователей организации
     /// </summary>
     [HttpGet("{id:guid}/users")]

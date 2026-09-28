@@ -33,8 +33,9 @@
 			{
 				<Column>
 					<Container Margin="0 0 0 3">
-						<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
-								   RoundedSize="RoundedSizes.Rounded3" Border="1">
+						<Container Padding="4" Size="Containers.Default"
+							Background="ThemeColors.Light"
+							RoundedSize="RoundedSizes.Rounded3" Border="1">
 							<Header Level="5">Автор этих ADR: </Header>
 						</Container>
 					</Container>
@@ -61,6 +62,12 @@
 	/// </summary>
 	[Parameter]
 	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Идентификатор пользователя
+	/// </summary>
+	[Parameter]
+	public Guid UserId { get; set; }
 
 	/// <inheritdoc/>
 	protected override async Task OnInitializedAsync()

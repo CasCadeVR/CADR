@@ -1,0 +1,182 @@
+﻿@* @attribute [Route(Routes.Assessment.Team.Issues)]
+
+@using CADR.Adrs.Pages.Controls.Issues
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Contracts.Interfaces
+
+@inherits DisposableComponentBase
+
+@inject IPortalCadrApiClient ApiClient
+
+<PageTitle>Задачи команды @team?.Name</PageTitle>
+<DefaultTab TItem="IssueApiModel"
+            IsLoaded="isLoaded"
+            TableItems="issuesPage?.Items as IReadOnlyCollection<IssueApiModel>"
+            EmptyTableMessage="Задач не найдено">
+    <TabHeader>
+        <Row>
+            <Breadcrumb Items="breadcrumbItems" Caption="@(team?.Name ?? string.Empty)"
+                        FlexItemsAlign="FlexAlign.Center"/>
+        </Row>
+        <Row>
+            <FormPillsToolBar Totals="issuesPage?.TotalCount" Current="issuesPage?.Items.Count">
+                <PillsContent>
+                    <PillItem IsActive="@(activeTable is IssuesTableItem.ToAssess)"
+                              Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.ToAssess)).ToLower()">
+                        На оценку
+                    </PillItem>
+                    <PillItem IsActive="@(activeTable is IssuesTableItem.Assessed)"
+                              Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.Assessed)).ToLower()">
+                        Оцененные
+                    </PillItem>
+                    <PillItem IsActive="@(activeTable is IssuesTableItem.ToReassess)"
+							  Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.ToReassess)).ToLower()">
+                        На переоценку
+                    </PillItem>
+                    <PillItem IsActive="@(activeTable is IssuesTableItem.All)"
+							  Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.All)).ToLower()">
+                        Все задачи
+                    </PillItem>
+                </PillsContent>
+                <ToolBarContent>
+                    <InputGroup>
+                        <InputGroupText id="search">
+                            <Icon IconType="IconTypes.MagnifyingGlass"/>
+                        </InputGroupText>
+                        <input class="form-control" aria-describedby="search" @oninput="SearchChangeEventHandler"/>
+                    </InputGroup>
+                    <ButtonGroup Items="buttonItems" Margin="4 * 2 *" IsOutline="true"
+                                 ItemType="ButtonGroupType.Button" OnItemClick="OnClickHandler"/>
+                </ToolBarContent>
+            </FormPillsToolBar>
+        </Row>
+    </TabHeader>
+</DefaultTab>
+<Pagination @ref="pagination" OnPageChange="LoadItemsAsync"/>
+<OffcanvasChangeIssue @ref="canvas" TeamId="TeamId" OnUpdate="() => pagination?.ReloadPage() ?? Task.CompletedTask"/>
+<ContextModalDialog @ref="deleteModalDialog" TItem="IssueApiModel" Title="Удаление задачи">
+    <ModalBody>Вы действительно желаете удалить <b>@context?.Number</b>?</ModalBody>
+    <ModalFooter>
+        <Button Color="ThemeColors.Primary" Click="() => DeleteIssue(context!)">Удалить</Button>
+        <Button Color="ThemeColors.Secondary" Click="deleteModalDialog!.Close">Отмена</Button>
+    </ModalFooter>
+</ContextModalDialog>
+
+@code {
+	private Pagination? pagination;
+	private bool isLoaded;
+	private IssueApiModelsPage? issuesPage;
+	private TeamApiModel? team;
+	private string? searchValue;
+	private OffcanvasChangeIssue? canvas;
+	private ContextModalDialog<IssueApiModel>? deleteModalDialog;
+	private IssueApiStatus issueFiltering;
+	private IssuesTableItem activeTable;
+	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
+	private IReadOnlyCollection<ButtonGroupItem<CommonAction>>? buttonItems = [];
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Значение активной таблицы
+	/// </summary>
+	[Parameter]
+	public string? Tab { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		team = await ApiClient.TeamGetByIdAsync(TeamId, TokenSource.Token);
+		var organization = await ApiClient.OrganizationGetByIdAsync(team.OrganizationId, TokenSource.Token);
+
+		if (string.IsNullOrWhiteSpace(Tab)
+		|| !Enum.GetNames<IssuesTableItem>().Contains(Tab, StringComparer.OrdinalIgnoreCase))
+		{
+			throw new ArgumentOutOfRangeException();
+		}
+
+		activeTable = Enum.Parse<IssuesTableItem>(Tab, ignoreCase: true);
+
+        buttonItems =
+        [
+            new() { Text = "Добавить", Color = ThemeColors.Secondary, Value = CommonAction.Append, IconType = IconTypes.Plus, },
+            new() { Color = ThemeColors.Secondary, Value = CommonAction.Refresh, IconType = IconTypes.Reload, },
+        ];
+        breadcrumbItems =
+        [
+            new() { IconType = IconTypes.Home, Caption = "Список организаций", Url = Routes.Administration.Organization.List, },
+            new() { Caption = organization.Name, Url = string.Format(Routes.Administration.Organization.TeamsFormat, organization.Id), },
+        ];
+
+        issueFiltering = activeTable switch
+        {
+            IssuesTableItem.All => IssueApiStatus.All,
+            IssuesTableItem.Assessed => IssueApiStatus.Assessed,
+            IssuesTableItem.ToAssess => IssueApiStatus.ToAssess,
+            IssuesTableItem.ToReassess => IssueApiStatus.ToReassess,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (pagination != null)
+        {
+            await pagination.SetPage(1, forced: true);
+        }
+    }
+
+    private async Task DeleteIssue(IssueApiModel issue)
+    {
+        if (pagination != null)
+        {
+            await ApiClient.IssueDeleteAsync(TeamId, issue.Id, TokenSource.Token);
+            await pagination.ReloadPage();
+            deleteModalDialog!.Close();
+        }
+    }
+
+    private async Task<int> LoadItemsAsync(PaginationModel model, CancellationToken cancellationToken)
+    {
+        isLoaded = false;
+
+        issuesPage = await ApiClient.IssueGetAsync(TeamId,
+            model.PageNum,
+            model.PageSize,
+            searchValue,
+            issueFiltering,
+            cancellationToken);
+
+        isLoaded = true;
+        StateHasChanged();
+        return issuesPage.TotalCount;
+    }
+
+    private async Task OnClickHandler(CommonAction value)
+    {
+        await Task.CompletedTask;
+        switch (value)
+        {
+            case CommonAction.Append:
+                if (canvas != null)
+                {
+                    await canvas.ShowPanelAsync();
+                }
+                break;
+            case CommonAction.Refresh when pagination is not null:
+                await pagination.ReloadPage();
+                break;
+        }
+    }
+
+    private async void SearchChangeEventHandler(ChangeEventArgs args)
+    {
+        searchValue = args.Value?.ToString();
+        searchValue = string.IsNullOrEmpty(searchValue) ? null : searchValue;
+        if (pagination != null)
+        {
+            await pagination.SetPage(1, forced: true);
+        }
+    }
+} *@

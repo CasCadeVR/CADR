@@ -12,7 +12,7 @@ public static partial class Routes
         /// </summary>
         public static class Organization
         {
-            private const string Prefix = "organization";
+            private const string Prefix = "organization/adrs";
 
             /// <summary>
             /// Корневая папка ADR
@@ -27,7 +27,12 @@ public static partial class Routes
             /// <summary>
             /// Просмотр ADR
             /// </summary>
-            public const string AdrDetails = $"{Prefix}/{{0}}";
+            public const string AdrDetails = $"{Prefix}/{{adrId:guid}}";
+
+            /// <summary>
+            /// Просмотр ADR. Константа для форматирнования
+            /// </summary>
+            public const string AdrDetailsFormat = $"{Prefix}/{{0}}";
         }
     }
 }

@@ -3,9 +3,19 @@
 @using CADR.Api.Client;
 
 <div class="border rounded-3 p-4 h-100">
-    <Header Level="2">@Model.Number - @Model.Title</Header>
+    <Header Level="2">
+		<CadrLink
+			DisableLinkStyles="true"
+			Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, Model.Id)">
+			@Model.Number - @Model.Title
+		</CadrLink>
+	</Header>
 
-	<Header Level="5">Создатель: <a href="@string.Format(Routes.Administration.Organization.ProfileFormat, Model.OrganizationId)">@Model.AuthorName (@@@Model.AuthorLogin)</a> </Header>
+	<Header Level="5">
+		Создатель: <CadrLink
+			Url="@string.Format(Routes.Administration.Organization.ProfileFormat, Model.OrganizationId)">@Model.AuthorName (@@@Model.AuthorLogin)
+		</CadrLink>
+	</Header>
 
 	@if (adrPath.Count > 0)
 	{
@@ -15,13 +25,10 @@
 		</Row>
 	}
 
-	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
-		<Header Column="Columns.TemplateAuto"
-				FlexContentGrow="FlexGrow.Grow1" Level="5">
-			Статус: @Model.Status
-		</Header>
-		<Header Column="Columns.TemplateAuto" Level="2">@Model.Score</Header>
-	</Row>
+	<Header Column="Columns.TemplateAuto"
+			FlexContentGrow="FlexGrow.Grow1" Level="5">
+		Статус: @Model.Status
+	</Header>
 
 	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
 		@if (Model.UpdatedAt != null)
@@ -31,13 +38,7 @@
 				Level="6">Последнее обновление: @Model.UpdatedAt
 			</Header>
 		}
-
-		<Button Padding="2"
-			Column="Columns.TemplateAuto"
-			AsLink="true"
-			Url="@(Routes.Adrs.Organization.AdrDetails)">
-			<Icon IconType=IconTypes.Plus></Icon>Подробнее
-		</Button>
+		<Header Column="Columns.TemplateAuto" Level="3"><Icon IconType=IconTypes.Star></Icon> @Model.Score</Header>
 	</Row>
 </div>
 

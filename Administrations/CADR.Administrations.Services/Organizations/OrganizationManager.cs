@@ -132,6 +132,17 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    async Task<UserOrganizationModel> IOrganizationManager.GetUserProfileAsync(Guid id, Guid userId, Guid requesterId, CancellationToken cancellationToken)
+    {
+        var organization = await GetOrganization(id, requesterId, cancellationToken);
+        var userOrganization = await userOrganizationReadRepository.GetByUserAndOrganizationIdAsync(userId, organization.Id, cancellationToken)
+            .OrThrowIfNull(() => new AdministrationEntityNotFoundException<User>(userId));
+        var user = await userReadRepository.GetByIdAsync(userOrganization!.UserId, cancellationToken)
+            .OrThrowIfNull(() => new AdministrationEntityNotFoundException<User>(userOrganization.UserId));
+
+        return MapUserOrganization(userOrganization, user!);
+    }
+
     async Task<IEnumerable<UserOrganizationModel>> IOrganizationManager.GetUsersByOrganizationIdAsync(Guid id,
         Guid userId,
         CancellationToken cancellationToken)

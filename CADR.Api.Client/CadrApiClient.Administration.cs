@@ -282,6 +282,21 @@ namespace CADR.Api.Client
         System.Threading.Tasks.Task OrganizationDeleteAsync(System.Guid id, System.Threading.CancellationToken cancellationToken);
 
         /// <summary>
+        /// Получает профиль пользователя организации
+        /// </summary>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<UserOrganizationApiModel> OrganizationUserProfileAsync(System.Guid id, System.Guid userId);
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Получает профиль пользователя организации
+        /// </summary>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<UserOrganizationApiModel> OrganizationUserProfileAsync(System.Guid id, System.Guid userId, System.Threading.CancellationToken cancellationToken);
+
+        /// <summary>
         /// Получает пользователей организации
         /// </summary>
         /// <returns>Success</returns>
@@ -2195,6 +2210,121 @@ namespace CADR.Api.Client
         }
 
         /// <summary>
+        /// Получает профиль пользователя организации
+        /// </summary>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<UserOrganizationApiModel> OrganizationUserProfileAsync(System.Guid id, System.Guid userId)
+        {
+            return OrganizationUserProfileAsync(id, userId, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Получает профиль пользователя организации
+        /// </summary>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<UserOrganizationApiModel> OrganizationUserProfileAsync(System.Guid id, System.Guid userId, System.Threading.CancellationToken cancellationToken)
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            if (userId == null)
+                throw new System.ArgumentNullException("userId");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain; x-api-version=1.0"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl))
+                        urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "v1/organization/{id}/users/{userId}/profile"
+                    urlBuilder_.Append("v1/organization/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/users/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(userId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/profile");
+
+                    await PrepareRequestAsync(client_, request_, urlBuilder_, cancellationToken).ConfigureAwait(false);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    await PrepareRequestAsync(client_, request_, url_, cancellationToken).ConfigureAwait(false);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        await ProcessResponseAsync(client_, response_, cancellationToken).ConfigureAwait(false);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<UserOrganizationApiModel>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                            if (status_ == 401)
+                            {
+                                var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                if (objectResponse_.Object == null)
+                                {
+                                    throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                }
+                                throw new ApiException<ProblemDetails>("Unauthorized", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                            }
+                            else
+                                if (status_ == 404)
+                                {
+                                    var objectResponse_ = await ReadObjectResponseAsync<ApiExceptionDetail>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                    if (objectResponse_.Object == null)
+                                    {
+                                        throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                    }
+                                    throw new ApiException<ApiExceptionDetail>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                                }
+                                else
+                                {
+                                    var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                                    throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                                }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Получает пользователей организации
         /// </summary>
         /// <returns>Success</returns>
@@ -2933,6 +3063,12 @@ namespace CADR.Api.Client
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
         public string Name { get; set; }
+
+        /// <summary>
+        /// Имя входа
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("login")]
+        public string Login { get; set; }
 
         /// <summary>
         /// Электронный адрес

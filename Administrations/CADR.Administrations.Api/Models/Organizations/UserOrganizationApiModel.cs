@@ -18,6 +18,11 @@ public class UserOrganizationApiModel
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
+    /// Имя входа
+    /// </summary>
+    public string Login { get; set; } = string.Empty;
+
+    /// <summary>
     /// Электронный адрес
     /// </summary>
     public string Email { get; set; } = string.Empty;
