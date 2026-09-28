@@ -1,4 +1,5 @@
-﻿@attribute [Route(Routes.Administration.Organization.Profile)]
+﻿@attribute [Route(Routes.Administration.Account.Profile)]
+@attribute [Route(Routes.Administration.Account.ProfileWithOrganization)]
 @implements IDisposable
 
 @using CADR.Portal.Contracts.Interfaces
@@ -29,33 +30,71 @@
 					Email: @PortalIdentity.Email
 				</Paragraph>
 			</Panel>
-			@if (authorAdrs?.Count != 0)
+		</Row>
+
+		@if (organizations.Count != 0)
+		{
+			<FormPillsToolBar>
+				@foreach (var organization in organizations)
+				{
+					<PillItem IsActive="@(organization.Id == selectedOrganizationId)"
+							  Url="@string.Format(Routes.Administration.Account.ProfileWithOrganizationFormat, organization.Id)">
+						@organization.Name
+					</PillItem>
+				}
+			</FormPillsToolBar>
+
+			@if (errorMessage != null)
+			{
+				<Alert Color="ThemeColors.Danger" Header="Ошибка">
+					<Paragraph>@errorMessage</Paragraph>
+				</Alert>
+			}
+			else if (authorAdrs?.Count != 0)
 			{
 				<Column>
 					<Container Margin="0 0 0 3">
 						<Container Padding="4" Size="Containers.Default"
-							Background="ThemeColors.Light"
-							RoundedSize="RoundedSizes.Rounded3" Border="1">
-							<Header Level="5">Автор этих ADR: </Header>
+								   Background="ThemeColors.Light"
+								   RoundedSize="RoundedSizes.Rounded3" Border="1">
+							<Header Level="5">Ваши ADR в организации «@selectedOrganizationName»:</Header>
 						</Container>
 					</Container>
 
 					<Row Gutter="3">
-						@for (var i = 0; i < authorAdrs!.Count; i++)
-						{
-							<AdrCard Model="authorAdrs[i]" />
-						}
+						<Row Gutter="3">
+							@foreach (var adr in authorAdrs!)
+							{
+								<Column Column="Columns.Template12" ColumnMedium="Columns.Template6"
+										ColumnExtraExtraLarge="Columns.Template4">
+									<AdrCard Model="adr" />
+								</Column>
+							}
+						</Row>
 					</Row>
 				</Column>
 			}
-		</Row>
+			else
+			{
+				<Paragraph>Вы пока не создали ни одного ADR в этой организации</Paragraph>
+			}
+		}
+		else
+		{
+			<Paragraph>Вы не состоите ни в одной организации</Paragraph>
+		}
 	</Container>
 }
 
 @code {
 	private bool isLoaded;
-	private ReadOnlyCollection<AdrApiModel>? authorAdrs;
+	private string? errorMessage;
+	private string selectedOrganizationName = string.Empty;
+	private IReadOnlyCollection<OrganizationApiModel> organizations = [];
 	private readonly CancellationTokenSource cancellationTokenSource = new();
+	private ReadOnlyCollection<AdrApiModel>? authorAdrs;
+	private Guid selectedOrganizationId;
+	private Guid loadedOrganizationId;
 
 	/// <summary>
 	/// Идентификатор организации
@@ -63,33 +102,63 @@
 	[Parameter]
 	public Guid OrganizationId { get; set; }
 
-	/// <summary>
-	/// Идентификатор пользователя
-	/// </summary>
-	[Parameter]
-	public Guid UserId { get; set; }
-
-	/// <inheritdoc/>
+	/// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
 		isLoaded = false;
 		StateHasChanged();
-		await LoadAuthorAdrsAsync();
+		var organizationsCollection = await ApiClient.OrganizationGetAsync(cancellationTokenSource.Token);
+		organizations = organizationsCollection.ToList();
+		if (OrganizationId == Guid.Empty && organizations.Count > 0)
+		{
+			OrganizationId = organizations.First().Id;
+		}
+		await LoadAdrsAsync();
 		isLoaded = true;
 		StateHasChanged();
 		await base.OnInitializedAsync();
 	}
 
-	private async Task LoadAuthorAdrsAsync()
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
 	{
-		var authorAdrsCollection = await ApiClient.AdrGetByAuthorAsync(OrganizationId, PortalIdentity.UserId);
-		authorAdrs = new ReadOnlyCollection<AdrApiModel>(authorAdrsCollection.ToList());
+		if (isLoaded && OrganizationId != Guid.Empty && OrganizationId != loadedOrganizationId)
+		{
+			isLoaded = false;
+			await LoadAdrsAsync();
+			isLoaded = true;
+		}
+		await base.OnParametersSetAsync();
 	}
 
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        cancellationTokenSource.Cancel();
-        cancellationTokenSource.Dispose();
-    }
+	private async Task LoadAdrsAsync()
+	{
+		selectedOrganizationId = OrganizationId;
+		selectedOrganizationName = organizations.FirstOrDefault(x => x.Id == OrganizationId)?.Name ?? string.Empty;
+		loadedOrganizationId = OrganizationId;
+		if (OrganizationId == Guid.Empty)
+		{
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>([]);
+			return;
+		}
+
+		try
+		{
+			var authorAdrsCollection = await ApiClient.AdrGetByAuthorAsync(OrganizationId, PortalIdentity.UserId, cancellationTokenSource.Token);
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>(authorAdrsCollection.ToList());
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>([]);
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+	}
 }

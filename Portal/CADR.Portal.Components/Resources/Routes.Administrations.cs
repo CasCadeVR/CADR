@@ -23,6 +23,21 @@ public static partial class Routes
             /// Регистрация пользователя
             /// </summary>
             public const string Registration = $"{Prefix}/register";
+
+            /// <summary>
+            /// Профиль пользователя
+            /// </summary>
+            public const string Profile = $"{Prefix}/profile";
+
+            /// <summary>
+            /// Профиль пользователя организации
+            /// </summary>
+            public const string ProfileWithOrganization = $"{Prefix}/profile/{{organizationId:guid}}";
+
+            /// <summary>
+            /// Профиль пользователя организации. Константа для форматирования
+            /// </summary>
+            public const string ProfileWithOrganizationFormat = $"{Prefix}/profile/{{0}}";
         }
 
         /// <summary>
@@ -48,14 +63,14 @@ public static partial class Routes
             public const string Users = $"{Prefix}/{{0}}/users";
 
             /// <summary>
-            /// Профиль пользователя
+            /// Профиль пользователя организации
             /// </summary>
-            public const string Profile = $"{Prefix}/{{organizationId:guid}}/profile";
+            public const string UserProfile = $"{Prefix}/{{organizationId:guid}}/users/{{userId:guid}}/profile";
 
             /// <summary>
-            /// Профиль пользователя. Константа для форматирования
+            /// Профиль пользователя организации. Константа для форматирования
             /// </summary>
-            public const string ProfileFormat = $"{Prefix}/{{0}}/profile";
+            public const string UserProfileFormat = $"{Prefix}/{{0}}/users/{{1}}/profile";
 
             /// <summary>
             /// Список приглашений организации

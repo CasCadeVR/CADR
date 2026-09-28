@@ -51,10 +51,10 @@
 					</Container>
 				</Container>
 
-				<Row Gutter ="3">
-					@for (var i = 0; i < recentAdrs!.Count; i++)
+				<Row Gutter="3">
+					@foreach (var adr in recentAdrs!)
 					{
-						<AdrCard Model="recentAdrs[i]"/>
+						<AdrCard Model="adr" />
 					}
 				</Row>
 			</Column>

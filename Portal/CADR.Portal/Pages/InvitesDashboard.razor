@@ -29,7 +29,7 @@
 						В Организации
 					</Button>
 					<Button type="button" Color="ThemeColors.Primary" IsOutline="true"
-						Url="@string.Format(Routes.Administration.Organization.ProfileFormat, organizationId)"
+						Url="@Routes.Administration.Account.Profile"
 					AsLink="true">
 						В профиль
 					</Button>
@@ -43,7 +43,6 @@
 	private readonly CancellationTokenSource cancellationTokenSource = new();
 	private IReadOnlyCollection<InviteForUserApiResponse>? invites;
 	private ReadOnlyCollection<OrganizationApiModel>? organizations;
-	private Guid organizationId;
 	private bool isLoaded = false;
 	private bool hasOrganizations;
 
@@ -75,7 +74,7 @@
 	{
 		if (organizations?.Count != 0)
 		{
-			organizationId = organizations!.Count > 0 ? organizations[0].Id : organizations[0].Id;
+			var organizationId = organizations!.Count > 0 ? organizations[0].Id : organizations[0].Id;
 			NavigationManager.NavigateTo(string.Format(Routes.Administration.Organization.DashboardFormat, organizationId));
 		}
 	}

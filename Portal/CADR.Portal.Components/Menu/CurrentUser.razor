@@ -23,7 +23,7 @@
             </a>
         </li>
         <DropdownDivider />
-		<NavDropdownItem Caption="Профиль" IconType="IconTypes.Person" Url="@string.Format(Routes.Administration.Organization.ProfileFormat, Guid.Empty)" />
+		<NavDropdownItem Caption="Профиль" IconType="IconTypes.Person" Url="@Routes.Administration.Account.Profile" />
         <NavDropdownItem Caption="Организации" IconType="IconTypes.Folder" Url="@Routes.Administration.Organization.List" />
         <DropdownDivider />
         <NavDropdownItem Caption="Выход" IconType="IconTypes.AccountLogout" OnClickAction="LogOffHandler"/>
@@ -32,14 +32,6 @@
 
 @code {
 	private readonly CancellationTokenSource cancellationTokenSource = new();
-
-	/// <inheritdoc />
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		await base.OnAfterRenderAsync(firstRender);
-		await JSRuntime.InvokeVoidAsync("console.log", $"PortalIdentity.Name {PortalIdentity.Name}");
-		await JSRuntime.InvokeVoidAsync("console.log", $"PortalIdentity.Login {PortalIdentity.Login}");
-	}
 
 	private async Task LogOffHandler()
 	{

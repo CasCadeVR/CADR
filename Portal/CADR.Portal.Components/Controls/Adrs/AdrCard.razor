@@ -12,10 +12,9 @@
 	</Header>
 
 	<Header Level="5">
-		Создатель: <CadrLink
-			Url="@string.Format(Routes.Administration.Organization.ProfileFormat, Model.OrganizationId)">@Model.AuthorName (@@@Model.AuthorLogin)
-		</CadrLink>
+		Создатель: <a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, Model.OrganizationId, Model.AuthorId)">@Model.AuthorName (@@@Model.AuthorLogin)</a>
 	</Header>
+
 
 	@if (adrPath.Count > 0)
 	{
