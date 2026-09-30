@@ -29,13 +29,13 @@
 				{
 					<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
 							Color="ThemeColors.Success"
-							Url="@string.Format(Routes.Adrs.Organization.AdrForm, OrganizationId)">
+							Url="@string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)">
 						<Icon IconType=IconTypes.Plus></Icon> Создать ADR
 					</Button>
 				}
 
 				<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
-						Url="@string.Format(Routes.Adrs.Organization.Root, OrganizationId)">
+						Url="@string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId)">
 					<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
 				</Button>
 			}
@@ -73,7 +73,7 @@
 						{
 							<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
 									Color="ThemeColors.Success"
-									Url="@string.Format(Routes.Adrs.Organization.AdrForm, OrganizationId)">
+									Url="@string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)">
 								<Icon IconType=IconTypes.Plus></Icon> Создать ADR
 							</Button>
 						}

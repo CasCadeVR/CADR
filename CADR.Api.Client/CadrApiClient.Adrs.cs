@@ -5331,12 +5331,6 @@ namespace CADR.Api.Client
         [System.Text.Json.Serialization.JsonPropertyName("parentAdrFolderId")]
         public System.Guid? ParentAdrFolderId { get; set; }
 
-        /// <summary>
-        /// Идентификатор пользователя, создающий папку
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("userId")]
-        public System.Guid UserId { get; set; }
-
     }
 
     /// <summary>

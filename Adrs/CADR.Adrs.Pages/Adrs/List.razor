@@ -1,79 +1,131 @@
-﻿@* @attribute [Route(Routes.Assessment.Team.Issues)]
+﻿@attribute [Route(Routes.Adrs.Organization.List)]
+@attribute [Route(Routes.Adrs.Organization.ListWithFolder)]
 
-@using CADR.Adrs.Pages.Controls.Issues
 @using CADR.Portal.Components.Models
 @using CADR.Portal.Contracts.Interfaces
+@using System.Net
 
 @inherits DisposableComponentBase
-
 @inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
 
-<PageTitle>Задачи команды @team?.Name</PageTitle>
-<DefaultTab TItem="IssueApiModel"
-            IsLoaded="isLoaded"
-            TableItems="issuesPage?.Items as IReadOnlyCollection<IssueApiModel>"
-            EmptyTableMessage="Задач не найдено">
-    <TabHeader>
-        <Row>
-            <Breadcrumb Items="breadcrumbItems" Caption="@(team?.Name ?? string.Empty)"
-                        FlexItemsAlign="FlexAlign.Center"/>
-        </Row>
-        <Row>
-            <FormPillsToolBar Totals="issuesPage?.TotalCount" Current="issuesPage?.Items.Count">
-                <PillsContent>
-                    <PillItem IsActive="@(activeTable is IssuesTableItem.ToAssess)"
-                              Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.ToAssess)).ToLower()">
-                        На оценку
-                    </PillItem>
-                    <PillItem IsActive="@(activeTable is IssuesTableItem.Assessed)"
-                              Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.Assessed)).ToLower()">
-                        Оцененные
-                    </PillItem>
-                    <PillItem IsActive="@(activeTable is IssuesTableItem.ToReassess)"
-							  Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.ToReassess)).ToLower()">
-                        На переоценку
-                    </PillItem>
-                    <PillItem IsActive="@(activeTable is IssuesTableItem.All)"
-							  Url="@string.Format(Routes.Assessment.Team.IssuesFormat, team?.Id, Enum.GetName(IssuesTableItem.All)).ToLower()">
-                        Все задачи
-                    </PillItem>
-                </PillsContent>
-                <ToolBarContent>
-                    <InputGroup>
-                        <InputGroupText id="search">
-                            <Icon IconType="IconTypes.MagnifyingGlass"/>
-                        </InputGroupText>
-                        <input class="form-control" aria-describedby="search" @oninput="SearchChangeEventHandler"/>
-                    </InputGroup>
-                    <ButtonGroup Items="buttonItems" Margin="4 * 2 *" IsOutline="true"
-                                 ItemType="ButtonGroupType.Button" OnItemClick="OnClickHandler"/>
-                </ToolBarContent>
-            </FormPillsToolBar>
-        </Row>
-    </TabHeader>
-</DefaultTab>
-<Pagination @ref="pagination" OnPageChange="LoadItemsAsync"/>
-<OffcanvasChangeIssue @ref="canvas" TeamId="TeamId" OnUpdate="() => pagination?.ReloadPage() ?? Task.CompletedTask"/>
-<ContextModalDialog @ref="deleteModalDialog" TItem="IssueApiModel" Title="Удаление задачи">
-    <ModalBody>Вы действительно желаете удалить <b>@context?.Number</b>?</ModalBody>
-    <ModalFooter>
-        <Button Color="ThemeColors.Primary" Click="() => DeleteIssue(context!)">Удалить</Button>
-        <Button Color="ThemeColors.Secondary" Click="deleteModalDialog!.Close">Отмена</Button>
-    </ModalFooter>
-</ContextModalDialog>
+<PageTitle>@currentFolderCaption</PageTitle>
+
+@if (isLoaded)
+{
+	<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+		@if (errorMessage != null)
+		{
+			<Alert Color="ThemeColors.Danger" Header="Ошибка">
+				<BodyContent>
+					<Paragraph>@errorMessage</Paragraph>
+				</BodyContent>
+			</Alert>
+		}
+		else
+		{
+			<Breadcrumb Items="breadcrumbItems" Caption="@currentFolderCaption" Margin="0 0 0 3"/>
+
+			<FormPillsToolBar>
+				<PillsContent>
+					<PillItem IsActive="@(!isFiltersView)" Url="@GetViewUrl(false)">
+						<Icon IconType="IconTypes.Folder" /> Содержимое папки
+					</PillItem>
+					<PillItem IsActive="@(isFiltersView)" Url="@GetViewUrl(true)">
+						<Icon IconType="IconTypes.MagnifyingGlass" /> ADR по фильтрам
+					</PillItem>
+				</PillsContent>
+			</FormPillsToolBar>
+
+			@if (isFiltersView)
+			{
+				<FormPillsToolBar>
+					<PillsContent>
+						<PillItem IsActive="@(activeFilter == AdrsFilter.Open)" Url="@GetFilterUrl(AdrsFilter.Open)">
+							Открытые (@GetFilterCount(AdrsFilter.Open))
+						</PillItem>
+						<PillItem IsActive="@(activeFilter == AdrsFilter.Approved)" Url="@GetFilterUrl(AdrsFilter.Approved)">
+							Одобренные (@GetFilterCount(AdrsFilter.Approved))
+						</PillItem>
+						<PillItem IsActive="@(activeFilter == AdrsFilter.Rejected)" Url="@GetFilterUrl(AdrsFilter.Rejected)">
+							Отклонённые (@GetFilterCount(AdrsFilter.Rejected))
+						</PillItem>
+					</PillsContent>
+				</FormPillsToolBar>
+			}
+
+			@if (!isFiltersView && subfolders.Count != 0)
+			{
+				<Table TItem="AdrFolderApiModel" Items="subfolders" HoverRows="true" EmptyMessage="Папок нет" Margin="3 0 0 0">
+					<TableHeader>
+						<th>Папки</th>
+						<th style="width: 10%">ADR</th>
+					</TableHeader>
+					<RowTemplate Context="folder">
+						<td>
+							<a href="@string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, folder.Id)">
+								<Icon IconType="IconTypes.Folder" /> @folder.Name
+							</a>
+						</td>
+						<td>@GetFolderAdrCount(folder.Id)</td>
+					</RowTemplate>
+				</Table>
+			}
+
+			<Table TItem="AdrApiModel" Items="currentAdrs" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
+				<TableHeader>
+					<th style="width: 5%">№</th>
+					<th>Название</th>
+					<th style="width: 15%">Статус</th>
+					<th style="width: 20%">Автор</th>
+					<th style="width: 15%">Обновлено</th>
+				</TableHeader>
+				<RowTemplate Context="adr">
+					<td>@adr.Number</td>
+					<td>
+						<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, adr.Id)">@adr.Title</a>
+					</td>
+					<td>
+						<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+							@GetStatusCaption(adr.Status)
+						</Badge>
+					</td>
+					<td>
+						<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, adr.OrganizationId, adr.AuthorId)">@adr.AuthorName</a>
+					</td>
+					<td>@adr.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy")</td>
+				</RowTemplate>
+			</Table>
+		}
+	</Container>
+}
+else
+{
+	<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+		<Paragraph TextAlignment="TextAlignments.Center" Padding="5">
+			<Spinner />
+		</Paragraph>
+	</Container>
+}
 
 @code {
-	private Pagination? pagination;
 	private bool isLoaded;
-	private IssueApiModelsPage? issuesPage;
-	private TeamApiModel? team;
-	private string? searchValue;
-	private OffcanvasChangeIssue? canvas;
-	private ContextModalDialog<IssueApiModel>? deleteModalDialog;
-	private IssueApiStatus issueFiltering;
-	private IssuesTableItem activeTable;
+	private string? errorMessage;
+	private Guid loadedOrganizationId;
+	private (Guid OrganizationId, Guid FolderId) loadedFolderKey;
+
+	private string currentFolderCaption = string.Empty;
 	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
-	private IReadOnlyCollection<ButtonGroupItem<CommonAction>>? buttonItems = [];
+	private IReadOnlyCollection<AdrFolderApiModel> subfolders = [];
+	private Dictionary<Guid, int> folderAdrCounts = [];
+	private IReadOnlyCollection<AdrApiModel> folderAdrs = [];
+
+	private bool isFiltersView;
+	private AdrsFilter activeFilter = AdrsFilter.Open;
+	private bool filtersLoaded;
+	private IReadOnlyCollection<AdrApiModel>? openAdrs;
+	private IReadOnlyCollection<AdrApiModel>? approvedAdrs;
+	private IReadOnlyCollection<AdrApiModel>? rejectedAdrs;
 
 	/// <summary>
 	/// Идентификатор организации
@@ -82,101 +134,329 @@
 	public Guid OrganizationId { get; set; }
 
 	/// <summary>
-	/// Значение активной таблицы
+	/// Идентификатор папки. Пустое значение — корневая папка
 	/// </summary>
 	[Parameter]
-	public string? Tab { get; set; }
+	public Guid FolderId { get; set; }
+
+	/// <summary>
+	/// Фильтр статусов ADR
+	/// </summary>
+	private enum AdrsFilter
+	{
+		Open,
+		Approved,
+		Rejected,
+	}
+
+	/// <summary>
+	/// ADR для отображения таблицы
+	/// </summary>
+	private IReadOnlyCollection<AdrApiModel> currentAdrs
+		=> isFiltersView
+			? activeFilter switch
+			{
+				AdrsFilter.Open => openAdrs ?? [],
+				AdrsFilter.Approved => approvedAdrs ?? [],
+				_ => rejectedAdrs ?? [],
+			}
+			: folderAdrs;
+
+	/// <summary>
+	/// Сообщение для пустой таблицы
+	/// </summary>
+	private string emptyMessage
+		=> isFiltersView
+			? "Нет ADR по этому фильтру"
+			: FolderId == Guid.Empty
+				? "В корневой папке пока нет ADR"
+				: "В папке пока нет ADR";
 
 	/// <inheritdoc />
 	protected override async Task OnParametersSetAsync()
 	{
-		team = await ApiClient.TeamGetByIdAsync(TeamId, TokenSource.Token);
-		var organization = await ApiClient.OrganizationGetByIdAsync(team.OrganizationId, TokenSource.Token);
-
-		if (string.IsNullOrWhiteSpace(Tab)
-		|| !Enum.GetNames<IssuesTableItem>().Contains(Tab, StringComparer.OrdinalIgnoreCase))
+		if (OrganizationId == Guid.Empty)
 		{
-			throw new ArgumentOutOfRangeException();
+			NavigationManager.NavigateTo(Routes.InvitesDashboard);
+			return;
 		}
 
-		activeTable = Enum.Parse<IssuesTableItem>(Tab, ignoreCase: true);
+		(isFiltersView, activeFilter) = ParseViewQuery(NavigationManager.Uri);
 
-        buttonItems =
-        [
-            new() { Text = "Добавить", Color = ThemeColors.Secondary, Value = CommonAction.Append, IconType = IconTypes.Plus, },
-            new() { Color = ThemeColors.Secondary, Value = CommonAction.Refresh, IconType = IconTypes.Reload, },
-        ];
-        breadcrumbItems =
-        [
-            new() { IconType = IconTypes.Home, Caption = "Список организаций", Url = Routes.Administration.Organization.List, },
-            new() { Caption = organization.Name, Url = string.Format(Routes.Administration.Organization.TeamsFormat, organization.Id), },
-        ];
+		var folderKey = (OrganizationId, FolderId);
+		var needFolderData = folderKey != loadedFolderKey;
+		var needFilters = isFiltersView && !filtersLoaded;
+		if (!needFolderData && !needFilters)
+		{
+			return;
+		}
 
-        issueFiltering = activeTable switch
-        {
-            IssuesTableItem.All => IssueApiStatus.All,
-            IssuesTableItem.Assessed => IssueApiStatus.Assessed,
-            IssuesTableItem.ToAssess => IssueApiStatus.ToAssess,
-            IssuesTableItem.ToReassess => IssueApiStatus.ToReassess,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+		isLoaded = false;
+		StateHasChanged();
+		try
+		{
+			if (needFolderData)
+			{
+				loadedFolderKey = folderKey;
+				if (OrganizationId != loadedOrganizationId)
+				{
+					ResetFilters();
+				}
+				loadedOrganizationId = OrganizationId;
+				await LoadFolderDataAsync();
+			}
+			if (needFilters)
+			{
+				await EnsureFiltersLoadedAsync();
+			}
+			errorMessage = null;
+		}
+		catch (ApiException<ApiExceptionDetail> exception)
+			when (exception.StatusCode == (int)HttpStatusCode.Forbidden
+				  || exception.StatusCode == (int)HttpStatusCode.NotFound)
+		{
+			NavigationManager.NavigateTo(Routes.InvitesDashboard);
+			return;
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+		isLoaded = true;
+		StateHasChanged();
+		await base.OnParametersSetAsync();
+	}
 
-        if (pagination != null)
-        {
-            await pagination.SetPage(1, forced: true);
-        }
-    }
+	/// <summary>
+	/// Разбирает состояние отображения из строки запроса
+	/// </summary>
+	private static (bool IsFiltersView, AdrsFilter Filter) ParseViewQuery(string uri)
+	{
+		string? view = null;
+		string? status = null;
+		var query = new Uri(uri).Query.TrimStart('?');
+		foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+		{
+			var parts = pair.Split('=', 2);
+			if (parts.Length != 2)
+			{
+				continue;
+			}
+			switch (parts[0].ToLowerInvariant())
+			{
+				case "view":
+					view = parts[1].ToLowerInvariant();
+					break;
+				case "status":
+					status = parts[1].ToLowerInvariant();
+					break;
+			}
+		}
 
-    private async Task DeleteIssue(IssueApiModel issue)
-    {
-        if (pagination != null)
-        {
-            await ApiClient.IssueDeleteAsync(TeamId, issue.Id, TokenSource.Token);
-            await pagination.ReloadPage();
-            deleteModalDialog!.Close();
-        }
-    }
+		var filter = status switch
+		{
+			"approved" => AdrsFilter.Approved,
+			"rejected" => AdrsFilter.Rejected,
+			_ => AdrsFilter.Open,
+		};
+		return (view == "filters", filter);
+	}
 
-    private async Task<int> LoadItemsAsync(PaginationModel model, CancellationToken cancellationToken)
-    {
-        isLoaded = false;
+	/// <summary>
+	/// Строит ссылку с указанными параметрами запроса на текущем пути
+	/// </summary>
+	private string BuildQueryUrl(string? view, string? status)
+	{
+		var baseUrl = new Uri(NavigationManager.Uri).GetLeftPart(UriPartial.Path);
+		var parameters = new List<string>();
+		if (view != null)
+		{
+			parameters.Add($"view={view}");
+		}
+		if (status != null)
+		{
+			parameters.Add($"status={status}");
+		}
+		return parameters.Count == 0 ? baseUrl : $"{baseUrl}?{string.Join('&', parameters)}";
+	}
 
-        issuesPage = await ApiClient.IssueGetAsync(TeamId,
-            model.PageNum,
-            model.PageSize,
-            searchValue,
-            issueFiltering,
-            cancellationToken);
+	/// <summary>
+	/// Ссылка переключения уровня 1
+	/// </summary>
+	private string GetViewUrl(bool toFilters)
+		=> toFilters ? BuildQueryUrl("filters", null) : BuildQueryUrl(null, null);
 
-        isLoaded = true;
-        StateHasChanged();
-        return issuesPage.TotalCount;
-    }
+	/// <summary>
+	/// Ссылка переключения фильтра статусов
+	/// </summary>
+	private string GetFilterUrl(AdrsFilter filter)
+		=> BuildQueryUrl("filters",
+			filter switch
+			{
+				AdrsFilter.Approved => "approved",
+				AdrsFilter.Rejected => "rejected",
+				_ => "open",
+			});
 
-    private async Task OnClickHandler(CommonAction value)
-    {
-        await Task.CompletedTask;
-        switch (value)
-        {
-            case CommonAction.Append:
-                if (canvas != null)
-                {
-                    await canvas.ShowPanelAsync();
-                }
-                break;
-            case CommonAction.Refresh when pagination is not null:
-                await pagination.ReloadPage();
-                break;
-        }
-    }
+	/// <summary>
+	/// Загружает содержимое папки: подмножество подпапок, ADR папки, хлебные крошки и счётчики
+	/// </summary>
+	private async Task LoadFolderDataAsync()
+	{
+		var organization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+		var allFolders = (await ApiClient.AdrFolderGetByOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
+		folderAdrs = FolderId == Guid.Empty
+			? SortByUpdated(await ApiClient.AdrGetByOrganizationAsync(OrganizationId, TokenSource.Token))
+				.Where(x => x.ParentAdrFolderId == null)
+				.ToList()
+			: SortByUpdated(await ApiClient.AdrGetByFolderAsync(OrganizationId, FolderId, TokenSource.Token));
 
-    private async void SearchChangeEventHandler(ChangeEventArgs args)
-    {
-        searchValue = args.Value?.ToString();
-        searchValue = string.IsNullOrEmpty(searchValue) ? null : searchValue;
-        if (pagination != null)
-        {
-            await pagination.SetPage(1, forced: true);
-        }
-    }
-} *@
+		subfolders = allFolders
+			.Where(x => FolderId == Guid.Empty ? x.ParentAdrFolderId == null : x.ParentAdrFolderId == FolderId)
+			.OrderBy(x => x.Name.ToLower())
+			.ToList();
+
+		currentFolderCaption = FolderId == Guid.Empty
+			? organization.Name
+			: string.Empty;
+		breadcrumbItems = [];
+
+		if (FolderId != Guid.Empty)
+		{
+			var path = (await ApiClient.AdrFolderGetPathAsync(OrganizationId, FolderId, TokenSource.Token)).ToList();
+			currentFolderCaption = path[^1].Name;
+			breadcrumbItems =
+			[
+				new LinkedItem
+				{
+					Caption = organization.Name,
+					IconType = IconTypes.Home,
+					Url = string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId),
+				},
+			];
+			foreach (var folder in path.Take(path.Count - 1))
+			{
+				breadcrumbItems = breadcrumbItems.Append(new LinkedItem
+				{
+					Caption = folder.Name,
+					Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, folder.Id),
+				}).ToList();
+			}
+		}
+
+		folderAdrCounts = [];
+		var countTasks = subfolders
+			.Select(async folder => (folder.Id, Count: await ApiClient.AdrFolderGetAdrCountAsync(OrganizationId, folder.Id, TokenSource.Token)))
+			.ToList();
+		foreach (var (folderId, count) in await Task.WhenAll(countTasks))
+		{
+			folderAdrCounts[folderId] = count;
+		}
+	}
+
+	/// <summary>
+	/// Загружает наборы ADR по фильтрам один раз для организации
+	/// </summary>
+	private async Task EnsureFiltersLoadedAsync()
+	{
+		if (filtersLoaded)
+		{
+			return;
+		}
+
+		var openTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Proposed, AdrStatusApi.NeedsRevision], TokenSource.Token);
+		var approvedTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Approved], TokenSource.Token);
+		var rejectedTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Rejected], TokenSource.Token);
+		await Task.WhenAll(openTask, approvedTask, rejectedTask);
+
+		openAdrs = SortByUpdated(openTask.Result);
+		approvedAdrs = SortByUpdated(approvedTask.Result);
+		rejectedAdrs = SortByUpdated(rejectedTask.Result);
+		filtersLoaded = true;
+	}
+
+	/// <summary>
+	/// Переключает уровень 1: содержимое папки или фильтры
+	/// </summary>
+	private async Task SwitchViewAsync(bool toFilters)
+	{
+		if (isFiltersView == toFilters)
+		{
+			return;
+		}
+
+		isFiltersView = toFilters;
+		if (isFiltersView)
+		{
+			isLoaded = false;
+			StateHasChanged();
+			try
+			{
+				await EnsureFiltersLoadedAsync();
+				errorMessage = null;
+			}
+			catch (Exception exception)
+			{
+				errorMessage = exception.Message;
+			}
+			isLoaded = true;
+			StateHasChanged();
+		}
+	}
+
+	/// <summary>
+	/// Переключает уровень 2: фильтр статусов
+	/// </summary>
+	private void SwitchFilter(AdrsFilter filter)
+	{
+		activeFilter = filter;
+	}
+
+	/// <summary>
+	/// Сбрасывает кэш фильтров при смене организации
+	/// </summary>
+	private void ResetFilters()
+	{
+		filtersLoaded = false;
+		activeFilter = AdrsFilter.Open;
+		openAdrs = null;
+		approvedAdrs = null;
+		rejectedAdrs = null;
+	}
+
+	private static IReadOnlyCollection<AdrApiModel> SortByUpdated(IEnumerable<AdrApiModel> items)
+		=> items.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt).ToList();
+
+	private int GetFilterCount(AdrsFilter filter)
+		=> filter switch
+		{
+			AdrsFilter.Open => openAdrs?.Count ?? 0,
+			AdrsFilter.Approved => approvedAdrs?.Count ?? 0,
+			_ => rejectedAdrs?.Count ?? 0,
+		};
+
+	private int GetFolderAdrCount(Guid folderId)
+		=> folderAdrCounts.TryGetValue(folderId, out var count) ? count : 0;
+
+	private static string GetStatusCaption(AdrStatusApi status)
+		=> status switch
+		{
+			AdrStatusApi.Draft => "Черновик",
+			AdrStatusApi.Proposed => "Предложен",
+			AdrStatusApi.Approved => "Одобрен",
+			AdrStatusApi.Rejected => "Отклонён",
+			AdrStatusApi.NeedsRevision => "Требует правок",
+			_ => "Устарел",
+		};
+
+	private static ThemeColors GetStatusColor(AdrStatusApi status)
+		=> status switch
+		{
+			AdrStatusApi.Approved => ThemeColors.Success,
+			AdrStatusApi.Rejected => ThemeColors.Danger,
+			AdrStatusApi.NeedsRevision => ThemeColors.Warning,
+			AdrStatusApi.Proposed => ThemeColors.Info,
+			AdrStatusApi.Draft => ThemeColors.Secondary,
+			_ => ThemeColors.Dark,
+		};
+}

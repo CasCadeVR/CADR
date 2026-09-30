@@ -6,7 +6,7 @@
     <Header Level="2">
 		<CadrLink
 			DisableLinkStyles="true"
-			Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, Model.Id)">
+			Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, Model.OrganizationId, Model.Id)">
 			@Model.Number - @Model.Title
 		</CadrLink>
 	</Header>
@@ -55,13 +55,13 @@
 			? Model.FolderPath.Select(x => new LinkedItem()
 				{
 					Caption = x.Name,
-					Url = Routes.Adrs.Organization.Root,
+				Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, Model.OrganizationId, Model.ParentAdrFolderId),
 				}).ToList()
 			: [new LinkedItem()
 			{
 				Caption = "/",
 				IconType = IconTypes.Home,
-				Url = Routes.Adrs.Organization.Root,
+				Url = string.Format(Routes.Adrs.Organization.ListFormat, Model.OrganizationId),
 			}];
 
 		base.OnInitialized();

@@ -1,0 +1,377 @@
+﻿@attribute [Route(Routes.Adrs.Organization.AdrDetails)]
+
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Enums.Font;
+@using System.Net
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
+@inject NavigationManager NavigationManager
+
+<PageTitle>@pageTitle</PageTitle>
+
+@if (isLoaded)
+{
+	@if (adr == null)
+	{
+		<Container Size="Containers.Default" Padding="4 5">
+			<Alert Color="ThemeColors.Danger" Header="ADR недоступен">
+				<BodyContent>
+					<Paragraph>@errorMessage</Paragraph>
+				</BodyContent>
+			</Alert>
+		</Container>
+	}
+	else
+	{
+		<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template12" Padding="4 5">
+			<Breadcrumb Items="breadcrumbItems" Caption="@pageTitle" Margin="0 0 0 3"/>
+
+			@* Заголовок ADR *@
+			<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 3 3 3">
+				<Header Level="2" Margin="0 0 0 3">@adr.Number. @adr.Title</Header>
+				@if (adr.UpdatedAt != null)
+				{
+					<Paragraph Foreground="ThemeColors.Muted" Margin="3 0 0 0">
+						Последнее изменение: @adr.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
+					</Paragraph>
+				}
+				else
+				{
+					<Paragraph Foreground="ThemeColors.Muted" Margin="3 0 0 0">
+						Создан: @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
+					</Paragraph>
+				}
+				<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+						Color="ThemeColors.Success"
+						Url="@string.Format(Routes.Adrs.Organization.AdrFormUpdateFormat, OrganizationId, adr.Id)">
+					<Icon IconType=IconTypes.Pencil></Icon> Обновить ADR
+				</Button>
+			</Panel>
+
+			<Row Gutter="0" Gap="3">
+				@* Левая колонка: секции, голоса, комментарии *@
+				<Column Column="Columns.Template8">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
+						@foreach (var section in adr.Sections.OrderBy(x => x.Position))
+						{
+							<Header Level="5">@section.Title</Header>
+							<Paragraph>@section.Content</Paragraph>
+						}
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="3">
+							<Paragraph FlexContentGrow="FlexGrow.Grow1" FontSize="FontSizes.Size2">
+								Оценка: @(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
+							</Paragraph>
+							<Button Size="ButtonSize.Small"
+									Color="@(adr.UserVote == AdrVoteTypeApi.Like ? ThemeColors.Success : ThemeColors.Secondary)"
+									IsOutline="@(adr.UserVote != AdrVoteTypeApi.Like)"
+									Click="() => VoteAsync(AdrVoteTypeApi.Like)">
+								Нравится
+							</Button>
+							<Button Size="ButtonSize.Small"
+									Color="@(adr.UserVote == AdrVoteTypeApi.Dislike ? ThemeColors.Danger : ThemeColors.Secondary)"
+									IsOutline="@(adr.UserVote != AdrVoteTypeApi.Dislike)"
+									Click="() => VoteAsync(AdrVoteTypeApi.Dislike)">
+								Не нравится
+							</Button>
+						</Row>
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 0">
+						<Header Level="4" Margin="0 0 0 3">Комментарии (@comments.Count)</Header>
+
+						@foreach (var comment in comments)
+						{
+							<Row FlexItemsAlign="FlexAlign.Start" Gutter="0" Gap="2" Margin="3 0 0 0">
+								<Column Column="Columns.TemplateAuto">
+									<div class="rounded-circle bg-secondary text-center" style="width: 32px; height: 32px;">
+										<span class="text-light align-middle"><Icon IconType="IconTypes.Person" /></span>
+									</div>
+								</Column>
+								<Column Column="Columns.Template12" FlexContentGrow="FlexGrow.Grow1">
+									<Paragraph Margin="0 0 0 0">
+										<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, OrganizationId, comment.AuthorId)">
+											@comment.AuthorName (@@@comment.AuthorLogin)
+										</a>
+										<span class="text-muted">
+											<small>@comment.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</small>
+										</span>
+										@if (comment.AuthorId == PortalIdentity.UserId)
+										{
+											<a href="@string.Empty" class="text-danger ms-2"
+											   @onclick="() => DeleteCommentAsync(comment.Id)" @onclick:preventDefault>удалить</a>
+										}
+									</Paragraph>
+									<Paragraph>@comment.Text</Paragraph>
+								</Column>
+							</Row>
+						}
+
+						<Paragraph Margin="3 0 0 0">
+							<textarea class="form-control" rows="3" placeholder="Оставьте комментарий..."
+									  @bind="newCommentText"></textarea>
+						</Paragraph>
+						<Button Color="ThemeColors.Primary" Margin="2 0 0 0"
+								IsDisabled="@string.IsNullOrWhiteSpace(newCommentText)"
+								IsSpinner="isCommentSending"
+								Click="CreateCommentAsync">
+							Отправить
+						</Button>
+					</Panel>
+				</Column>
+
+				@* Правая колонка: метаданные и связи *@
+				<Column Column="Columns.Template4">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
+						<Paragraph><strong>Статус:</strong>
+							<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+								@GetStatusCaption(adr.Status)
+							</Badge>
+						</Paragraph>
+						<Paragraph><strong>Автор:</strong>
+							<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, adr.OrganizationId, adr.AuthorId)">
+								@adr.AuthorName (@@@adr.AuthorLogin)
+							</a>
+						</Paragraph>
+						<Paragraph><strong>Создан:</strong> @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</Paragraph>
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 0">
+						<Header Level="5" Margin="0 0 0 3">Связи</Header>
+						@if (links.Count == 0)
+						{
+							<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 0">Связанных ADR нет</Paragraph>
+						}
+						else
+						{
+							@foreach (var link in links)
+							{
+								<Paragraph Margin="2 0 0 0">
+									@GetLinkTypeCaption(link.Type):
+									<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, link.TargetAdrId)">
+										#@link.TargetAdrNumber @link.TargetAdrName
+									</a>
+								</Paragraph>
+							}
+						}
+					</Panel>
+				</Column>
+			</Row>
+		</Container>
+	}
+}
+else
+{
+	<Container Size="Containers.Default" Padding="4 5">
+		<Paragraph TextAlignment="TextAlignments.Center" Padding="5">
+			<Spinner />
+		</Paragraph>
+	</Container>
+}
+
+@code {
+	private bool isLoaded;
+	private string? errorMessage;
+	private Guid loadedAdrId;
+	private string? newCommentText;
+	private bool isCommentSending;
+
+	private AdrApiModel? adr;
+	private IReadOnlyCollection<AdrCommentApiModel> comments = [];
+	private IReadOnlyCollection<AdrLinkApiModel> links = [];
+	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
+
+	private string pageTitle
+		=> adr == null ? "ADR" : $"#{adr.Number} {adr.Title}";
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Идентификатор ADR
+	/// </summary>
+	[Parameter]
+	public Guid AdrId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		if (AdrId == Guid.Empty || AdrId == loadedAdrId)
+		{
+			return;
+		}
+
+		loadedAdrId = AdrId;
+		isLoaded = false;
+		StateHasChanged();
+		try
+		{
+			await LoadAdrAsync();
+			errorMessage = null;
+		}
+		catch (ApiException<ApiExceptionDetail> exception)
+			when (exception.StatusCode == (int)HttpStatusCode.Forbidden
+				  || exception.StatusCode == (int)HttpStatusCode.NotFound)
+		{
+			NavigationManager.NavigateTo(Routes.InvitesDashboard);
+			return;
+		}
+		catch (Exception exception)
+		{
+			adr = null;
+			errorMessage = exception.Message;
+		}
+		isLoaded = true;
+		StateHasChanged();
+		await base.OnParametersSetAsync();
+	}
+
+	/// <summary>
+	/// Загружает ADR, комментарии и связи
+	/// </summary>
+	private async Task LoadAdrAsync()
+	{
+		adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
+			.OrderBy(x => x.CreatedAt)
+			.ToList();
+		links = (await ApiClient.AdrLinkGetByAdrAsync(AdrId, TokenSource.Token)).ToList();
+
+		breadcrumbItems =
+		[
+			new LinkedItem
+			{
+				Caption = "ADR",
+				IconType = IconTypes.Home,
+				Url = string.Format(Routes.Adrs.Organization.ListFormat, adr.OrganizationId),
+			},
+		];
+		foreach (var folder in adr.FolderPath)
+		{
+			breadcrumbItems = breadcrumbItems.Append(new LinkedItem
+			{
+				Caption = folder.Name,
+				Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, adr.OrganizationId, folder.Id),
+			}).ToList();
+		}
+	}
+
+	/// <summary>
+	/// Голосует или отзывает голос при повторном нажатии
+	/// </summary>
+	private async Task VoteAsync(AdrVoteTypeApi vote)
+	{
+		if (adr == null)
+		{
+			return;
+		}
+
+		try
+		{
+			if (adr.UserVote == vote)
+			{
+				await ApiClient.AdrWithdrawVoteAsync(AdrId, TokenSource.Token);
+			}
+			else
+			{
+				await ApiClient.AdrVoteAsync(AdrId, new VoteAdrApiModel
+				{
+					Vote = vote,
+					UserId = PortalIdentity.UserId,
+					AdrId = AdrId,
+				}, TokenSource.Token);
+			}
+			adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <summary>
+	/// Создаёт комментарий
+	/// </summary>
+	private async Task CreateCommentAsync()
+	{
+		if (adr == null || string.IsNullOrWhiteSpace(newCommentText))
+		{
+			return;
+		}
+
+		isCommentSending = true;
+		try
+		{
+			await ApiClient.AdrCommentCreateAsync(new CreateAdrCommentApiModel
+			{
+				AdrId = AdrId,
+				UserId = PortalIdentity.UserId,
+				Text = newCommentText,
+			}, TokenSource.Token);
+			newCommentText = null;
+			comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
+				.OrderBy(x => x.CreatedAt)
+				.ToList();
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+		isCommentSending = false;
+	}
+
+	/// <summary>
+	/// Удаляет свой комментарий
+	/// </summary>
+	private async Task DeleteCommentAsync(Guid commentId)
+	{
+		try
+		{
+			await ApiClient.AdrCommentDeleteAsync(commentId, TokenSource.Token);
+			comments = comments.Where(x => x.Id != commentId).ToList();
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	private static string GetStatusCaption(AdrStatusApi status)
+		=> status switch
+		{
+			AdrStatusApi.Draft => "Черновик",
+			AdrStatusApi.Proposed => "Предложен",
+			AdrStatusApi.Approved => "Одобрен",
+			AdrStatusApi.Rejected => "Отклонён",
+			AdrStatusApi.NeedsRevision => "Требует правок",
+			_ => "Устарел",
+		};
+
+	private static ThemeColors GetStatusColor(AdrStatusApi status)
+		=> status switch
+		{
+			AdrStatusApi.Approved => ThemeColors.Success,
+			AdrStatusApi.Rejected => ThemeColors.Danger,
+			AdrStatusApi.NeedsRevision => ThemeColors.Warning,
+			AdrStatusApi.Proposed => ThemeColors.Info,
+			AdrStatusApi.Draft => ThemeColors.Secondary,
+			_ => ThemeColors.Dark,
+		};
+
+	private static string GetLinkTypeCaption(AdrLinkTypeApi type)
+		=> type switch
+		{
+			AdrLinkTypeApi.Supersedes => "Заменяет",
+			AdrLinkTypeApi.DeprecatedBy => "Устарел в пользу",
+			_ => "Связан с",
+		};
+}

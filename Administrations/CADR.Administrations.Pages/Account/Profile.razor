@@ -47,7 +47,9 @@
 			@if (errorMessage != null)
 			{
 				<Alert Color="ThemeColors.Danger" Header="Ошибка">
-					<Paragraph>@errorMessage</Paragraph>
+					<BodyContent>
+						<Paragraph>@errorMessage</Paragraph>
+					</BodyContent>
 				</Alert>
 			}
 			else if (authorAdrs?.Count != 0)

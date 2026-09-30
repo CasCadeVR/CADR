@@ -19,9 +19,4 @@ public class CreateAdrFolderApiModel
     /// Идентификатор родителя (папки)
     /// </summary>
     public Guid? ParentAdrFolderId { get; set; }
-
-    /// <summary>
-    /// Идентификатор пользователя, создающий папку
-    /// </summary>
-    public Guid UserId { get; set; }
 }
