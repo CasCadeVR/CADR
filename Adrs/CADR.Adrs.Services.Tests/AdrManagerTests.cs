@@ -635,37 +635,6 @@ public class AdrManagerTests : CadrContextInMemory
     }
 
     /// <summary>
-    /// Голосование выдаёт ошибку: не хватает прав
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldThrowDeny()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var user = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = user.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.User;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = user.Id,
-            Vote = ContractEnums.AdrVoteType.Like,
-        };
-
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<AdrAccessException>();
-    }
-
-    /// <summary>
     /// Голосование Proposed ADR автоматически утверждает при достижении порога
     /// </summary>
     [Fact]

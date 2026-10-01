@@ -31,58 +31,70 @@
 
 			@* Заголовок ADR *@
 			<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 3 3 3">
-				<Header Level="2" Margin="0 0 0 3">@adr.Number. @adr.Title</Header>
+				<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+
+					<Header Column="Columns.TemplateAuto" Level="2" Margin="0 0 0 3">@adr.Number. @adr.Title</Header>
+
+					@if (PortalIdentity.UserId == adr.AuthorId)
+					{
+						<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+								Color="ThemeColors.Success"
+								Url="@string.Format(Routes.Adrs.Organization.AdrFormUpdateFormat, OrganizationId, adr.Id)">
+							<Icon IconType=IconTypes.Pencil></Icon> Обновить ADR
+						</Button>
+					}
+				</Row>
+
 				@if (adr.UpdatedAt != null)
 				{
-					<Paragraph Foreground="ThemeColors.Muted" Margin="3 0 0 0">
+					<Paragraph Foreground="ThemeColors.Muted">
 						Последнее изменение: @adr.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
 					</Paragraph>
 				}
 				else
 				{
-					<Paragraph Foreground="ThemeColors.Muted" Margin="3 0 0 0">
+					<Paragraph Foreground="ThemeColors.Muted">
 						Создан: @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
 					</Paragraph>
 				}
-				<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
-						Color="ThemeColors.Success"
-						Url="@string.Format(Routes.Adrs.Organization.AdrFormUpdateFormat, OrganizationId, adr.Id)">
-					<Icon IconType=IconTypes.Pencil></Icon> Обновить ADR
-				</Button>
 			</Panel>
 
-			<Row Gutter="0" Gap="3">
+			<Row Gutter="3">
 				@* Левая колонка: секции, голоса, комментарии *@
 				<Column Column="Columns.Template8">
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
 						@foreach (var section in adr.Sections.OrderBy(x => x.Position))
 						{
-							<Header Level="5">@section.Title</Header>
+							<Header Level="4">@section.Title</Header>
 							<Paragraph>@section.Content</Paragraph>
 						}
-					</Panel>
 
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
 						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="3">
-							<Paragraph FlexContentGrow="FlexGrow.Grow1" FontSize="FontSizes.Size2">
-								Оценка: @(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
+							@if (adr.AuthorId != PortalIdentity.UserId)
+							{
+								<Button Column="Columns.TemplateAuto"
+										Color="@(adr.UserVote == AdrVoteTypeApi.Like ? ThemeColors.Success : ThemeColors.Secondary)"
+										IsOutline="@(adr.UserVote != AdrVoteTypeApi.Like)"
+										Click="() => VoteAsync(AdrVoteTypeApi.Like)">
+									<Icon Margin="2 0" IconType="IconTypes.Like"></Icon>
+								</Button>
+
+								<Button Column="Columns.TemplateAuto"
+										Color="@(adr.UserVote == AdrVoteTypeApi.Dislike ? ThemeColors.Danger : ThemeColors.Secondary)"
+										IsOutline="@(adr.UserVote != AdrVoteTypeApi.Dislike)"
+										Click="() => VoteAsync(AdrVoteTypeApi.Dislike)">
+									<Icon Margin="2 0" IconType="IconTypes.Dislike"></Icon>
+								</Button>
+							}
+
+							<Paragraph Column="Columns.TemplateAuto"
+									   FontSize="FontSizes.Size2">
+								@(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
 							</Paragraph>
-							<Button Size="ButtonSize.Small"
-									Color="@(adr.UserVote == AdrVoteTypeApi.Like ? ThemeColors.Success : ThemeColors.Secondary)"
-									IsOutline="@(adr.UserVote != AdrVoteTypeApi.Like)"
-									Click="() => VoteAsync(AdrVoteTypeApi.Like)">
-								Нравится
-							</Button>
-							<Button Size="ButtonSize.Small"
-									Color="@(adr.UserVote == AdrVoteTypeApi.Dislike ? ThemeColors.Danger : ThemeColors.Secondary)"
-									IsOutline="@(adr.UserVote != AdrVoteTypeApi.Dislike)"
-									Click="() => VoteAsync(AdrVoteTypeApi.Dislike)">
-								Не нравится
-							</Button>
 						</Row>
 					</Panel>
 
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 0">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
 						<Header Level="4" Margin="0 0 0 3">Комментарии (@comments.Count)</Header>
 
 						@foreach (var comment in comments)
@@ -112,11 +124,12 @@
 							</Row>
 						}
 
-						<Paragraph Margin="3 0 0 0">
+						<Paragraph Margin="0 0 0 3">
 							<textarea class="form-control" rows="3" placeholder="Оставьте комментарий..."
 									  @bind="newCommentText"></textarea>
 						</Paragraph>
-						<Button Color="ThemeColors.Primary" Margin="2 0 0 0"
+
+						<Button Color="ThemeColors.Primary"
 								IsDisabled="@string.IsNullOrWhiteSpace(newCommentText)"
 								IsSpinner="isCommentSending"
 								Click="CreateCommentAsync">
@@ -127,7 +140,7 @@
 
 				@* Правая колонка: метаданные и связи *@
 				<Column Column="Columns.Template4">
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 3 0">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
 						<Paragraph><strong>Статус:</strong>
 							<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
 								@GetStatusCaption(adr.Status)

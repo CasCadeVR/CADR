@@ -233,4 +233,16 @@ public enum IconTypes
     /// </summary>
     [CssClass("oi oi-briefcase")]
     Briefcase,
+
+    /// <summary>
+    /// Лайк
+    /// </summary>
+    [CssClass("oi oi-thumb-up")]
+    Like,
+
+    /// <summary>
+    /// Дизлайк
+    /// </summary>
+    [CssClass("oi oi-thumb-down")]
+    Dislike,
 }

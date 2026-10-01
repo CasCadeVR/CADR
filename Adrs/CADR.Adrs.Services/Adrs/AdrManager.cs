@@ -251,7 +251,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     async Task IAdrManager.VoteAsync(VoteAdrModel model, CancellationToken cancellationToken)
     {
         var adr = await GetAdrOrThrowAsync(model.AdrId, cancellationToken);
-        await userOrganizationReadRepository.ThrowIfNotAdminOrArchitectureAsync<AdrAccessException>(model.UserId, adr.OrganizationId, cancellationToken);
         if (adr.AuthorId == model.UserId)
         {
             throw new AdrInvalidOperationException(ErrorMessages.CannotVoteOwnAdr);
@@ -286,8 +285,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     async Task IAdrManager.WithdrawVoteAsync(WithdrawVoteAdrModel model, CancellationToken cancellationToken)
     {
         var adr = await GetAdrOrThrowAsync(model.AdrId, cancellationToken);
-        await userOrganizationReadRepository.ThrowIfNotAdminOrArchitectureAsync<AdrAccessException>(model.UserId, adr!.OrganizationId, cancellationToken);
-
         var vote = await adrVoteReadRepository.GetByAdrAndUserIdAsync(adr.Id, model.UserId, cancellationToken)
             .OrThrowIfNull(() => new AdrEntityNotFoundException<AdrVote>(adr.Id));
 

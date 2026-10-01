@@ -36,7 +36,9 @@
     </TableHeader>
     <RowTemplate>
         <td>
-            @context.Name
+			<CadrLink Url="@string.Format(Routes.Administration.Organization.UserProfileFormat, OrganizationId, context.Id)">
+				@context.Name
+			</CadrLink>
             @if (context.Id == currentUser?.Id)
             {
                 <Badge Background="ThemeColors.Secondary"
