@@ -28,12 +28,12 @@ public static partial class Routes
             /// <summary>
             /// Вложенная папка ADR
             /// </summary>
-            public const string ListWithFolder = $"{Prefix}/adrs/{{folderId:guid}}";
+            public const string ListWithFolder = $"{Prefix}/folder/{{folderId:guid}}";
 
             /// <summary>
             /// Вложенная папка ADR. Константа для форматирования
             /// </summary>
-            public const string ListWithFolderFormat = $"{PrefixFormat}/adrs/{{1}}";
+            public const string ListWithFolderFormat = $"{PrefixFormat}/folder/{{1}}";
 
             /// <summary>
             /// Создание ADR

@@ -1,5 +1,6 @@
 ﻿@using CADR.Portal.Components.Resources;
 @using CADR.Portal.Components.Models;
+@using CADR.Portal.Components.Infrastructures;
 @using CADR.Api.Client;
 
 <div class="border rounded-3 p-4 h-100">
@@ -37,7 +38,10 @@
 				Level="6">Последнее обновление: @Model.UpdatedAt
 			</Header>
 		}
-		<Header Column="Columns.TemplateAuto" Level="3"><Icon IconType=IconTypes.Star></Icon> @Model.Score</Header>
+		<Header BorderColor="@AdrsHelper.GetScoreColor(Model.Score)"
+			Column="Columns.TemplateAuto" Level="3">
+			<Icon IconType=IconTypes.Like></Icon> @Model.Score
+		</Header>
 	</Row>
 </div>
 

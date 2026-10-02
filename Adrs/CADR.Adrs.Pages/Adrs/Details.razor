@@ -30,7 +30,7 @@
 			<Breadcrumb Items="breadcrumbItems" Caption="@pageTitle" Margin="0 0 0 3"/>
 
 			@* Заголовок ADR *@
-			<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 3 3 3">
+			<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 3 3 3">
 				<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
 
 					<Header Column="Columns.TemplateAuto" Level="2" Margin="0 0 0 3">@adr.Number. @adr.Title</Header>
@@ -62,7 +62,7 @@
 			<Row Gutter="3">
 				@* Левая колонка: секции, голоса, комментарии *@
 				<Column Column="Columns.Template8">
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
 						@foreach (var section in adr.Sections.OrderBy(x => x.Position))
 						{
 							<Header Level="4">@section.Title</Header>
@@ -87,8 +87,20 @@
 								</Button>
 							}
 
-							<Paragraph Column="Columns.TemplateAuto"
-									   FontSize="FontSizes.Size2">
+							<Container Background="ThemeColors.Primary" Border="* 1"></Container>
+
+							@if (adr.AuthorId == PortalIdentity.UserId)
+							{
+								<Paragraph Column="Columns.TemplateAuto"
+									FontSize="FontSizes.Size5">
+									Репутация:
+								</Paragraph>
+							}
+
+							<Paragraph
+								Column="Columns.TemplateAuto"
+								FontSize="FontSizes.Size2">
+								
 								@(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
 							</Paragraph>
 						</Row>
@@ -140,7 +152,7 @@
 
 				@* Правая колонка: метаданные и связи *@
 				<Column Column="Columns.Template4">
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
 						<Paragraph><strong>Статус:</strong>
 							<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
 								@GetStatusCaption(adr.Status)

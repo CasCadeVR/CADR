@@ -31,7 +31,7 @@
 				<div class="border rounded-3 p-3 mb-3 position-relative bg-white">
 					<button type="button" class="btn-close position-absolute top-0 end-0 m-2"
 							@onclick="() => RemoveSection(currentSection)"></button>
-					<Paragraph Margin="0 0 2 0">
+					<Paragraph Margin="0 0 0 2">
 						<Badge Background="ThemeColors.Secondary" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
 							Секция @(currentIndex + 1)
 						</Badge>
@@ -41,17 +41,17 @@
 							<InputText @bind-Value="currentSection.Title" class="form-control" placeholder="Заголовок секции" />
 						</Column>
 						<Column Column="Columns.TemplateAuto">
-							<Button Size="ButtonSize.Small" IsOutline="true" Color="ThemeColors.Secondary"
+							<Button IsOutline="true" Color="ThemeColors.Secondary"
 									IsDisabled="@(currentIndex == 0)"
 									Click="() => MoveSection(currentIndex, currentIndex - 1)">
-								↑
+								<Icon Margin="2 0" IconType="IconTypes.ArrowUp"></Icon>
 							</Button>
 						</Column>
 						<Column Column="Columns.TemplateAuto">
-							<Button Size="ButtonSize.Small" IsOutline="true" Color="ThemeColors.Secondary"
+							<Button IsOutline="true" Color="ThemeColors.Secondary"
 									IsDisabled="@(currentIndex == form.Sections.Count - 1)"
 									Click="() => MoveSection(currentIndex, currentIndex + 1)">
-								↓
+								<Icon Margin="2 0" IconType="IconTypes.ArrowDown"></Icon>
 							</Button>
 						</Column>
 					</Row>
@@ -60,9 +60,9 @@
 				</div>
 			}
 
-			<Button LongWidth="true" Color="ThemeColors.Secondary" IsOutline="true" Margin="2 0 0 0"
+			<Button LongWidth="true" Color="ThemeColors.Secondary" IsOutline="true" Margin="0 0 0 3"
 					Click="AddSection">
-				Добавить секцию
+				+ Добавить секцию
 			</Button>
 		</ChildContent>
 	</CommonEditForm>

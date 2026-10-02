@@ -2,6 +2,7 @@
 @attribute [Route(Routes.Adrs.Organization.ListWithFolder)]
 
 @using CADR.Portal.Components.Models
+@using CADR.Portal.Components.Infrastructures
 @using CADR.Portal.Contracts.Interfaces
 @using System.Net
 
@@ -41,14 +42,14 @@
 			{
 				<FormPillsToolBar>
 					<PillsContent>
-						<PillItem IsActive="@(activeFilter == AdrsFilter.Open)" Url="@GetFilterUrl(AdrsFilter.Open)">
-							Открытые (@GetFilterCount(AdrsFilter.Open))
+						<PillItem IsActive="@(activeFilter == AdrStatusApi.Proposed)" Url="@GetFilterUrl(AdrStatusApi.Proposed)">
+							Открытые (@GetFilterCount(AdrStatusApi.Proposed))
 						</PillItem>
-						<PillItem IsActive="@(activeFilter == AdrsFilter.Approved)" Url="@GetFilterUrl(AdrsFilter.Approved)">
-							Одобренные (@GetFilterCount(AdrsFilter.Approved))
+						<PillItem IsActive="@(activeFilter == AdrStatusApi.Approved)" Url="@GetFilterUrl(AdrStatusApi.Approved)">
+							Одобренные (@GetFilterCount(AdrStatusApi.Approved))
 						</PillItem>
-						<PillItem IsActive="@(activeFilter == AdrsFilter.Rejected)" Url="@GetFilterUrl(AdrsFilter.Rejected)">
-							Отклонённые (@GetFilterCount(AdrsFilter.Rejected))
+						<PillItem IsActive="@(activeFilter == AdrStatusApi.Rejected)" Url="@GetFilterUrl(AdrStatusApi.Rejected)">
+							Отклонённые (@GetFilterCount(AdrStatusApi.Rejected))
 						</PillItem>
 					</PillsContent>
 				</FormPillsToolBar>
@@ -86,8 +87,8 @@
 						<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, adr.Id)">@adr.Title</a>
 					</td>
 					<td>
-						<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
-							@GetStatusCaption(adr.Status)
+						<Badge Background="@AdrsHelper.GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+							@AdrsHelper.GetStatusCaption(adr.Status)
 						</Badge>
 					</td>
 					<td>
@@ -121,9 +122,9 @@ else
 	private IReadOnlyCollection<AdrApiModel> folderAdrs = [];
 
 	private bool isFiltersView;
-	private AdrsFilter activeFilter = AdrsFilter.Open;
+	private AdrStatusApi activeFilter = AdrStatusApi.Approved;
 	private bool filtersLoaded;
-	private IReadOnlyCollection<AdrApiModel>? openAdrs;
+	private IReadOnlyCollection<AdrApiModel>? proposedAdrs;
 	private IReadOnlyCollection<AdrApiModel>? approvedAdrs;
 	private IReadOnlyCollection<AdrApiModel>? rejectedAdrs;
 
@@ -139,15 +140,8 @@ else
 	[Parameter]
 	public Guid FolderId { get; set; }
 
-	/// <summary>
-	/// Фильтр статусов ADR
-	/// </summary>
-	private enum AdrsFilter
-	{
-		Open,
-		Approved,
-		Rejected,
-	}
+	[SupplyParameterFromQuery(Name = "view")] public string? ViewQuery { get; set; }
+	[SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
 
 	/// <summary>
 	/// ADR для отображения таблицы
@@ -156,8 +150,8 @@ else
 		=> isFiltersView
 			? activeFilter switch
 			{
-				AdrsFilter.Open => openAdrs ?? [],
-				AdrsFilter.Approved => approvedAdrs ?? [],
+				AdrStatusApi.Proposed => proposedAdrs ?? [],
+				AdrStatusApi.Approved => approvedAdrs ?? [],
 				_ => rejectedAdrs ?? [],
 			}
 			: folderAdrs;
@@ -181,7 +175,8 @@ else
 			return;
 		}
 
-		(isFiltersView, activeFilter) = ParseViewQuery(NavigationManager.Uri);
+		isFiltersView = ViewQuery != null;
+		Enum.TryParse<AdrStatusApi>(StatusQuery ?? string.Empty, out activeFilter);
 
 		var folderKey = (OrganizationId, FolderId);
 		var needFolderData = folderKey != loadedFolderKey;
@@ -228,41 +223,6 @@ else
 	}
 
 	/// <summary>
-	/// Разбирает состояние отображения из строки запроса
-	/// </summary>
-	private static (bool IsFiltersView, AdrsFilter Filter) ParseViewQuery(string uri)
-	{
-		string? view = null;
-		string? status = null;
-		var query = new Uri(uri).Query.TrimStart('?');
-		foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
-		{
-			var parts = pair.Split('=', 2);
-			if (parts.Length != 2)
-			{
-				continue;
-			}
-			switch (parts[0].ToLowerInvariant())
-			{
-				case "view":
-					view = parts[1].ToLowerInvariant();
-					break;
-				case "status":
-					status = parts[1].ToLowerInvariant();
-					break;
-			}
-		}
-
-		var filter = status switch
-		{
-			"approved" => AdrsFilter.Approved,
-			"rejected" => AdrsFilter.Rejected,
-			_ => AdrsFilter.Open,
-		};
-		return (view == "filters", filter);
-	}
-
-	/// <summary>
 	/// Строит ссылку с указанными параметрами запроса на текущем пути
 	/// </summary>
 	private string BuildQueryUrl(string? view, string? status)
@@ -289,14 +249,8 @@ else
 	/// <summary>
 	/// Ссылка переключения фильтра статусов
 	/// </summary>
-	private string GetFilterUrl(AdrsFilter filter)
-		=> BuildQueryUrl("filters",
-			filter switch
-			{
-				AdrsFilter.Approved => "approved",
-				AdrsFilter.Rejected => "rejected",
-				_ => "open",
-			});
+	private string GetFilterUrl(AdrStatusApi filter)
+		=> BuildQueryUrl("filters", filter.ToString());
 
 	/// <summary>
 	/// Загружает содержимое папки: подмножество подпапок, ADR папки, хлебные крошки и счётчики
@@ -369,7 +323,7 @@ else
 		var rejectedTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Rejected], TokenSource.Token);
 		await Task.WhenAll(openTask, approvedTask, rejectedTask);
 
-		openAdrs = SortByUpdated(openTask.Result);
+		proposedAdrs = SortByUpdated(openTask.Result);
 		approvedAdrs = SortByUpdated(approvedTask.Result);
 		rejectedAdrs = SortByUpdated(rejectedTask.Result);
 		filtersLoaded = true;
@@ -407,7 +361,7 @@ else
 	/// <summary>
 	/// Переключает уровень 2: фильтр статусов
 	/// </summary>
-	private void SwitchFilter(AdrsFilter filter)
+	private void SwitchFilter(AdrStatusApi filter)
 	{
 		activeFilter = filter;
 	}
@@ -418,8 +372,8 @@ else
 	private void ResetFilters()
 	{
 		filtersLoaded = false;
-		activeFilter = AdrsFilter.Open;
-		openAdrs = null;
+		activeFilter = AdrStatusApi.Proposed;
+		proposedAdrs = null;
 		approvedAdrs = null;
 		rejectedAdrs = null;
 	}
@@ -427,36 +381,14 @@ else
 	private static IReadOnlyCollection<AdrApiModel> SortByUpdated(IEnumerable<AdrApiModel> items)
 		=> items.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt).ToList();
 
-	private int GetFilterCount(AdrsFilter filter)
+	private int GetFilterCount(AdrStatusApi filter)
 		=> filter switch
 		{
-			AdrsFilter.Open => openAdrs?.Count ?? 0,
-			AdrsFilter.Approved => approvedAdrs?.Count ?? 0,
+			AdrStatusApi.Proposed => proposedAdrs?.Count ?? 0,
+			AdrStatusApi.Approved => approvedAdrs?.Count ?? 0,
 			_ => rejectedAdrs?.Count ?? 0,
 		};
 
 	private int GetFolderAdrCount(Guid folderId)
 		=> folderAdrCounts.TryGetValue(folderId, out var count) ? count : 0;
-
-	private static string GetStatusCaption(AdrStatusApi status)
-		=> status switch
-		{
-			AdrStatusApi.Draft => "Черновик",
-			AdrStatusApi.Proposed => "Предложен",
-			AdrStatusApi.Approved => "Одобрен",
-			AdrStatusApi.Rejected => "Отклонён",
-			AdrStatusApi.NeedsRevision => "Требует правок",
-			_ => "Устарел",
-		};
-
-	private static ThemeColors GetStatusColor(AdrStatusApi status)
-		=> status switch
-		{
-			AdrStatusApi.Approved => ThemeColors.Success,
-			AdrStatusApi.Rejected => ThemeColors.Danger,
-			AdrStatusApi.NeedsRevision => ThemeColors.Warning,
-			AdrStatusApi.Proposed => ThemeColors.Info,
-			AdrStatusApi.Draft => ThemeColors.Secondary,
-			_ => ThemeColors.Dark,
-		};
 }
