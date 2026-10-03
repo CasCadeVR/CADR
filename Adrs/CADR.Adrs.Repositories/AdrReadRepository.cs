@@ -31,6 +31,7 @@ internal sealed class AdrReadRepository : IAdrReadRepository, IAdrsRepositoryAnc
             .Where(x => x.OrganizationId == organizationId)
             .Where(x => x.AuthorId == authorId)
             .NotDeletedAt()
+            .OrderByDescending(x => x.UpdatedAt)
             .ToReadOnlyCollectionAsync(cancellationToken);
 
     Task<IReadOnlyCollection<Adr>> IAdrReadRepository.GetByFolderIdAsync(Guid organizationId, Guid? folderId, CancellationToken cancellationToken)

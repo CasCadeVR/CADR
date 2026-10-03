@@ -33,6 +33,11 @@ public interface IOrganizationManager
     Task DeleteAsync(DeleteOrganizationModel model, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Получает пользователя организации
+    /// </summary>
+    Task<UserOrganizationModel> GetUserProfileAsync(Guid id, Guid userId, Guid requesterId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Получает список пользователей организации пользователя
     /// </summary>
     Task<IEnumerable<UserOrganizationModel>> GetUsersByOrganizationIdAsync(Guid id, Guid userId, CancellationToken cancellationToken);

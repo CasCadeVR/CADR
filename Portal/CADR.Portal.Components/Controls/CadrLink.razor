@@ -1,5 +1,4 @@
-﻿@using CADR.Portal.Components.Infrastructures
-@inherits BootstrapComponentBase
+﻿@inherits BootstrapComponentBase
 
 <a href="@(IsDisabled ? null : Url)" class="@BaseCssClass" @attributes="@CapturedAttributes"
    @onclick="OnClickHandler" @onclick:preventDefault="IsDisabled"

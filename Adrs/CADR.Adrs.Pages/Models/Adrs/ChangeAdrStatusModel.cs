@@ -1,0 +1,24 @@
+﻿using CADR.Adrs.Pages.Models.Adrs.Enums;
+
+namespace CADR.Adrs.Pages.Models.Adrs.Adrs;
+
+/// <summary>
+/// Модель смена статуса ADR
+/// </summary>
+public class ChangeAdrStatusModel
+{
+    /// <summary>
+    /// Идентификатор пользователя, сменяющий статус ADR
+    /// </summary>
+    public Guid UserId { get; init; }
+
+    /// <summary>
+    /// Идентификатор ADR
+    /// </summary>
+    public Guid AdrId { get; init; }
+
+    /// <summary>
+    /// Стаутс ADR
+    /// </summary>
+    public AdrStatus Status { get; init; }
+}

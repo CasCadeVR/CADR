@@ -80,4 +80,14 @@ public class AdrApiModel
     /// Разделы ADR
     /// </summary>
     public IReadOnlyCollection<AdrSectionApiModel> Sections { get; set; } = [];
+
+    /// <summary>
+    /// Дата создания
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Дата последнего обновления
+    /// </summary>
+    public DateTime? UpdatedAt { get; set; }
 }

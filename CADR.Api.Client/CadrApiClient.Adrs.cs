@@ -4740,6 +4740,18 @@ namespace CADR.Api.Client
         [System.Text.Json.Serialization.JsonPropertyName("sections")]
         public System.Collections.Generic.ICollection<AdrSectionApiModel> Sections { get; set; }
 
+        /// <summary>
+        /// Дата создания
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        /// <summary>
+        /// Дата последнего обновления
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        public System.DateTimeOffset? UpdatedAt { get; set; }
+
     }
 
     /// <summary>
@@ -4998,6 +5010,18 @@ namespace CADR.Api.Client
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("sections")]
         public System.Collections.Generic.ICollection<AdrSectionApiModel> Sections { get; set; }
+
+        /// <summary>
+        /// Дата создания
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        /// <summary>
+        /// Дата последнего обновления
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        public System.DateTimeOffset? UpdatedAt { get; set; }
 
     }
 
@@ -5306,12 +5330,6 @@ namespace CADR.Api.Client
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("parentAdrFolderId")]
         public System.Guid? ParentAdrFolderId { get; set; }
-
-        /// <summary>
-        /// Идентификатор пользователя, создающий папку
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("userId")]
-        public System.Guid UserId { get; set; }
 
     }
 

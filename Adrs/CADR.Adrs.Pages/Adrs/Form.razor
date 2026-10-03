@@ -1,0 +1,202 @@
+﻿@attribute [Route(Routes.Adrs.Organization.AdrForm)]
+@attribute [Route(Routes.Adrs.Organization.AdrFormUpdate)]
+
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Adrs.Pages.Models.Adrs;
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
+@inject NavigationManager NavigationManager
+
+<PageTitle>@pageTitle</PageTitle>
+
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+	<CommonEditForm Model="form" Handler="SaveAsync"
+					SubmitText="@(Id.HasValue ? "Сохранить" : "Создать")"
+					IsDisabledSubmit="@string.IsNullOrWhiteSpace(form.Title)">
+		<ChildContent>
+			<Header Level="3">@pageTitle</Header>
+			<FormRow IsHorizontal="true" Label="Название" LabelAreaWidth="Columns.Template3">
+				<InputText @bind-Value="form.Title" class="form-control" id="inputTitle" type="text" />
+				<FormInvalidFeedback>
+					<ValidationMessage For="() => form.Title" />
+				</FormInvalidFeedback>
+			</FormRow>
+
+			@foreach (var entry in form.Sections.Select((section, index) => (section, index)))
+			{
+				var currentSection = entry.section;
+				var currentIndex = entry.index;
+				<div class="border rounded-3 p-3 mb-3 position-relative bg-white">
+					<button type="button" class="btn-close position-absolute top-0 end-0 m-2"
+							@onclick="() => RemoveSection(currentSection)"></button>
+					<Paragraph Margin="0 0 0 2">
+						<Badge Background="ThemeColors.Secondary" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+							Секция @(currentIndex + 1)
+						</Badge>
+					</Paragraph>
+					<Row Gutter="0" Gap="2" FlexItemsAlign="FlexAlign.Center">
+						<Column Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1">
+							<InputText @bind-Value="currentSection.Title" class="form-control" placeholder="Заголовок секции" />
+						</Column>
+						<Column Column="Columns.TemplateAuto">
+							<Button IsOutline="true" Color="ThemeColors.Secondary"
+									IsDisabled="@(currentIndex == 0)"
+									Click="() => MoveSection(currentIndex, currentIndex - 1)">
+								<Icon Margin="2 0" IconType="IconTypes.ArrowUp"></Icon>
+							</Button>
+						</Column>
+						<Column Column="Columns.TemplateAuto">
+							<Button IsOutline="true" Color="ThemeColors.Secondary"
+									IsDisabled="@(currentIndex == form.Sections.Count - 1)"
+									Click="() => MoveSection(currentIndex, currentIndex + 1)">
+								<Icon Margin="2 0" IconType="IconTypes.ArrowDown"></Icon>
+							</Button>
+						</Column>
+					</Row>
+					<InputTextArea @bind-Value="currentSection.Content" rows="6" class="form-control mt-2"
+								   placeholder="Содержимое секции" />
+				</div>
+			}
+
+			<Button LongWidth="true" Color="ThemeColors.Secondary" IsOutline="true" Margin="0 0 0 3"
+					Click="AddSection">
+				+ Добавить секцию
+			</Button>
+		</ChildContent>
+	</CommonEditForm>
+</Container>
+
+@code {
+	private string pageTitle = "Создание ADR";
+	private AdrFormModel form = new();
+	private AdrApiModel? loadedAdr;
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Идентификатор ADR. Пустое значение — создание
+	/// </summary>
+	[Parameter]
+	public Guid? Id { get; set; }
+
+	/// <summary>
+	/// Идентификатор папки, куда создаться ADR
+	/// </summary>
+	[SupplyParameterFromQuery(Name = "folder")]
+	public Guid? ParentFolderId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		if (!Id.HasValue)
+		{
+			form.Sections.Add(new SectionEditModel());
+		}
+
+		await base.OnInitializedAsync();
+	}
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		if (Id.HasValue && loadedAdr?.Id != Id.Value)
+		{
+			loadedAdr = await ApiClient.AdrGetAsync(Id.Value, TokenSource.Token);
+			form.Title = loadedAdr!.Title;
+			form.Sections = loadedAdr.Sections
+				.OrderBy(x => x.Position)
+				.Select(x => new SectionEditModel { Title = x.Title, Content = x.Content })
+				.ToList();
+			pageTitle = $"Редактирование ADR #{loadedAdr.Number}";
+		}
+		else if (!Id.HasValue && loadedAdr != null)
+		{
+			loadedAdr = null;
+			form = new AdrFormModel();
+			form.Sections.Add(new SectionEditModel());
+			pageTitle = "Создание ADR";
+		}
+
+		await base.OnParametersSetAsync();
+	}
+
+	/// <summary>
+	/// Сохраняет ADR: создание или обновление
+	/// </summary>
+	private async Task SaveAsync(CancellationToken cancellationToken)
+	{
+		if (Id.HasValue && loadedAdr != null)
+		{
+			await ApiClient.AdrUpdateAsync(BuildUpdateRequest(loadedAdr, form), cancellationToken);
+			NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, loadedAdr.Id));
+			return;
+		}
+
+		var created = await ApiClient.AdrCreateAsync(new CreateAdrApiModel
+		{
+			Title = form.Title,
+			OrganizationId = OrganizationId,
+			Status = AdrStatusApi.Proposed,
+			Score = 0,
+			AuthorId = PortalIdentity.UserId,
+			ParentAdrFolderId = ParentFolderId,
+		}, cancellationToken);
+		if (form.Sections.Count != 0)
+		{
+			await ApiClient.AdrUpdateAsync(BuildUpdateRequest(created, form), cancellationToken);
+		}
+		NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, created.Id));
+	}
+
+	/// <summary>
+	/// Строит запрос обновления из текущего состояния формы
+	/// </summary>
+	private UpdateAdrApiModel BuildUpdateRequest(AdrApiModel adr, AdrFormModel model)
+		=> new()
+		{
+			Id = adr.Id,
+			Number = adr.Number,
+			Title = model.Title,
+			Status = adr.Status,
+			Score = adr.Score,
+			OrganizationId = adr.OrganizationId,
+			AuthorId = adr.AuthorId,
+			AuthorName = adr.AuthorName,
+			AuthorLogin = adr.AuthorLogin,
+			ParentAdrFolderId = adr.ParentAdrFolderId,
+			TemplateId = adr.TemplateId,
+			CreatedAt = adr.CreatedAt,
+			UpdatedAt = adr.UpdatedAt,
+			UserId = PortalIdentity.UserId,
+			Sections = model.Sections
+				.Select((section, index) => new AdrSectionApiModel
+				{
+					AdrId = adr.Id,
+					Position = index + 1,
+					Title = section.Title,
+					Content = section.Content,
+				})
+				.ToList(),
+		};
+
+	private void AddSection()
+		=> form.Sections.Add(new SectionEditModel());
+
+	private void RemoveSection(SectionEditModel section)
+		=> form.Sections.Remove(section);
+
+	private void MoveSection(int fromIndex, int toIndex)
+	{
+		if (toIndex < 0 || toIndex >= form.Sections.Count)
+		{
+			return;
+		}
+		(form.Sections[fromIndex], form.Sections[toIndex]) = (form.Sections[toIndex], form.Sections[fromIndex]);
+	}
+}

@@ -14,5 +14,6 @@ public static class RouterAssemblies
         =>
     [
         typeof(Administrations.Pages._Imports).Assembly,
+        typeof(Adrs.Pages._Imports).Assembly,
     ];
 }

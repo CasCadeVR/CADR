@@ -11,9 +11,9 @@ public static partial class Routes
     public const string Base = "/";
 
     /// <summary>
-    /// Экран основной информации
+    /// Экран основной информации, проверка на приглашенй
     /// </summary>
-    public const string Dashboard = "/dashboard";
+    public const string InvitesDashboard = "/dashboard";
 
     /// <summary>
     /// Страница ошибки

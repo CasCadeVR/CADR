@@ -16,7 +16,7 @@ public class AdministrationServiceProfile : Profile
         CreateMap<Entities.User, UserLoggedModel>(MemberList.Destination);
 
         CreateMap<Entities.Organization, OrganizationModel>(MemberList.Destination)
-            .ForMember(x => x.UserIsAdmin, opt => opt.Ignore());
+            .ForMember(x => x.RequestingUserRole, opt => opt.Ignore());
 
         CreateMap<Entities.UserInvite, InviteModel>(MemberList.Destination)
             .ForMember(x => x.OwnerId, opt => opt.Ignore())

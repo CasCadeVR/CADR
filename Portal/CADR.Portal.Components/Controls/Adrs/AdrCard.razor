@@ -1,0 +1,72 @@
+﻿@using CADR.Portal.Components.Resources;
+@using CADR.Portal.Components.Models;
+@using CADR.Portal.Components.Infrastructures;
+@using CADR.Api.Client;
+
+<div class="border rounded-3 p-4 h-100">
+    <Header Level="2">
+		<CadrLink
+			DisableLinkStyles="true"
+			Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, Model.OrganizationId, Model.Id)">
+			@Model.Number - @Model.Title
+		</CadrLink>
+	</Header>
+
+	<Header Level="5">
+		Создатель: <a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, Model.OrganizationId, Model.AuthorId)">@Model.AuthorName (@@@Model.AuthorLogin)</a>
+	</Header>
+
+
+	@if (adrPath.Count > 0)
+	{
+		<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+			<Paragraph Column="Columns.TemplateAuto">Путь: </Paragraph>
+			<Breadcrumb Column="Columns.TemplateAuto" Items="adrPath" />
+		</Row>
+	}
+
+	<Badge Column="Columns.TemplateAuto" Background="@AdrsHelper.GetStatusColor(Model.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+		@AdrsHelper.GetStatusCaption(Model.Status)
+	</Badge>
+
+	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+		@if (Model.UpdatedAt != null)
+		{
+			<Header Column="Columns.TemplateAuto"
+				FlexContentGrow="FlexGrow.Grow1"
+				Level="6">Последнее обновление: @Model.UpdatedAt
+			</Header>
+		}
+		<Header Foreground="@AdrsHelper.GetScoreColor(Model.Score)"
+			Column="Columns.TemplateAuto" Level="3">
+			<Icon IconType=IconTypes.Like></Icon> @Model.Score
+		</Header>
+	</Row>
+</div>
+
+@code {
+	private IReadOnlyCollection<LinkedItem> adrPath { get; set; } = Array.Empty<LinkedItem>();
+
+	/// <inheritdoc cref="AdrApiModel"/>
+	[Parameter]
+	public AdrApiModel Model { get; set; } = null!;
+
+	/// <inheritdoc />
+	protected override void OnInitialized()
+	{
+		adrPath = Model.FolderPath.Count > 0
+			? Model.FolderPath.Select(x => new LinkedItem()
+				{
+					Caption = x.Name,
+				Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, Model.OrganizationId, Model.ParentAdrFolderId),
+				}).ToList()
+			: [new LinkedItem()
+			{
+				Caption = "/",
+				IconType = IconTypes.Home,
+				Url = string.Format(Routes.Adrs.Organization.ListFormat, Model.OrganizationId),
+			}];
+
+		base.OnInitialized();
+	}
+}
