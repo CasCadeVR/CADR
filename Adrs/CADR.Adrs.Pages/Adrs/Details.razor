@@ -3,6 +3,7 @@
 @using CADR.Portal.Components.Models
 @using CADR.Portal.Contracts.Interfaces
 @using CADR.Portal.Components.Enums.Font;
+@using CADR.Portal.Components.Infrastructures;
 @using System.Net
 
 @inherits DisposableComponentBase
@@ -98,9 +99,9 @@
 							}
 
 							<Paragraph
+								Foreground="@AdrsHelper.GetScoreColor(adr.Score)"
 								Column="Columns.TemplateAuto"
 								FontSize="FontSizes.Size2">
-								
 								@(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
 							</Paragraph>
 						</Row>
@@ -154,9 +155,19 @@
 				<Column Column="Columns.Template4">
 					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
 						<Paragraph><strong>Статус:</strong>
-							<Badge Background="@GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
-								@GetStatusCaption(adr.Status)
+							<Badge Background="@AdrsHelper.GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+								@AdrsHelper.GetStatusCaption(adr.Status)
 							</Badge>
+							@if (allowedStatuses.Count != 0)
+							{
+								<select class="form-select mt-2" value="@selectedStatus" @onchange="ChangeStatusAsync">
+									<option value="" selected disabled>Перевести в статус…</option>
+									@foreach (var status in allowedStatuses)
+									{
+										<option value="@status.ToString()">@AdrsHelper.GetStatusCaption(status)</option>
+									}
+								</select>
+							}
 						</Paragraph>
 						<Paragraph><strong>Автор:</strong>
 							<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, adr.OrganizationId, adr.AuthorId)">
@@ -177,7 +188,7 @@
 							@foreach (var link in links)
 							{
 								<Paragraph Margin="2 0 0 0">
-									@GetLinkTypeCaption(link.Type):
+									@AdrsHelper.GetLinkTypeCaption(link.Type):
 									<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, link.TargetAdrId)">
 										#@link.TargetAdrNumber @link.TargetAdrName
 									</a>
@@ -205,11 +216,20 @@ else
 	private Guid loadedAdrId;
 	private string? newCommentText;
 	private bool isCommentSending;
+	private string selectedStatus = string.Empty;
 
 	private AdrApiModel? adr;
 	private IReadOnlyCollection<AdrCommentApiModel> comments = [];
 	private IReadOnlyCollection<AdrLinkApiModel> links = [];
 	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
+	private OrganizationApiModel? currentOrganization;
+
+	private IReadOnlyCollection<AdrStatusApi> allowedStatuses
+		=> adr == null
+			? []
+			: AdrsHelper.GetAllowedTargetStatuses(adr.Status,
+				currentOrganization?.RequestingUserRole ?? UserRoleApi.User,
+				adr.AuthorId == PortalIdentity.UserId);
 
 	private string pageTitle
 		=> adr == null ? "ADR" : $"#{adr.Number} {adr.Title}";
@@ -244,7 +264,7 @@ else
 		}
 		catch (ApiException<ApiExceptionDetail> exception)
 			when (exception.StatusCode == (int)HttpStatusCode.Forbidden
-				  || exception.StatusCode == (int)HttpStatusCode.NotFound)
+						|| exception.StatusCode == (int)HttpStatusCode.NotFound)
 		{
 			NavigationManager.NavigateTo(Routes.InvitesDashboard);
 			return;
@@ -265,6 +285,7 @@ else
 	private async Task LoadAdrAsync()
 	{
 		adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(adr.OrganizationId, TokenSource.Token);
 		comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
 			.OrderBy(x => x.CreatedAt)
 			.ToList();
@@ -274,11 +295,10 @@ else
 		[
 			new LinkedItem
 			{
-				Caption = "ADR",
 				IconType = IconTypes.Home,
 				Url = string.Format(Routes.Adrs.Organization.ListFormat, adr.OrganizationId),
 			},
-		];
+	];
 		foreach (var folder in adr.FolderPath)
 		{
 			breadcrumbItems = breadcrumbItems.Append(new LinkedItem
@@ -315,6 +335,30 @@ else
 				}, TokenSource.Token);
 			}
 			adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <summary>
+	/// Меняет статус
+	/// </summary>
+	private async Task ChangeStatusAsync(ChangeEventArgs args)
+	{
+		var target = Enum.Parse<AdrStatusApi>((string)args.Value!);
+		try
+		{
+			await ApiClient.AdrChangeStatusAsync(AdrId, new ChangeAdrStatusApiModel
+			{
+				AdrId = AdrId,
+				UserId = PortalIdentity.UserId,
+				Status = target,
+			}, TokenSource.Token);
+			await LoadAdrAsync();
+			selectedStatus = string.Empty;
+			errorMessage = null;
 		}
 		catch (Exception exception)
 		{
@@ -369,34 +413,4 @@ else
 			errorMessage = exception.Message;
 		}
 	}
-
-	private static string GetStatusCaption(AdrStatusApi status)
-		=> status switch
-		{
-			AdrStatusApi.Draft => "Черновик",
-			AdrStatusApi.Proposed => "Предложен",
-			AdrStatusApi.Approved => "Одобрен",
-			AdrStatusApi.Rejected => "Отклонён",
-			AdrStatusApi.NeedsRevision => "Требует правок",
-			_ => "Устарел",
-		};
-
-	private static ThemeColors GetStatusColor(AdrStatusApi status)
-		=> status switch
-		{
-			AdrStatusApi.Approved => ThemeColors.Success,
-			AdrStatusApi.Rejected => ThemeColors.Danger,
-			AdrStatusApi.NeedsRevision => ThemeColors.Warning,
-			AdrStatusApi.Proposed => ThemeColors.Info,
-			AdrStatusApi.Draft => ThemeColors.Secondary,
-			_ => ThemeColors.Dark,
-		};
-
-	private static string GetLinkTypeCaption(AdrLinkTypeApi type)
-		=> type switch
-		{
-			AdrLinkTypeApi.Supersedes => "Заменяет",
-			AdrLinkTypeApi.DeprecatedBy => "Устарел в пользу",
-			_ => "Связан с",
-		};
 }

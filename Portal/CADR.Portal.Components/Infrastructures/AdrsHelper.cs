@@ -48,9 +48,31 @@ public static class AdrsHelper
     public static string GetLinkTypeCaption(AdrLinkTypeApi linkType)
         => linkType switch
         {
-            AdrLinkTypeApi.DeprecatedBy => "Устерел",
+            AdrLinkTypeApi.DeprecatedBy => "Устарел в пользу",
             AdrLinkTypeApi.Supersedes => "Заменяет",
-            AdrLinkTypeApi.RelatedTo => "Связан",
+            AdrLinkTypeApi.RelatedTo => "Связан с",
             _ => "Устарел",
         };
+
+    /// <summary>
+    /// Возвращает допустимые целевые статусы.
+    /// Зеркало AdrManager.IsTransitionAllowed — при изменении правил API обновить здесь!
+    /// </summary>
+    public static IReadOnlyCollection<AdrStatusApi> GetAllowedTargetStatuses(AdrStatusApi current, UserRoleApi role, bool isAuthor)
+    {
+        var isAdmin = role == UserRoleApi.Admin;
+        var isArchitect = role == UserRoleApi.Architect;
+        return (current, isAuthor) switch
+        {
+            (AdrStatusApi.Draft, _) when isAdmin || isArchitect => [AdrStatusApi.Proposed],
+            (AdrStatusApi.Proposed, _) when isAdmin => [AdrStatusApi.Approved, AdrStatusApi.Rejected],
+            (AdrStatusApi.Approved, _) when isAdmin => [AdrStatusApi.NeedsRevision, AdrStatusApi.Deprecated],
+            (AdrStatusApi.Approved, true) => [AdrStatusApi.Deprecated],
+            (AdrStatusApi.NeedsRevision, _) when isAdmin => [AdrStatusApi.Approved, AdrStatusApi.Proposed, AdrStatusApi.Deprecated],
+            (AdrStatusApi.NeedsRevision, _) when isArchitect => [AdrStatusApi.Proposed],
+            (AdrStatusApi.NeedsRevision, true) => [AdrStatusApi.Deprecated],
+            (AdrStatusApi.Rejected, _) when isAdmin => [AdrStatusApi.Proposed],
+            _ => [],
+        };
+    }
 }

@@ -85,6 +85,12 @@
 	[Parameter]
 	public Guid? Id { get; set; }
 
+	/// <summary>
+	/// Идентификатор папки, куда создаться ADR
+	/// </summary>
+	[SupplyParameterFromQuery(Name = "folder")]
+	public Guid? ParentFolderId { get; set; }
+
 	/// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
@@ -128,7 +134,7 @@
 		if (Id.HasValue && loadedAdr != null)
 		{
 			await ApiClient.AdrUpdateAsync(BuildUpdateRequest(loadedAdr, form), cancellationToken);
-			NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, loadedAdr.Id));
+			NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, loadedAdr.Id));
 			return;
 		}
 
@@ -139,12 +145,13 @@
 			Status = AdrStatusApi.Proposed,
 			Score = 0,
 			AuthorId = PortalIdentity.UserId,
+			ParentAdrFolderId = ParentFolderId,
 		}, cancellationToken);
 		if (form.Sections.Count != 0)
 		{
 			await ApiClient.AdrUpdateAsync(BuildUpdateRequest(created, form), cancellationToken);
 		}
-		NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, created.Id));
+		NavigationManager.NavigateTo(string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, created.Id));
 	}
 
 	/// <summary>

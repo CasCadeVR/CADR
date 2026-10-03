@@ -8,6 +8,7 @@
 
 @inherits DisposableComponentBase
 @inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
 @inject NavigationManager NavigationManager
 
 <PageTitle>@currentFolderCaption</PageTitle>
@@ -28,6 +29,17 @@
 			<Breadcrumb Items="breadcrumbItems" Caption="@currentFolderCaption" Margin="0 0 0 3"/>
 
 			<FormPillsToolBar>
+				<ToolBarContent>
+					@if (!isFiltersView && currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
+					{
+						<Button Color="ThemeColors.Success" AsLink="true" Url="@GetCreateAdrUrl()">
+							<Icon IconType="IconTypes.Plus" /> Создать ADR
+						</Button>
+						<Button Margin="2 0 0 0" Color="ThemeColors.Success" Click="ShowFolderInput">
+							<Icon IconType="IconTypes.Plus" /> Создать Папку  <Icon IconType="IconTypes.Folder" />
+						</Button>
+					}
+				</ToolBarContent>
 				<PillsContent>
 					<PillItem IsActive="@(!isFiltersView)" Url="@GetViewUrl(false)">
 						<Icon IconType="IconTypes.Folder" /> Содержимое папки
@@ -42,59 +54,127 @@
 			{
 				<FormPillsToolBar>
 					<PillsContent>
-						<PillItem IsActive="@(activeFilter == AdrStatusApi.Proposed)" Url="@GetFilterUrl(AdrStatusApi.Proposed)">
-							Открытые (@GetFilterCount(AdrStatusApi.Proposed))
-						</PillItem>
-						<PillItem IsActive="@(activeFilter == AdrStatusApi.Approved)" Url="@GetFilterUrl(AdrStatusApi.Approved)">
-							Одобренные (@GetFilterCount(AdrStatusApi.Approved))
-						</PillItem>
-						<PillItem IsActive="@(activeFilter == AdrStatusApi.Rejected)" Url="@GetFilterUrl(AdrStatusApi.Rejected)">
-							Отклонённые (@GetFilterCount(AdrStatusApi.Rejected))
-						</PillItem>
+						@foreach (var status in Enum.GetValues<AdrStatusApi>())
+						{
+							<PillItem IsActive="@(activeStatus == status)" Url="@GetFilterUrl(status)">
+								@AdrsHelper.GetStatusCaption(status) (@GetFilterCount(status))
+							</PillItem>
+						}
 					</PillsContent>
 				</FormPillsToolBar>
 			}
 
-			@if (!isFiltersView && subfolders.Count != 0)
+			@if (isFolderInputVisible)
 			{
-				<Table TItem="AdrFolderApiModel" Items="subfolders" HoverRows="true" EmptyMessage="Папок нет" Margin="3 0 0 0">
-					<TableHeader>
-						<th>Папки</th>
-						<th style="width: 10%">ADR</th>
-					</TableHeader>
-					<RowTemplate Context="folder">
-						<td>
-							<a href="@string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, folder.Id)">
-								<Icon IconType="IconTypes.Folder" /> @folder.Name
-							</a>
-						</td>
-						<td>@GetFolderAdrCount(folder.Id)</td>
-					</RowTemplate>
-				</Table>
+				<Row Gutter="0" Gap="2" FlexItemsAlign="FlexAlign.Center" Margin="2 0 0 0">
+					<Column Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1">
+						<input class="form-control" placeholder="Название папки" @bind="newFolderName" />
+					</Column>
+					<Column Column="Columns.TemplateAuto">
+						<Button Color="ThemeColors.Success" IsOutline="true" Size="ButtonSize.Small"
+								IsDisabled="@string.IsNullOrWhiteSpace(newFolderName)" IsSpinner="isFolderSaving"
+								Click="CreateFolderAsync">
+							<Icon IconType="IconTypes.Check" />
+						</Button>
+					</Column>
+					<Column Column="Columns.TemplateAuto">
+						<button type="button" class="btn-close" @onclick="HideFolderInput"></button>
+					</Column>
+				</Row>
 			}
 
-			<Table TItem="AdrApiModel" Items="currentAdrs" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
+			<Table TItem="ExplorerItem" Items="explorerItems" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
 				<TableHeader>
-					<th style="width: 5%">№</th>
 					<th>Название</th>
 					<th style="width: 15%">Статус</th>
-					<th style="width: 20%">Автор</th>
 					<th style="width: 15%">Обновлено</th>
+					<th style="width: 5%">Действие</th>
 				</TableHeader>
-				<RowTemplate Context="adr">
-					<td>@adr.Number</td>
-					<td>
-						<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, adr.Id)">@adr.Title</a>
-					</td>
-					<td>
-						<Badge Background="@AdrsHelper.GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
-							@AdrsHelper.GetStatusCaption(adr.Status)
-						</Badge>
-					</td>
-					<td>
-						<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, adr.OrganizationId, adr.AuthorId)">@adr.AuthorName</a>
-					</td>
-					<td>@adr.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy")</td>
+				<RowTemplate Context="item">
+					@if (item.FolderId != Guid.Empty && item.FolderId == editingFolderId)
+					{
+						<td>
+							<input class="form-control form-control-sm" @bind="editFolderName" />
+						</td>
+						<td><span class="text-muted">—</span></td>
+						<td><span class="text-muted">—</span></td>
+						<td class="text-end">
+							<Button Size="ButtonSize.Small" Color="ThemeColors.Success" IsOutline="true"
+									IsDisabled="@string.IsNullOrWhiteSpace(editFolderName)"
+									Click="SaveFolderNameAsync">
+								<Icon IconType="IconTypes.Check" />
+							</Button>
+							<button type="button" class="btn-close btn-sm ms-1" @onclick="CancelFolderEdit"></button>
+						</td>
+					}
+					else
+					{
+						<td>
+							<CadrLink DisableLinkStyles="true" href="@item.Url">
+								@if (item.Icon != null)
+								{
+									<Icon IconType="@item.Icon.Value" />
+									<text>&nbsp;</text>
+								}
+								@item.Caption
+							</CadrLink>
+						</td>
+						<td>
+							@if (item.Status != null)
+							{
+								<Badge Background="@AdrsHelper.GetStatusColor(item.Status.Value)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+									@AdrsHelper.GetStatusCaption(item.Status.Value)
+								</Badge>
+							}
+							else
+							{
+								<span class="text-muted">—</span>
+							}
+						</td>
+						<td>
+							@if (item.UpdatedAt != null)
+							{
+								@item.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy")
+							}
+							else
+							{
+								<span class="text-muted">—</span>
+							}
+						</td>
+						<td>
+							<Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
+								@if (item.AdrId != null)
+								{
+									<DropDownItem IconType="IconTypes.Info"
+										Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, item.AdrId)"
+										Disabled="false">
+										Детали
+									</DropDownItem>
+								}
+								else
+								{
+									<DropDownItem IconType="IconTypes.Folder"
+										Url="@string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, item.FolderId)"
+										Disabled="false">
+										Содержимое
+									</DropDownItem>
+									<DropdownDivider />
+									<DropDownItem IconType="IconTypes.Pencil"
+												  Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
+												  Click="() => EditFolder(item)">
+										Редактировать
+									</DropDownItem>
+								}
+
+								<DropdownDivider />
+								<DropDownItem IconType="IconTypes.Trash"
+											  Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
+											  Click="() => RequestDelete(item)">
+									Удалить
+								</DropDownItem>
+							</Dropdown>
+						</td>
+					}
 				</RowTemplate>
 			</Table>
 		}
@@ -109,11 +189,27 @@ else
 	</Container>
 }
 
+<ContextModalDialog @ref="deleteDialog" TItem="ExplorerItem" Title="Подтверждение удаления">
+	<ModalBody>
+		<Paragraph>@deleteDialogText</Paragraph>
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Danger" IsSpinner="isDeleting" Click="ConfirmDeleteAsync">Удалить</Button>
+		<Button Color="ThemeColors.Secondary" Click="() => deleteDialog?.Close()">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
 @code {
 	private bool isLoaded;
 	private string? errorMessage;
 	private Guid loadedOrganizationId;
+	private OrganizationApiModel? currentOrganization;
 	private (Guid OrganizationId, Guid FolderId) loadedFolderKey;
+
+	private ContextModalDialog<ExplorerItem>? deleteDialog;
+	private ExplorerItem? deleteTarget;
+	private string deleteDialogText = string.Empty;
+	private bool isDeleting;
 
 	private string currentFolderCaption = string.Empty;
 	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
@@ -122,11 +218,15 @@ else
 	private IReadOnlyCollection<AdrApiModel> folderAdrs = [];
 
 	private bool isFiltersView;
-	private AdrStatusApi activeFilter = AdrStatusApi.Approved;
-	private bool filtersLoaded;
-	private IReadOnlyCollection<AdrApiModel>? proposedAdrs;
-	private IReadOnlyCollection<AdrApiModel>? approvedAdrs;
-	private IReadOnlyCollection<AdrApiModel>? rejectedAdrs;
+	private AdrStatusApi activeStatus = AdrStatusApi.Proposed;
+	private Dictionary<AdrStatusApi, IReadOnlyCollection<AdrApiModel>> filterAdrs = [];
+
+	private bool isFolderInputVisible;
+	private string newFolderName = string.Empty;
+	private bool isFolderSaving;
+
+	private Guid editingFolderId;
+	private string editFolderName = string.Empty;
 
 	/// <summary>
 	/// Идентификатор организации
@@ -144,24 +244,19 @@ else
 	[SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
 
 	/// <summary>
-	/// ADR для отображения таблицы
+	/// Строки проводника: папки, затем ADR; либо отфильтрованные ADR
 	/// </summary>
-	private IReadOnlyCollection<AdrApiModel> currentAdrs
+	private IReadOnlyCollection<ExplorerItem> explorerItems
 		=> isFiltersView
-			? activeFilter switch
-			{
-				AdrStatusApi.Proposed => proposedAdrs ?? [],
-				AdrStatusApi.Approved => approvedAdrs ?? [],
-				_ => rejectedAdrs ?? [],
-			}
-			: folderAdrs;
+			? (filterAdrs.GetValueOrDefault(activeStatus) ?? []).Select(ToExplorerItem).ToList()
+			: subfolders.Select(ToFolderItem).Concat(folderAdrs.Select(ToExplorerItem)).ToList();
 
 	/// <summary>
 	/// Сообщение для пустой таблицы
 	/// </summary>
 	private string emptyMessage
 		=> isFiltersView
-			? "Нет ADR по этому фильтру"
+			? $"Нет ADR со статусом «{AdrsHelper.GetStatusCaption(activeStatus)}»"
 			: FolderId == Guid.Empty
 				? "В корневой папке пока нет ADR"
 				: "В папке пока нет ADR";
@@ -175,13 +270,16 @@ else
 			return;
 		}
 
-		isFiltersView = ViewQuery != null;
-		Enum.TryParse<AdrStatusApi>(StatusQuery ?? string.Empty, out activeFilter);
+		isFiltersView = ViewQuery == "filters";
+		if (!Enum.TryParse(StatusQuery, out activeStatus))
+		{
+			activeStatus = AdrStatusApi.Proposed;
+		}
 
 		var folderKey = (OrganizationId, FolderId);
 		var needFolderData = folderKey != loadedFolderKey;
-		var needFilters = isFiltersView && !filtersLoaded;
-		if (!needFolderData && !needFilters)
+		var needFilter = isFiltersView && !filterAdrs.ContainsKey(activeStatus);
+		if (!needFolderData && !needFilter)
 		{
 			return;
 		}
@@ -195,14 +293,16 @@ else
 				loadedFolderKey = folderKey;
 				if (OrganizationId != loadedOrganizationId)
 				{
-					ResetFilters();
+					filterAdrs.Clear();
 				}
 				loadedOrganizationId = OrganizationId;
 				await LoadFolderDataAsync();
 			}
-			if (needFilters)
+			if (needFilter)
 			{
-				await EnsureFiltersLoadedAsync();
+				filterAdrs[activeStatus] = SortByUpdated(await ApiClient.AdrGetByStatusesAsync(OrganizationId,
+					[activeStatus],
+					TokenSource.Token));
 			}
 			errorMessage = null;
 		}
@@ -249,15 +349,15 @@ else
 	/// <summary>
 	/// Ссылка переключения фильтра статусов
 	/// </summary>
-	private string GetFilterUrl(AdrStatusApi filter)
-		=> BuildQueryUrl("filters", filter.ToString());
+	private string GetFilterUrl(AdrStatusApi status)
+		=> BuildQueryUrl("filters", status.ToString());
 
 	/// <summary>
-	/// Загружает содержимое папки: подмножество подпапок, ADR папки, хлебные крошки и счётчики
+	/// Загружает содержимое папки: подпапки, ADR папки, хлебные крошки и счётчики
 	/// </summary>
 	private async Task LoadFolderDataAsync()
 	{
-		var organization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
 		var allFolders = (await ApiClient.AdrFolderGetByOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
 		folderAdrs = FolderId == Guid.Empty
 			? SortByUpdated(await ApiClient.AdrGetByOrganizationAsync(OrganizationId, TokenSource.Token))
@@ -271,7 +371,7 @@ else
 			.ToList();
 
 		currentFolderCaption = FolderId == Guid.Empty
-			? organization.Name
+			? currentOrganization.Name
 			: string.Empty;
 		breadcrumbItems = [];
 
@@ -283,7 +383,7 @@ else
 			[
 				new LinkedItem
 				{
-					Caption = organization.Name,
+					Caption = currentOrganization.Name,
 					IconType = IconTypes.Home,
 					Url = string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId),
 				},
@@ -308,87 +408,136 @@ else
 		}
 	}
 
+	private string GetCreateAdrUrl()
+	=> string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)
+	   + (FolderId == Guid.Empty ? string.Empty : $"?folder={FolderId}");
+
 	/// <summary>
-	/// Загружает наборы ADR по фильтрам один раз для организации
+	/// Преобразует папку в строку проводника
 	/// </summary>
-	private async Task EnsureFiltersLoadedAsync()
+	private ExplorerItem ToFolderItem(AdrFolderApiModel folder)
+		=> new(null, folder.Id, $"{folder.Name} ({GetFolderAdrCount(folder.Id)} ADR)",
+			string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, folder.Id),
+			IconTypes.Folder,
+			null,
+			null,
+			null);
+
+	/// <summary>
+	/// Преобразует ADR в строку проводника
+	/// </summary>
+	private static ExplorerItem ToExplorerItem(AdrApiModel adr)
+		=> new(adr.Id, null, $"#{adr.Number} {adr.Title}",
+			string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, adr.Id),
+			null,
+			adr.Number,
+			adr.Status,
+			adr.UpdatedAt ?? adr.CreatedAt);
+
+	private void RequestDelete(ExplorerItem item)
 	{
-		if (filtersLoaded)
-		{
-			return;
-		}
-
-		var openTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Proposed, AdrStatusApi.NeedsRevision], TokenSource.Token);
-		var approvedTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Approved], TokenSource.Token);
-		var rejectedTask = ApiClient.AdrGetByStatusesAsync(OrganizationId, [AdrStatusApi.Rejected], TokenSource.Token);
-		await Task.WhenAll(openTask, approvedTask, rejectedTask);
-
-		proposedAdrs = SortByUpdated(openTask.Result);
-		approvedAdrs = SortByUpdated(approvedTask.Result);
-		rejectedAdrs = SortByUpdated(rejectedTask.Result);
-		filtersLoaded = true;
+		deleteTarget = item;
+		deleteDialogText = item.AdrId != Guid.Empty
+			? $"Вы уверены, что хотите удалить {item.Caption}? Действие необратимо."
+			: $"Вы уверены, что хотите удалить папку «{item.Caption}»? Будут удалены все вложенные папки и их ADR. Действие необратимо.";
+		deleteDialog?.Open(item);
 	}
 
-	/// <summary>
-	/// Переключает уровень 1: содержимое папки или фильтры
-	/// </summary>
-	private async Task SwitchViewAsync(bool toFilters)
+	private async Task ConfirmDeleteAsync()
 	{
-		if (isFiltersView == toFilters)
+		if (deleteTarget == null || isDeleting) return;
+		isDeleting = true;
+		try
 		{
-			return;
-		}
-
-		isFiltersView = toFilters;
-		if (isFiltersView)
-		{
-			isLoaded = false;
-			StateHasChanged();
-			try
+			if (deleteTarget.AdrId != null)
 			{
-				await EnsureFiltersLoadedAsync();
-				errorMessage = null;
+				await ApiClient.AdrDeleteAsync(deleteTarget.AdrId.Value, TokenSource.Token);
 			}
-			catch (Exception exception)
+			else
 			{
-				errorMessage = exception.Message;
+				await ApiClient.AdrFolderDeleteAsync(deleteTarget.FolderId!.Value, TokenSource.Token);
 			}
-			isLoaded = true;
-			StateHasChanged();
+			deleteDialog?.Close();
+			filterAdrs.Clear();
+			await LoadFolderDataAsync();
 		}
+		catch (Exception exception) { errorMessage = exception.Message; }
+		isDeleting = false;
 	}
 
-	/// <summary>
-	/// Переключает уровень 2: фильтр статусов
-	/// </summary>
-	private void SwitchFilter(AdrStatusApi filter)
-	{
-		activeFilter = filter;
-	}
 
-	/// <summary>
-	/// Сбрасывает кэш фильтров при смене организации
-	/// </summary>
 	private void ResetFilters()
-	{
-		filtersLoaded = false;
-		activeFilter = AdrStatusApi.Proposed;
-		proposedAdrs = null;
-		approvedAdrs = null;
-		rejectedAdrs = null;
-	}
+		=> filterAdrs.Clear();
 
 	private static IReadOnlyCollection<AdrApiModel> SortByUpdated(IEnumerable<AdrApiModel> items)
 		=> items.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt).ToList();
 
-	private int GetFilterCount(AdrStatusApi filter)
-		=> filter switch
-		{
-			AdrStatusApi.Proposed => proposedAdrs?.Count ?? 0,
-			AdrStatusApi.Approved => approvedAdrs?.Count ?? 0,
-			_ => rejectedAdrs?.Count ?? 0,
-		};
+	private int GetFilterCount(AdrStatusApi status)
+		=> filterAdrs.GetValueOrDefault(status)?.Count ?? 0;
 
 	private int GetFolderAdrCount(Guid folderId)
 		=> folderAdrCounts.TryGetValue(folderId, out var count) ? count : 0;
+
+	private void ShowFolderInput()
+	{
+		isFolderInputVisible = true;
+		newFolderName = string.Empty;
+	}
+
+	private void HideFolderInput()
+	{
+		isFolderInputVisible = false;
+		newFolderName = string.Empty;
+	}
+
+	private async Task CreateFolderAsync()
+	{
+		if (isFolderSaving || string.IsNullOrWhiteSpace(newFolderName)) return;
+		isFolderSaving = true;
+		try
+		{
+			await ApiClient.AdrFolderCreateAsync(new CreateAdrFolderApiModel
+			{
+				Name = newFolderName.Trim(),
+				OrganizationId = OrganizationId,
+				ParentAdrFolderId = FolderId == Guid.Empty ? null : FolderId,
+			}, TokenSource.Token);
+			HideFolderInput();
+			await LoadFolderDataAsync();
+			errorMessage = null;
+		}
+		catch (Exception exception) { errorMessage = exception.Message; }
+		isFolderSaving = false;
+	}
+
+	private void EditFolder(ExplorerItem item)
+	{
+		editingFolderId = item.FolderId!.Value;
+		editFolderName = subfolders.First(x => x.Id == item.FolderId).Name;
+	}
+
+	private async Task SaveFolderNameAsync()
+	{
+		if (isFolderSaving || string.IsNullOrWhiteSpace(editFolderName)) return;
+		var folder = subfolders.First(x => x.Id == editingFolderId);
+		isFolderSaving = true;
+		try
+		{
+			await ApiClient.AdrFolderUpdateAsync(new UpdateAdrFolderApiModel
+			{
+				UserId = PortalIdentity.UserId,
+				Id = folder.Id,
+				Name = editFolderName.Trim(),
+				OrganizationId = folder.OrganizationId,
+				ParentAdrFolderId = folder.ParentAdrFolderId,
+			}, TokenSource.Token);
+			CancelFolderEdit();
+			await LoadFolderDataAsync();
+			errorMessage = null;
+		}
+		catch (Exception exception) { errorMessage = exception.Message; }
+		isFolderSaving = false;
+	}
+
+	private void CancelFolderEdit() => editingFolderId = Guid.Empty;
 }

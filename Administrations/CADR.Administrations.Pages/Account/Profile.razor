@@ -3,8 +3,8 @@
 @implements IDisposable
 
 @using CADR.Portal.Contracts.Interfaces
-@using CADR.Portal.Components.Enums.Font;
-@using CADR.Portal.Components.Controls.Adrs;
+@using CADR.Portal.Components.Enums.Font
+@using CADR.Portal.Components.Controls.Adrs
 @using System.Collections.ObjectModel
 
 @inject IPortalIdentity PortalIdentity
@@ -34,7 +34,7 @@
 
 		@if (organizations.Count != 0)
 		{
-			<FormPillsToolBar>
+			<Pills>
 				@foreach (var organization in organizations)
 				{
 					<PillItem IsActive="@(organization.Id == selectedOrganizationId)"
@@ -42,7 +42,7 @@
 						@organization.Name
 					</PillItem>
 				}
-			</FormPillsToolBar>
+			</Pills>
 
 			@if (errorMessage != null)
 			{

@@ -25,10 +25,9 @@
 		</Row>
 	}
 
-	<Header Column="Columns.TemplateAuto"
-			FlexContentGrow="FlexGrow.Grow1" Level="5">
-		Статус: @Model.Status
-	</Header>
+	<Badge Column="Columns.TemplateAuto" Background="@AdrsHelper.GetStatusColor(Model.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+		@AdrsHelper.GetStatusCaption(Model.Status)
+	</Badge>
 
 	<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
 		@if (Model.UpdatedAt != null)
@@ -38,7 +37,7 @@
 				Level="6">Последнее обновление: @Model.UpdatedAt
 			</Header>
 		}
-		<Header BorderColor="@AdrsHelper.GetScoreColor(Model.Score)"
+		<Header Foreground="@AdrsHelper.GetScoreColor(Model.Score)"
 			Column="Columns.TemplateAuto" Level="3">
 			<Icon IconType=IconTypes.Like></Icon> @Model.Score
 		</Header>
