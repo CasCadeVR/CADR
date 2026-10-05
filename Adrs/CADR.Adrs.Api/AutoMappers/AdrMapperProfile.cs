@@ -29,6 +29,8 @@ public class AdrMapperProfile : Profile
         CreateMap<AdrModel, AdrApiModel>(MemberList.Destination)
             .ForMember(x => x.Sections, opt => opt.MapFrom(x => x.Sections));
 
+        CreateMap<MoveAdrApiModel, MoveAdrModel>(MemberList.Destination);
+
         CreateMap<AdrFolderModel, AdrFolderApiModel>(MemberList.Destination);
 
         CreateMap<AdrCommentModel, AdrCommentApiModel>(MemberList.Destination);
@@ -58,7 +60,8 @@ public class AdrMapperProfile : Profile
         CreateMap<CreateAdrCommentApiModel, CreateAdrCommentModel>(MemberList.Destination);
         CreateMap<UpdateAdrCommentApiModel, UpdateAdrCommentModel>(MemberList.Destination);
 
-        CreateMap<CreateAdrFolderApiModel, CreateAdrFolderModel>(MemberList.Destination);
+        CreateMap<CreateAdrFolderApiModel, CreateAdrFolderModel>(MemberList.Destination)
+            .ForMember(x => x.UserId, opt => opt.Ignore());
         CreateMap<UpdateAdrFolderApiModel, UpdateAdrFolderModel>(MemberList.Destination);
 
         CreateMap<CreateAdrLinkApiModel, CreateAdrLinkModel>(MemberList.Destination);

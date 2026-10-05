@@ -19,98 +19,101 @@
 		@if (errorMessage != null)
 		{
 			<Alert Color="ThemeColors.Danger" Header="Ошибка">
-				<BodyContent>
+				<FooterContent>
 					<Paragraph>@errorMessage</Paragraph>
-				</BodyContent>
+				</FooterContent>
 			</Alert>
 		}
-		else
-		{
-			<Breadcrumb Items="breadcrumbItems" Caption="@currentFolderCaption" Margin="0 0 0 3"/>
 
+		<Breadcrumb EnableDrop="true" OnItemDrop="DropOnBreadcrumbAsync" Items="breadcrumbItems" Caption="@currentFolderCaption" Margin="0 0 0 3"/>
+
+		<FormPillsToolBar>
+			<ToolBarContent>
+				@if (!isFiltersView && currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
+				{
+					<Button Color="ThemeColors.Success" AsLink="true" Url="@GetCreateAdrUrl()">
+						<Icon IconType="IconTypes.Plus" /> Создать ADR
+					</Button>
+					<Button Margin="2 0 0 0" Color="ThemeColors.Success" Click="ShowFolderInput">
+						<Icon IconType="IconTypes.Plus" /> Создать Папку  <Icon IconType="IconTypes.Folder" />
+					</Button>
+				}
+			</ToolBarContent>
+			<PillsContent>
+				<PillItem IsActive="@(!isFiltersView)" Url="@GetViewUrl(false)">
+					<Icon IconType="IconTypes.Folder" /> Содержимое папки
+				</PillItem>
+				<PillItem IsActive="@(isFiltersView)" Url="@GetViewUrl(true)">
+					<Icon IconType="IconTypes.MagnifyingGlass" /> ADR по фильтрам
+				</PillItem>
+			</PillsContent>
+		</FormPillsToolBar>
+
+		@if (isFiltersView)
+		{
 			<FormPillsToolBar>
-				<ToolBarContent>
-					@if (!isFiltersView && currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
-					{
-						<Button Color="ThemeColors.Success" AsLink="true" Url="@GetCreateAdrUrl()">
-							<Icon IconType="IconTypes.Plus" /> Создать ADR
-						</Button>
-						<Button Margin="2 0 0 0" Color="ThemeColors.Success" Click="ShowFolderInput">
-							<Icon IconType="IconTypes.Plus" /> Создать Папку  <Icon IconType="IconTypes.Folder" />
-						</Button>
-					}
-				</ToolBarContent>
 				<PillsContent>
-					<PillItem IsActive="@(!isFiltersView)" Url="@GetViewUrl(false)">
-						<Icon IconType="IconTypes.Folder" /> Содержимое папки
-					</PillItem>
-					<PillItem IsActive="@(isFiltersView)" Url="@GetViewUrl(true)">
-						<Icon IconType="IconTypes.MagnifyingGlass" /> ADR по фильтрам
-					</PillItem>
+					@foreach (var status in Enum.GetValues<AdrStatusApi>())
+					{
+						<PillItem IsActive="@(activeStatus == status)" Url="@GetFilterUrl(status)">
+							@AdrsHelper.GetStatusCaption(status) (@GetFilterCount(status))
+						</PillItem>
+					}
 				</PillsContent>
 			</FormPillsToolBar>
+		}
 
-			@if (isFiltersView)
-			{
-				<FormPillsToolBar>
-					<PillsContent>
-						@foreach (var status in Enum.GetValues<AdrStatusApi>())
-						{
-							<PillItem IsActive="@(activeStatus == status)" Url="@GetFilterUrl(status)">
-								@AdrsHelper.GetStatusCaption(status) (@GetFilterCount(status))
-							</PillItem>
-						}
-					</PillsContent>
-				</FormPillsToolBar>
-			}
+		@if (isFolderInputVisible)
+		{
+			<Row Gutter="0" Gap="2" FlexItemsAlign="FlexAlign.Center" Margin="2 0 0 0">
+				<Column Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1">
+					<input class="form-control" placeholder="Название папки" @bind="newFolderName" />
+				</Column>
+				<Column Column="Columns.TemplateAuto">
+					<Button Color="ThemeColors.Success" IsOutline="true" Size="ButtonSize.Small"
+							IsDisabled="@string.IsNullOrWhiteSpace(newFolderName)" IsSpinner="isFolderSaving"
+							Click="CreateFolderAsync">
+						<Icon IconType="IconTypes.Check" />
+					</Button>
+				</Column>
+				<Column Column="Columns.TemplateAuto">
+					<button type="button" class="btn-close" @onclick="HideFolderInput"></button>
+				</Column>
+			</Row>
+		}
 
-			@if (isFolderInputVisible)
-			{
-				<Row Gutter="0" Gap="2" FlexItemsAlign="FlexAlign.Center" Margin="2 0 0 0">
-					<Column Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1">
-						<input class="form-control" placeholder="Название папки" @bind="newFolderName" />
-					</Column>
-					<Column Column="Columns.TemplateAuto">
-						<Button Color="ThemeColors.Success" IsOutline="true" Size="ButtonSize.Small"
-								IsDisabled="@string.IsNullOrWhiteSpace(newFolderName)" IsSpinner="isFolderSaving"
-								Click="CreateFolderAsync">
+		<Table TItem="ExplorerItem" Items="explorerItems" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
+			<TableHeader>
+				<th>Название</th>
+				<th style="width: 15%">Статус</th>
+				<th style="width: 15%">Обновлено</th>
+				<th style="width: 5%">Действие</th>
+			</TableHeader>
+			<RowTemplate Context="item">
+				@if (item.FolderId is not null && item.FolderId == editingFolderId)
+				{
+					<td>
+						<input class="form-control form-control-sm" @bind="editFolderName" />
+					</td>
+					<td><span class="text-muted">—</span></td>
+					<td><span class="text-muted">—</span></td>
+					<td class="text-end">
+						<Button Size="ButtonSize.Small" Color="ThemeColors.Success" IsOutline="true"
+								IsDisabled="@string.IsNullOrWhiteSpace(editFolderName)"
+								Click="SaveFolderNameAsync">
 							<Icon IconType="IconTypes.Check" />
 						</Button>
-					</Column>
-					<Column Column="Columns.TemplateAuto">
-						<button type="button" class="btn-close" @onclick="HideFolderInput"></button>
-					</Column>
-				</Row>
-			}
-
-			<Table TItem="ExplorerItem" Items="explorerItems" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
-				<TableHeader>
-					<th>Название</th>
-					<th style="width: 15%">Статус</th>
-					<th style="width: 15%">Обновлено</th>
-					<th style="width: 5%">Действие</th>
-				</TableHeader>
-				<RowTemplate Context="item">
-					@if (item.FolderId != Guid.Empty && item.FolderId == editingFolderId)
+						<button type="button" class="btn-close btn-sm ms-1" @onclick="CancelFolderEdit"></button>
+					</td>
+				}
+				else
+				{
+					@if (item.AdrId != null)
 					{
 						<td>
-							<input class="form-control form-control-sm" @bind="editFolderName" />
-						</td>
-						<td><span class="text-muted">—</span></td>
-						<td><span class="text-muted">—</span></td>
-						<td class="text-end">
-							<Button Size="ButtonSize.Small" Color="ThemeColors.Success" IsOutline="true"
-									IsDisabled="@string.IsNullOrWhiteSpace(editFolderName)"
-									Click="SaveFolderNameAsync">
-								<Icon IconType="IconTypes.Check" />
-							</Button>
-							<button type="button" class="btn-close btn-sm ms-1" @onclick="CancelFolderEdit"></button>
-						</td>
-					}
-					else
-					{
-						<td>
-							<CadrLink DisableLinkStyles="true" href="@item.Url">
+							<CadrLink DisableLinkStyles="true" draggable="@isManageAllowed"
+								@ondragstart="() => StartDrag(item)"
+								@ondragend="() => EndDrag()" Url="@item.Url">
 								@if (item.Icon != null)
 								{
 									<Icon IconType="@item.Icon.Value" />
@@ -119,65 +122,87 @@
 								@item.Caption
 							</CadrLink>
 						</td>
-						<td>
-							@if (item.Status != null)
-							{
-								<Badge Background="@AdrsHelper.GetStatusColor(item.Status.Value)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
-									@AdrsHelper.GetStatusCaption(item.Status.Value)
-								</Badge>
-							}
-							else
-							{
-								<span class="text-muted">—</span>
-							}
-						</td>
-						<td>
-							@if (item.UpdatedAt != null)
-							{
-								@item.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy")
-							}
-							else
-							{
-								<span class="text-muted">—</span>
-							}
-						</td>
-						<td>
-							<Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
-								@if (item.AdrId != null)
+					}
+					else
+					{
+						<td class="@(dropTargetFolderId == item.FolderId ? "table-active" : string.Empty)"
+							ondragover="event.preventDefault();"
+							@ondragstart="() => StartDrag(item)"
+							@ondragend="() => EndDrag()"
+							@ondragenter="() => SetDropTarget(item.FolderId!.Value)"
+							@ondragleave="() => SetDropTarget(Guid.Empty)"
+							@ondrop="() => DropOnFolder(item)"
+							@ondrop:preventDefault>
+							<CadrLink DisableLinkStyles="true"
+									Url="@item.Url">
+								@if (item.Icon != null)
 								{
-									<DropDownItem IconType="IconTypes.Info"
-										Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, item.AdrId)"
-										Disabled="false">
-										Детали
-									</DropDownItem>
+									<Icon IconType="@item.Icon.Value" />
+									<text>&nbsp;</text>
 								}
-								else
-								{
-									<DropDownItem IconType="IconTypes.Folder"
-										Url="@string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, item.FolderId)"
-										Disabled="false">
-										Содержимое
-									</DropDownItem>
-									<DropdownDivider />
-									<DropDownItem IconType="IconTypes.Pencil"
-												  Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
-												  Click="() => EditFolder(item)">
-										Редактировать
-									</DropDownItem>
-								}
-
-								<DropdownDivider />
-								<DropDownItem IconType="IconTypes.Trash"
-											  Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
-											  Click="() => RequestDelete(item)">
-									Удалить
-								</DropDownItem>
-							</Dropdown>
+								@item.Caption
+							</CadrLink>
 						</td>
 					}
-				</RowTemplate>
-			</Table>
-		}
+
+					<td>
+						@if (item.Status != null)
+						{
+							<Badge Background="@AdrsHelper.GetStatusColor(item.Status.Value)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+								@AdrsHelper.GetStatusCaption(item.Status.Value)
+							</Badge>
+						}
+						else
+						{
+							<span class="text-muted">—</span>
+						}
+					</td>
+					<td>
+						@if (item.UpdatedAt != null)
+						{
+							@item.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy")
+						}
+						else
+						{
+							<span class="text-muted">—</span>
+						}
+					</td>
+					<td>
+						<Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
+							@if (item.AdrId != null)
+							{
+								<DropDownItem IconType="IconTypes.Info"
+									Url="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, OrganizationId, item.AdrId)"
+									Disabled="false">
+									Детали
+								</DropDownItem>
+							}
+							else
+							{
+								<DropDownItem IconType="IconTypes.Folder"
+									Url="@string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, item.FolderId)"
+									Disabled="false">
+									Содержимое
+								</DropDownItem>
+								<DropdownDivider />
+								<DropDownItem IconType="IconTypes.Pencil"
+												Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
+												Click="() => EditFolder(item)">
+									Редактировать
+								</DropDownItem>
+							}
+
+							<DropdownDivider />
+							<DropDownItem IconType="IconTypes.Trash"
+											Disabled="currentOrganization?.RequestingUserRole is UserRoleApi.User"
+											Click="() => RequestDelete(item)">
+								Удалить
+							</DropDownItem>
+						</Dropdown>
+					</td>
+				}
+			</RowTemplate>
+		</Table>
 	</Container>
 }
 else
@@ -213,6 +238,7 @@ else
 
 	private string currentFolderCaption = string.Empty;
 	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
+	private IReadOnlyCollection<AdrFolderApiModel> allFolders = [];
 	private IReadOnlyCollection<AdrFolderApiModel> subfolders = [];
 	private Dictionary<Guid, int> folderAdrCounts = [];
 	private IReadOnlyCollection<AdrApiModel> folderAdrs = [];
@@ -227,6 +253,10 @@ else
 
 	private Guid editingFolderId;
 	private string editFolderName = string.Empty;
+
+	private ExplorerItem? draggingItem;
+	private bool isManageAllowed;
+	private Guid dropTargetFolderId;
 
 	/// <summary>
 	/// Идентификатор организации
@@ -308,7 +338,7 @@ else
 		}
 		catch (ApiException<ApiExceptionDetail> exception)
 			when (exception.StatusCode == (int)HttpStatusCode.Forbidden
-				  || exception.StatusCode == (int)HttpStatusCode.NotFound)
+						|| exception.StatusCode == (int)HttpStatusCode.NotFound)
 		{
 			NavigationManager.NavigateTo(Routes.InvitesDashboard);
 			return;
@@ -358,7 +388,8 @@ else
 	private async Task LoadFolderDataAsync()
 	{
 		currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
-		var allFolders = (await ApiClient.AdrFolderGetByOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
+		isManageAllowed = currentOrganization.RequestingUserRole == UserRoleApi.Admin || currentOrganization.RequestingUserRole == UserRoleApi.Architect;
+		allFolders = (await ApiClient.AdrFolderGetByOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
 		folderAdrs = FolderId == Guid.Empty
 			? SortByUpdated(await ApiClient.AdrGetByOrganizationAsync(OrganizationId, TokenSource.Token))
 				.Where(x => x.ParentAdrFolderId == null)
@@ -388,11 +419,13 @@ else
 					Url = string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId),
 				},
 			];
+
 			foreach (var folder in path.Take(path.Count - 1))
 			{
 				breadcrumbItems = breadcrumbItems.Append(new LinkedItem
 				{
 					Caption = folder.Name,
+					ItemId = folder.Id,
 					Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, OrganizationId, folder.Id),
 				}).ToList();
 			}
@@ -410,7 +443,7 @@ else
 
 	private string GetCreateAdrUrl()
 	=> string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)
-	   + (FolderId == Guid.Empty ? string.Empty : $"?folder={FolderId}");
+				+ (FolderId == Guid.Empty ? string.Empty : $"?folder={FolderId}");
 
 	/// <summary>
 	/// Преобразует папку в строку проводника
@@ -437,7 +470,7 @@ else
 	private void RequestDelete(ExplorerItem item)
 	{
 		deleteTarget = item;
-		deleteDialogText = item.AdrId != Guid.Empty
+		deleteDialogText = item.AdrId is not null
 			? $"Вы уверены, что хотите удалить {item.Caption}? Действие необратимо."
 			: $"Вы уверены, что хотите удалить папку «{item.Caption}»? Будут удалены все вложенные папки и их ADR. Действие необратимо.";
 		deleteDialog?.Open(item);
@@ -465,10 +498,6 @@ else
 		isDeleting = false;
 	}
 
-
-	private void ResetFilters()
-		=> filterAdrs.Clear();
-
 	private static IReadOnlyCollection<AdrApiModel> SortByUpdated(IEnumerable<AdrApiModel> items)
 		=> items.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt).ToList();
 
@@ -494,19 +523,15 @@ else
 	{
 		if (isFolderSaving || string.IsNullOrWhiteSpace(newFolderName)) return;
 		isFolderSaving = true;
-		try
+		await ApiClient.AdrFolderCreateAsync(new CreateAdrFolderApiModel
 		{
-			await ApiClient.AdrFolderCreateAsync(new CreateAdrFolderApiModel
-			{
-				Name = newFolderName.Trim(),
-				OrganizationId = OrganizationId,
-				ParentAdrFolderId = FolderId == Guid.Empty ? null : FolderId,
-			}, TokenSource.Token);
-			HideFolderInput();
-			await LoadFolderDataAsync();
-			errorMessage = null;
-		}
-		catch (Exception exception) { errorMessage = exception.Message; }
+			Name = newFolderName.Trim(),
+			OrganizationId = OrganizationId,
+			ParentAdrFolderId = FolderId == Guid.Empty ? null : FolderId,
+		}, TokenSource.Token);
+		HideFolderInput();
+		await LoadFolderDataAsync();
+		errorMessage = null;
 		isFolderSaving = false;
 	}
 
@@ -540,4 +565,117 @@ else
 	}
 
 	private void CancelFolderEdit() => editingFolderId = Guid.Empty;
+
+	private void StartDrag(ExplorerItem item) => draggingItem = item;
+
+	private void EndDrag()
+	{
+		draggingItem = null;
+		dropTargetFolderId = Guid.Empty;
+	}
+
+	private void SetDropTarget(Guid folderId) => dropTargetFolderId = folderId;
+
+	private async Task DropOnFolder(ExplorerItem target)
+	{
+		var source = draggingItem;
+		EndDrag();
+		if (source == null || target.FolderId is null)
+		{
+			return;
+		}
+
+		if (source.AdrId != null)
+		{
+			var adr = folderAdrs.FirstOrDefault(x => x.Id == source.AdrId);
+			if (adr == null || adr.ParentAdrFolderId == target.FolderId)
+			{
+				return;
+			}
+
+			await ApiClient.AdrMoveAsync(source.AdrId!.Value, new MoveAdrApiModel
+			{
+				UserId = PortalIdentity.UserId,
+				ParentAdrFolderId = target.FolderId,
+			}, TokenSource.Token);
+		}
+		else
+		{
+			var folder = subfolders.FirstOrDefault(x => x.Id == source.FolderId);
+			if (folder == null
+				|| folder.Id == target.FolderId
+				|| folder.ParentAdrFolderId == target.FolderId
+				|| IsDescendantFolder(folder.Id, target.FolderId!.Value))          // client mirror of IsDescendant
+			{
+				return;                                                      // silent no-op on invalid targets
+			}
+
+			await ApiClient.AdrFolderUpdateAsync(new UpdateAdrFolderApiModel
+			{
+				UserId = PortalIdentity.UserId,
+				Id = folder.Id,
+				Name = folder.Name,
+				OrganizationId = folder.OrganizationId,
+				ParentAdrFolderId = target.FolderId,
+			}, TokenSource.Token);
+		}
+
+		await LoadFolderDataAsync();
+		errorMessage = null;   // errors caught → AdrsHelper.GetErrorMessage (server guards as backstop)
+	}
+
+	private async Task DropOnBreadcrumbAsync(LinkedItem item)
+	{
+		var source = draggingItem;
+		EndDrag();
+		if (source == null) return;
+
+		var targetFolderId = item.ItemId;
+
+		if (source.AdrId is not null)
+		{
+			var adr = folderAdrs.FirstOrDefault(x => x.Id == source.AdrId);
+			if (adr == null || adr.ParentAdrFolderId == targetFolderId)
+			{
+				return;
+			}
+
+			await ApiClient.AdrMoveAsync(source.AdrId.Value, new MoveAdrApiModel
+			{
+				UserId = PortalIdentity.UserId,
+				ParentAdrFolderId = targetFolderId,
+			}, TokenSource.Token);
+		}
+		else
+		{
+			var folder = subfolders.FirstOrDefault(x => x.Id == source.FolderId);
+			if (folder == null || folder.ParentAdrFolderId == targetFolderId)
+			{
+				return;
+			}
+
+			await ApiClient.AdrFolderUpdateAsync(new UpdateAdrFolderApiModel
+			{
+				UserId = PortalIdentity.UserId,
+				Id = folder.Id,
+				Name = folder.Name,
+				OrganizationId = folder.OrganizationId,
+				ParentAdrFolderId = targetFolderId,
+			}, TokenSource.Token);
+		}
+
+		NavigationManager.NavigateTo(item.Url);
+		errorMessage = null;
+	}
+
+	private bool IsDescendantFolder(Guid folderId, Guid candidateId)
+	{
+		var current = candidateId;
+		while (current != Guid.Empty)
+		{
+			if (current == folderId) return true;
+			current = allFolders.FirstOrDefault(x => x.Id == current)?.ParentAdrFolderId ?? Guid.Empty;
+		}
+		return false;
+	}
 }

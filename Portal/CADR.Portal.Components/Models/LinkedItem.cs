@@ -19,4 +19,9 @@ public class LinkedItem
 
     /// <inheritdoc cref="IconTypes"/>
     public IconTypes? IconType { get; set; }
+
+    /// <summary>
+    /// Идентификатор элемента (для drag-and-drop). null — корневой элемент
+    /// </summary>
+    public Guid? ItemId { get; set; }
 }

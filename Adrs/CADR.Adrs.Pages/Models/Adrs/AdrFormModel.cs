@@ -14,6 +14,11 @@ public class AdrFormModel
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
+    /// Идентификатор используемого шаблона. Null если нет
+    /// </summary>
+    public Guid? TemplateId { get; set; }
+
+    /// <summary>
     /// Секции ADR
     /// </summary>
     public List<SectionEditModel> Sections { get; set; } = [];

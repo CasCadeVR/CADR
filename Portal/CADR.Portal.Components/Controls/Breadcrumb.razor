@@ -5,8 +5,13 @@
     <ol class="breadcrumb">
         @foreach (var item in Items)
         {
-            <li class="breadcrumb-item">
-                <a href="@item.Url">
+			<li class="breadcrumb-item @(EnableDrop && dropTargetItemId == item.ItemId ? "bg-info-subtle" : string.Empty)"
+				ondragover="event.preventDefault();"
+				@ondragenter="() => dropTargetItemId = item.ItemId"
+				@ondragleave="() => dropTargetItemId = null"
+				@ondrop="() => OnItemDrop.InvokeAsync(item)"
+				@ondrop:preventDefault>
+				<a href="@item.Url">
                     @if (item.IconType.HasValue)
                     {
                         <Icon IconType="@item.IconType.Value" />
@@ -25,6 +30,7 @@
 </nav>
 
 @code {
+	private Guid? dropTargetItemId;
 
 	/// <summary>
 	/// Заголовок элемента
@@ -33,6 +39,10 @@
 
 	/// <inheritdoc cref="RenderFragment"/>
 	[Parameter] public RenderFragment? CaptionAdditional { get; set; }
+
+	[Parameter] public bool EnableDrop { get; set; }
+
+	[Parameter] public EventCallback<LinkedItem> OnItemDrop { get; set; }
 
 	/// <summary>
 	/// Список элементов хлебных крошек

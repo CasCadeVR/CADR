@@ -14,4 +14,14 @@ public class SectionEditModel
     /// Содержимое секции
     /// </summary>
     public string Content { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Подксказка от шаблона
+    /// </summary>
+    public string Hint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Placeholder от шаблона
+    /// </summary>
+    public string Placeholder { get; set; } = string.Empty;
 }

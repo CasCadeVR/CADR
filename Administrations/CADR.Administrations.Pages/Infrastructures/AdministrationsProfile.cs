@@ -22,6 +22,8 @@ public class AdministrationsProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.RequestingUserRole, opt => opt.Ignore());
         CreateMap<OrganizationApiModel, OrganizationRequestModel>(MemberList.Destination);
+        CreateMap<AdrOrganizationSettingsApiModel, UpdateAdrOrganizationSettingsApiModel>(MemberList.Destination)
+            .ForMember(dest => dest.UserId, opt => opt.Ignore());
         CreateMap<OrganizationInviteModel, InviteApiModel>(MemberList.Destination)
             .ForMember(x => x.Email, opt => opt.MapFrom(x => x.UserMail))
             .ForMember(x => x.Role, opt => opt.MapFrom(x => x.UserRole));

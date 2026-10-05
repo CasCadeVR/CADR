@@ -45,7 +45,7 @@
 	/// <inheritdoc />
 	protected override async Task OnParametersSetAsync()
 	{
-		if(Id.HasValue)
+		if (Id.HasValue)
 		{
 			var result = await ApiClient.OrganizationGetByIdAsync(Id.Value, TokenSource.Token);
 			if (result != null)

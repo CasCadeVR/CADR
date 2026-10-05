@@ -86,6 +86,36 @@ public static partial class Routes
             /// Главная страница организации. Константа для форматирования
             /// </summary>
             public const string DashboardFormat = $"{Prefix}/{{0}}/dashboard";
+
+            /// <summary>
+            /// Настройки организации
+            /// </summary>
+            public const string Settings = $"{Prefix}/{{organizationId:guid}}/adr-settings";
+
+            /// <summary>
+            /// Настройки организации. Константа для форматирования
+            /// </summary>
+            public const string SettingsFormat = $"{Prefix}/{{0}}/adr-settings";
+
+            /// <summary>
+            /// Создание шаблона ADR
+            /// </summary>
+            public const string TemplateForm = $"{Prefix}/{{organizationId:guid}}/adr-settings/templates/form";
+
+            /// <summary>
+            /// Создание шаблона ADR. Константа для форматирования
+            /// </summary>
+            public const string TemplateFormFormat = $"{Prefix}/{{0}}/adr-settings/templates/form";
+
+            /// <summary>
+            /// Редактирование шаблона ADR
+            /// </summary>
+            public const string TemplateFormUpdate = $"{Prefix}/{{organizationId:guid}}/adr-settings/templates/form/{{templateId:guid}}";
+
+            /// <summary>
+            /// Редактирование шаблона ADR. Константа для форматирования
+            /// </summary>
+            public const string TemplateFormUpdateFormat = $"{Prefix}/{{0}}/adr-settings/templates/form/{{1}}";
         }
     }
 }

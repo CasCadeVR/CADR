@@ -99,6 +99,23 @@ public class AdrController : ControllerBase
     }
 
     /// <summary>
+    /// Перемещает существующий ADR в другую папку
+    /// </summary>
+    [HttpPut("move/{id:guid}")]
+    [ApiNoContent]
+    [ApiUnauthorized]
+    [ApiForbidden]
+    [ApiNotFound]
+    [SwaggerOperation(OperationId = "AdrMove")]
+    public async Task<IActionResult> Move(Guid id, MoveAdrApiModel request, CancellationToken cancellationToken)
+    {
+        var model = mapper.Map<MoveAdrModel>(request);
+        model.UserId = identityProvider.Id;
+        await adrManager.MoveAdrAsync(id, model, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
     /// Удаляет существующий ADR
     /// </summary>
     [HttpDelete("{id:guid}")]

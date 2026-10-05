@@ -24,6 +24,28 @@
 				</FormInvalidFeedback>
 			</FormRow>
 
+			@if (!Id.HasValue)
+			{
+				<FormRow IsHorizontal="true" Label="Шаблон" LabelAreaWidth="Columns.Template3">
+					<select @key="templateSelectVersion" class="form-select"
+							value="@selectedTemplateId" @onchange="ChangeTemplateAsync">
+						<option value="">Без шаблона</option>
+						@foreach (var template in templates)
+						{
+							<option value="@template.Id.ToString()">
+								@template.Name (@template.Sections.Count секций)
+							</option>
+						}
+					</select>
+				</FormRow>
+				@if (selectedTemplate != null)
+				{
+					<Paragraph Foreground="ThemeColors.Muted" Margin="1 0 0 0">
+						Секции: @string.Join(" · ", selectedTemplate.Sections.OrderBy(x => x.Position).Select(x => x.Title))
+					</Paragraph>
+				}
+			}
+
 			@foreach (var entry in form.Sections.Select((section, index) => (section, index)))
 			{
 				var currentSection = entry.section;
@@ -36,6 +58,12 @@
 							Секция @(currentIndex + 1)
 						</Badge>
 					</Paragraph>
+					@if (!string.IsNullOrWhiteSpace(currentSection.Hint))
+					{
+						<Paragraph Foreground="ThemeColors.Muted" Margin="1 0 0 0">
+							<Icon IconType="IconTypes.QuestionMark" /> @currentSection.Hint
+						</Paragraph>
+					}
 					<Row Gutter="0" Gap="2" FlexItemsAlign="FlexAlign.Center">
 						<Column Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1">
 							<InputText @bind-Value="currentSection.Title" class="form-control" placeholder="Заголовок секции" />
@@ -56,7 +84,7 @@
 						</Column>
 					</Row>
 					<InputTextArea @bind-Value="currentSection.Content" rows="6" class="form-control mt-2"
-								   placeholder="Содержимое секции" />
+								   placeholder="@(string.IsNullOrWhiteSpace(currentSection.Placeholder) ? "Содержимое секции" : currentSection.Placeholder)" />
 				</div>
 			}
 
@@ -68,10 +96,29 @@
 	</CommonEditForm>
 </Container>
 
+<ContextModalDialog @ref="templateDialog" TItem="AdrTemplateApiModel" Title="Замена секций">
+	<ModalBody Context="template">
+		<Paragraph>
+			Секции будут заменены секциями шаблона «@(template?.Name)». Продолжить?
+		</Paragraph>
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Primary" Click="ConfirmTemplateAsync">Заменить</Button>
+		<Button Color="ThemeColors.Secondary" Click="CancelTemplate">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
 @code {
 	private string pageTitle = "Создание ADR";
 	private AdrFormModel form = new();
 	private AdrApiModel? loadedAdr;
+
+	private IReadOnlyCollection<AdrTemplateApiModel> templates = [];
+	private AdrTemplateApiModel? selectedTemplate;
+	private string selectedTemplateId = string.Empty;
+	private int templateSelectVersion;
+	private ContextModalDialog<AdrTemplateApiModel>? templateDialog;
+	private AdrTemplateApiModel? pendingTemplate;
 
 	/// <summary>
 	/// Идентификатор организации
@@ -96,6 +143,7 @@
 	{
 		if (!Id.HasValue)
 		{
+			await LoadTemplatesAsync();
 			form.Sections.Add(new SectionEditModel());
 		}
 
@@ -111,19 +159,121 @@
 			form.Title = loadedAdr!.Title;
 			form.Sections = loadedAdr.Sections
 				.OrderBy(x => x.Position)
-				.Select(x => new SectionEditModel { Title = x.Title, Content = x.Content })
+				.Select(x => new SectionEditModel
+				{
+					Title = x.Title,
+					Content = x.Content,
+					Hint = x.Hint,
+					Placeholder = x.Placeholder
+				})
 				.ToList();
 			pageTitle = $"Редактирование ADR #{loadedAdr.Number}";
 		}
 		else if (!Id.HasValue && loadedAdr != null)
 		{
+			await LoadTemplatesAsync();
 			loadedAdr = null;
 			form = new AdrFormModel();
+			selectedTemplate = null;
+			selectedTemplateId = string.Empty;
 			form.Sections.Add(new SectionEditModel());
 			pageTitle = "Создание ADR";
 		}
 
 		await base.OnParametersSetAsync();
+	}
+
+	/// <summary>
+	/// Загружает шаблоны, доступные организации
+	/// </summary>
+	private async Task LoadTemplatesAsync()
+	{
+		if (templates.Count != 0)
+		{
+			return;
+		}
+
+		templates = (await ApiClient.AdrTemplateGetAvailableForOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
+	}
+
+	/// <summary>
+	/// Обрабатывает выбор шаблона с подтверждением при изменённых секциях
+	/// </summary>
+	private async Task ChangeTemplateAsync(ChangeEventArgs args)
+	{
+		var template = templates.FirstOrDefault(x => x.Id.ToString() == (string?)args.Value);
+		if (template?.Id == selectedTemplate?.Id)
+		{
+			return;
+		}
+
+		if (template != null && IsSectionsDirty())
+		{
+			// селект уже показал новый выбор в DOM — откатываем через пересоздание
+			templateSelectVersion++;
+			pendingTemplate = template;
+			templateDialog?.Open(template);
+			return;
+		}
+
+		await ApplyTemplateAsync(template);
+	}
+
+	/// <summary>
+	/// Применяет выбранный шаблон к секциям формы
+	/// </summary>
+	private async Task ApplyTemplateAsync(AdrTemplateApiModel? template)
+	{
+		selectedTemplate = template;
+		selectedTemplateId = template?.Id.ToString() ?? string.Empty;
+		form.TemplateId = template?.Id;
+		if (template != null)
+		{
+			form.Sections = template.Sections
+				.OrderBy(x => x.Position)
+				.Select(x => new SectionEditModel
+				{
+					Title = x.Title,
+					Hint = x.Hint,
+					Placeholder = x.Placeholder
+				})
+				.ToList();
+		}
+		templateSelectVersion++;
+		await Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Проверяет, изменены ли секции формы
+	/// </summary>
+	private bool IsSectionsDirty()
+		=> form.Sections.Any(x => !string.IsNullOrWhiteSpace(x.Title) || !string.IsNullOrWhiteSpace(x.Content));
+
+	/// <summary>
+	/// Подтверждает замену секций шаблоном
+	/// </summary>
+	private async Task ConfirmTemplateAsync()
+	{
+		var template = pendingTemplate;
+		pendingTemplate = null;
+		templateDialog?.Close();
+		if (template == null)
+		{
+			templateSelectVersion++;
+			return;
+		}
+
+		await ApplyTemplateAsync(template);
+	}
+
+	/// <summary>
+	/// Отменяет замену секций шаблоном
+	/// </summary>
+	private void CancelTemplate()
+	{
+		pendingTemplate = null;
+		templateDialog?.Close();
+		templateSelectVersion++;
 	}
 
 	/// <summary>
@@ -141,6 +291,7 @@
 		var created = await ApiClient.AdrCreateAsync(new CreateAdrApiModel
 		{
 			Title = form.Title,
+			TemplateId = form.TemplateId,
 			OrganizationId = OrganizationId,
 			Status = AdrStatusApi.Proposed,
 			Score = 0,

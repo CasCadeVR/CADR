@@ -160,7 +160,7 @@
 							</Badge>
 							@if (allowedStatuses.Count != 0)
 							{
-								<select class="form-select mt-2" value="@selectedStatus" @onchange="ChangeStatusAsync">
+								<select @key="statusSelectVersion" class="form-select mt-2" value="@selectedStatus" @onchange="ChangeStatusAsync">
 									<option value="" selected disabled>Перевести в статус…</option>
 									@foreach (var status in allowedStatuses)
 									{
@@ -217,6 +217,7 @@ else
 	private string? newCommentText;
 	private bool isCommentSending;
 	private string selectedStatus = string.Empty;
+	private int statusSelectVersion;
 
 	private AdrApiModel? adr;
 	private IReadOnlyCollection<AdrCommentApiModel> comments = [];
@@ -298,7 +299,7 @@ else
 				IconType = IconTypes.Home,
 				Url = string.Format(Routes.Adrs.Organization.ListFormat, adr.OrganizationId),
 			},
-	];
+		];
 		foreach (var folder in adr.FolderPath)
 		{
 			breadcrumbItems = breadcrumbItems.Append(new LinkedItem
@@ -358,6 +359,7 @@ else
 			}, TokenSource.Token);
 			await LoadAdrAsync();
 			selectedStatus = string.Empty;
+			statusSelectVersion++;
 			errorMessage = null;
 		}
 		catch (Exception exception)
