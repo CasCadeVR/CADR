@@ -178,21 +178,52 @@
 					</Panel>
 
 					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 0">
-						<Header Level="5" Margin="0 0 0 3">Связи</Header>
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2">
+							<Header Level="5" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Связи</Header>
+							@if (IsManageAllowed)
+							{
+								<Button Size="ButtonSize.Small" Color="ThemeColors.Primary" IsOutline="true"
+										Click="() => isLinkTypeSelectVisible = !isLinkTypeSelectVisible">
+									<Icon IconType="IconTypes.Plus" />
+								</Button>
+							}
+						</Row>
+
+						@if (isLinkTypeSelectVisible && IsManageAllowed)
+						{
+							<select @key="linkSelectVersion" class="form-select form-select-sm mt-2"
+									value="@selectedLinkType" @onchange="OpenLinkDialogAsync">
+								<option value="" selected disabled>Тип связи…</option>
+								@foreach (var type in Enum.GetValues<AdrLinkTypeApi>())
+								{
+									<option value="@type.ToString()">@AdrsHelper.GetLinkTypeCaption(type)</option>
+								}
+							</select>
+						}
+
 						@if (links.Count == 0)
 						{
-							<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 0">Связанных ADR нет</Paragraph>
+							<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 3">Связанных ADR нет</Paragraph>
 						}
 						else
 						{
 							@foreach (var link in links)
 							{
-								<Paragraph Margin="2 0 0 0">
-									@AdrsHelper.GetLinkTypeCaption(link.Type):
-									<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr.OrganizationId, link.TargetAdrId)">
-										#@link.TargetAdrNumber @link.TargetAdrName
-									</a>
-								</Paragraph>
+								<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2" Margin="2 0 0 0">
+									<Paragraph Column="Columns.Template10" FlexContentGrow="FlexGrow.Grow1" Margin="0">
+										@AdrsHelper.GetLinkTypeCaption(link.Type, link.SourceAdrId == adr.Id):
+										<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr!.OrganizationId, link.TargetAdrId)">
+											#@link.TargetAdrNumber @link.TargetAdrName
+										</a>
+									</Paragraph>
+									@if (IsManageAllowed)
+									{
+										<Button Column="Columns.TemplateAuto" Padding="2" Color="ThemeColors.Danger" IsOutline="true"
+												Click="() => DeleteLinkAsync(link.Id)">
+											<Icon IconType="IconTypes.Trash" />
+										</Button>
+									}
+								</Row>
 							}
 						}
 					</Panel>
@@ -210,6 +241,42 @@ else
 	</Container>
 }
 
+<ContextModalDialog @ref="linkDialog" TItem="AdrLinkTypeApi" Title="Добавление связи">
+	<ModalBody Context="linkType">
+		<input class="form-control" placeholder="Поиск по названию или номеру…"
+			   @bind="linkSearchText" @bind:event="oninput" />
+		@if (linkSearchResults.Count == 0)
+		{
+			<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 0">Ничего не найдено</Paragraph>
+		}
+		else
+		{
+			@foreach (var candidate in linkSearchResults)
+			{
+				<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="4" Margin="2 0 0 0">
+					<Paragraph FlexContentGrow="FlexGrow.Grow1" Column="Columns.Template8" Margin="0">
+						#@candidate.Number @candidate.Title
+					</Paragraph>
+					<Badge Column="Columns.TemplateAuto" Background="@AdrsHelper.GetStatusColor(candidate.Status)"
+						Padding="2"
+						Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+						@AdrsHelper.GetStatusCaption(candidate.Status)
+					</Badge>
+					<Button Column="Columns.TemplateAuto" Color="ThemeColors.Primary" IsOutline="true"
+							Padding="2"
+							IsSpinner="isLinkSaving"
+							Click="() => CreateLinkAsync(linkType, candidate)">
+						Связать
+					</Button>
+				</Row>
+			}
+		}
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Secondary" Click="() => linkDialog?.Close()">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
 @code {
 	private bool isLoaded;
 	private string? errorMessage;
@@ -219,11 +286,25 @@ else
 	private string selectedStatus = string.Empty;
 	private int statusSelectVersion;
 
+	private bool isLinkTypeSelectVisible;
+	private string selectedLinkType = string.Empty;
+	private int linkSelectVersion;
+	private ContextModalDialog<AdrLinkTypeApi>? linkDialog;
+	private IReadOnlyCollection<AdrApiModel>? linkCandidates;
+	private string linkSearchText = string.Empty;
+	private bool isLinkSaving;
+
 	private AdrApiModel? adr;
 	private IReadOnlyCollection<AdrCommentApiModel> comments = [];
 	private IReadOnlyCollection<AdrLinkApiModel> links = [];
 	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
 	private OrganizationApiModel? currentOrganization;
+
+	/// <summary>
+	/// Разрешено ли управление ADR (создание связей, удаление)
+	/// </summary>
+	private bool IsManageAllowed
+		=> currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect;
 
 	private IReadOnlyCollection<AdrStatusApi> allowedStatuses
 		=> adr == null
@@ -231,6 +312,31 @@ else
 			: AdrsHelper.GetAllowedTargetStatuses(adr.Status,
 				currentOrganization?.RequestingUserRole ?? UserRoleApi.User,
 				adr.AuthorId == PortalIdentity.UserId);
+
+	/// <summary>
+	/// Результаты поиска ADR в модальном окне связей
+	/// </summary>
+	private IReadOnlyCollection<AdrApiModel> linkSearchResults
+	{
+		get
+		{
+			if (linkCandidates == null)
+			{
+				return [];
+			}
+
+			var query = linkSearchText.Trim();
+			if (query.Length == 0)
+			{
+				return linkCandidates;
+			}
+
+			return linkCandidates
+				.Where(x => x.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+							|| x.Number.ToString().StartsWith(query, StringComparison.Ordinal))
+				.ToList();
+		}
+	}
 
 	private string pageTitle
 		=> adr == null ? "ADR" : $"#{adr.Number} {adr.Title}";
@@ -270,11 +376,6 @@ else
 			NavigationManager.NavigateTo(Routes.InvitesDashboard);
 			return;
 		}
-		catch (Exception exception)
-		{
-			adr = null;
-			errorMessage = exception.Message;
-		}
 		isLoaded = true;
 		StateHasChanged();
 		await base.OnParametersSetAsync();
@@ -286,7 +387,7 @@ else
 	private async Task LoadAdrAsync()
 	{
 		adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
-		currentOrganization = await ApiClient.OrganizationGetByIdAsync(adr.OrganizationId, TokenSource.Token);
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(adr!.OrganizationId, TokenSource.Token);
 		comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
 			.OrderBy(x => x.CreatedAt)
 			.ToList();
@@ -308,6 +409,62 @@ else
 				Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, adr.OrganizationId, folder.Id),
 			}).ToList();
 		}
+	}
+
+	/// <summary>
+	/// Открывает модальное окно выбора ADR для связи выбранного типа
+	/// </summary>
+	private async Task OpenLinkDialogAsync(ChangeEventArgs args)
+	{
+		var type = Enum.Parse<AdrLinkTypeApi>((string?)args.Value ?? string.Empty);
+		if (adr == null)
+		{
+			return;
+		}
+
+		linkSelectVersion++;
+		linkSearchText = string.Empty;
+		linkCandidates = (await ApiClient.AdrGetByOrganizationAsync(adr.OrganizationId, TokenSource.Token))
+			.Where(x => x.Id != AdrId)
+			.Where(x => !links.Any(l => l.Type == type && l.TargetAdrId == x.Id))
+			.OrderBy(x => x.Number)
+			.ToList();
+
+		linkDialog?.Open(type);
+	}
+
+	/// <summary>
+	/// Создаёт связь с выбранным ADR
+	/// </summary>
+	private async Task CreateLinkAsync(AdrLinkTypeApi type, AdrApiModel target)
+	{
+		if (adr == null || isLinkSaving)
+		{
+			return;
+		}
+
+		isLinkSaving = true;
+		await ApiClient.AdrLinkCreateAsync(new CreateAdrLinkApiModel
+		{
+			Type = type,
+			SourceAdrId = AdrId,
+			TargetAdrId = target.Id,
+			UserId = PortalIdentity.UserId,
+		}, TokenSource.Token);
+		linkDialog?.Close();
+		links = (await ApiClient.AdrLinkGetByAdrAsync(AdrId, TokenSource.Token)).ToList();
+		errorMessage = null;
+		isLinkSaving = false;
+	}
+
+	/// <summary>
+	/// Удаляет связь
+	/// </summary>
+	private async Task DeleteLinkAsync(Guid linkId)
+	{
+		await ApiClient.AdrLinkDeleteAsync(linkId, TokenSource.Token);
+		links = links.Where(x => x.Id != linkId).ToList();
+		errorMessage = null;
 	}
 
 	/// <summary>

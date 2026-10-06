@@ -45,11 +45,13 @@ public static class AdrsHelper
     /// <summary>
     /// Получить описание связи
     /// </summary>
-    public static string GetLinkTypeCaption(AdrLinkTypeApi linkType)
+    /// <param name="linkType">тип связи</param>
+    /// <param name="isInitiator">является ли adr, источником связи и стоит ли соответсвенно его сколнять</param>
+    public static string GetLinkTypeCaption(AdrLinkTypeApi linkType, bool isInitiator = true)
         => linkType switch
         {
-            AdrLinkTypeApi.DeprecatedBy => "Устарел в пользу",
-            AdrLinkTypeApi.Supersedes => "Заменяет",
+            AdrLinkTypeApi.DeprecatedBy => isInitiator ? "Устарел в пользу" : "Действует как новая версия в пользу",
+            AdrLinkTypeApi.Supersedes => isInitiator ? "Заменяет" : "Заменён на",
             AdrLinkTypeApi.RelatedTo => "Связан с",
             _ => "Устарел",
         };

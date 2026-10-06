@@ -115,7 +115,7 @@
 		new() { IconType = IconTypes.Home, Caption = "Список организаций", Url = Routes.Administration.Organization.List, }
 	];
 
-	private readonly AdrOrganizationSettingsApiModel adrSettings = new();
+	private AdrOrganizationSettingsApiModel adrSettings = new();
 	private OrganizationApiModel? organization { get; set; }
 	private bool isLoaded;
 	private string? errorMessage;
@@ -154,7 +154,7 @@
 		var result = await ApiClient.AdrOrganizationSettingsGetByOrganizationIdAsync(OrganizationId, TokenSource.Token);
 		if (result != null)
 		{
-			Mapper.Map(result, adrSettings);
+			adrSettings = Mapper.Map<AdrOrganizationSettingsApiModel>(result);
 		}
 	}
 
