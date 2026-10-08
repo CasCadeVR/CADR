@@ -189,6 +189,12 @@ public enum IconTypes
     Reload,
 
     /// <summary>
+    /// Загрузить
+    /// </summary>
+    [CssClass("oi oi-data-transfer-download")]
+    Download,
+
+    /// <summary>
     /// Кусочек пазла
     /// </summary>
     [CssClass("oi oi-puzzle-piece")]

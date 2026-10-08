@@ -1,5 +1,7 @@
-﻿using CADR.Api.Client;
+﻿using System.Text;
+using CADR.Api.Client;
 using CADR.Portal.Components.Enums;
+using Microsoft.JSInterop;
 
 namespace CADR.Portal.Components.Infrastructures;
 
@@ -76,5 +78,14 @@ public static class AdrsHelper
             (AdrStatusApi.Rejected, _) when isAdmin => [AdrStatusApi.Proposed],
             _ => [],
         };
+    }
+
+    /// <summary>
+    /// Скачивает markdown-текст как файл через браузер
+    /// </summary>
+    public static async Task DownloadMarkdownAsync(IJSRuntime jsRuntime, string fileName, string markdown)
+    {
+        var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(markdown));
+        await jsRuntime.InvokeVoidAsync("downloadTextFile", fileName, "text/markdown;charset=utf-8", base64);
     }
 }

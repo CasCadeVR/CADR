@@ -5,10 +5,12 @@
 @using CADR.Portal.Components.Infrastructures
 @using CADR.Portal.Contracts.Interfaces
 @using System.Net
+@using Microsoft.JSInterop
 
 @inherits DisposableComponentBase
 @inject IPortalCadrApiClient ApiClient
 @inject IPortalIdentity PortalIdentity
+@inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
 <PageTitle>@currentFolderCaption</PageTitle>
@@ -61,6 +63,27 @@
 					}
 				</PillsContent>
 			</FormPillsToolBar>
+			@if (activeStatus == AdrStatusApi.Approved)
+			{
+				<Row Gutter="0" Gap="2">
+					<Container Column="Columns.TemplateAuto" FlexContentGrow="FlexGrow.Grow1"></Container>
+
+					@if (isExporting)
+					{
+						<Container Size="Containers.Default" Column="Columns.TemplateAuto" Padding="4 5">
+							<Paragraph TextAlignment="TextAlignments.Center" Padding="5">
+								<Spinner />
+							</Paragraph>
+						</Container>
+					}
+					else
+					{
+						<Button Padding="2" IsDisabled="isExporting" Column="Columns.TemplateAuto" Color="ThemeColors.Success" Click="async () => await ExportApprovedAdrs()">
+							<Icon IconType="IconTypes.Download" /> Экспортировать в MD
+						</Button>
+					}
+				</Row>
+			}
 		}
 
 		@if (isFolderInputVisible)
@@ -226,6 +249,7 @@ else
 
 @code {
 	private bool isLoaded;
+	private bool isExporting;
 	private string? errorMessage;
 	private Guid loadedOrganizationId;
 	private OrganizationApiModel? currentOrganization;
@@ -418,7 +442,7 @@ else
 					IconType = IconTypes.Home,
 					Url = string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId),
 				},
-			];
+		];
 
 			foreach (var folder in path.Take(path.Count - 1))
 			{
@@ -677,5 +701,25 @@ else
 			current = allFolders.FirstOrDefault(x => x.Id == current)?.ParentAdrFolderId ?? Guid.Empty;
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Экспортирует все одобренные ADR организации в один markdown-файл
+	/// </summary>
+	private async Task ExportApprovedAdrs()
+	{
+		try
+		{
+			isExporting = true;
+			var markdown = await ApiClient.AdrExportApprovedAsync(OrganizationId, TokenSource.Token);
+			await AdrsHelper.DownloadMarkdownAsync(JS,
+				$"ADR-{currentOrganization?.Name ?? "approved"}.md",
+				markdown);
+			errorMessage = null;
+		}
+		finally
+		{
+			isExporting = false;
+		}
 	}
 }

@@ -284,7 +284,7 @@ public class AdrController : ControllerBase
     public async Task<IActionResult> Export(Guid id, CancellationToken cancellationToken)
     {
         var result = await adrExportService.ExportToMarkdownAsync(id, identityProvider.Id, cancellationToken);
-        return Content(result, "text/markdown");
+        return new JsonResult(result);
     }
 
     /// <summary>
@@ -298,6 +298,6 @@ public class AdrController : ControllerBase
     public async Task<IActionResult> ExportApproved(Guid organizationId, CancellationToken cancellationToken)
     {
         var result = await adrExportService.ExportApprovedToMarkdownAsync(organizationId, identityProvider.Id, cancellationToken);
-        return Content(result, "text/markdown");
+        return new JsonResult(result);
     }
 }

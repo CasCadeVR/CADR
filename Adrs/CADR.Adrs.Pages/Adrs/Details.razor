@@ -5,10 +5,12 @@
 @using CADR.Portal.Components.Enums.Font;
 @using CADR.Portal.Components.Infrastructures;
 @using System.Net
+@using Microsoft.JSInterop
 
 @inherits DisposableComponentBase
 @inject IPortalCadrApiClient ApiClient
 @inject IPortalIdentity PortalIdentity
+@inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
 <PageTitle>@pageTitle</PageTitle>
@@ -177,13 +179,14 @@
 						<Paragraph><strong>Создан:</strong> @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</Paragraph>
 					</Panel>
 
-					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 0">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
 						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2">
 							<Header Level="5" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Связи</Header>
 							@if (IsManageAllowed)
 							{
 								<Button Size="ButtonSize.Small" Color="ThemeColors.Primary" IsOutline="true"
-										Click="() => isLinkTypeSelectVisible = !isLinkTypeSelectVisible">
+									Margin="0 0 0 3"
+									Click="() => isLinkTypeSelectVisible = !isLinkTypeSelectVisible">
 									<Icon IconType="IconTypes.Plus" />
 								</Button>
 							}
@@ -226,6 +229,17 @@
 								</Row>
 							}
 						}
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4">
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2">
+							<Header Level="5" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Экспорт</Header>
+							<Button Size="ButtonSize.Small" Color="ThemeColors.Info"
+								Foreground="ThemeColors.White"
+								Click="() => ExportAdr()">
+								<Icon IconType="IconTypes.Download" /> Экспортировать в MD
+							</Button>
+						</Row>
 					</Panel>
 				</Column>
 			</Row>
@@ -400,7 +414,7 @@ else
 				IconType = IconTypes.Home,
 				Url = string.Format(Routes.Adrs.Organization.ListFormat, adr.OrganizationId),
 			},
-		];
+	];
 		foreach (var folder in adr.FolderPath)
 		{
 			breadcrumbItems = breadcrumbItems.Append(new LinkedItem
@@ -571,5 +585,22 @@ else
 		{
 			errorMessage = exception.Message;
 		}
+	}
+
+	/// <summary>
+	/// Экспортирует ADR в markdown-файл
+	/// </summary>
+	private async Task ExportAdr()
+	{
+		if (adr == null)
+		{
+			return;
+		}
+
+		var markdown = await ApiClient.AdrExportAsync(AdrId, TokenSource.Token);
+		await AdrsHelper.DownloadMarkdownAsync(JS,
+			$"ADR-{adr.Number}.md",
+			markdown);
+		errorMessage = null;
 	}
 }
