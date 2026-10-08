@@ -49,6 +49,11 @@ public interface IAdrManager
     Task<AdrModel> UpdateAdrAsync(UpdateAdrModel model, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Перемещает существующий ADR в другую папку
+    /// </summary>
+    Task MoveAdrAsync(Guid id, MoveAdrModel model, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Удаляет существующий ADR
     /// </summary>
     Task DeleteAdrAsync(DeleteAdrModel model, CancellationToken cancellationToken);

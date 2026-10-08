@@ -69,12 +69,12 @@
                 <DropdownDivider/>
 				<DropDownItem IconType="IconTypes.Pencil"
 				    Url="@($"{Routes.Administration.Organization.Form}/{context.Id}")"
-				    Disabled="@(!context.UserIsAdmin)">
+					Disabled="@(context.RequestingUserRole != UserRoleApi.Admin)">
 					Редактировать
 				</DropDownItem>
 				<DropdownDivider/>
 				<DropDownItem IconType="IconTypes.Trash"
-				    Disabled="@(!context.UserIsAdmin)">
+					Disabled="@(context.RequestingUserRole != UserRoleApi.Admin)">
 					Удалить
 				</DropDownItem>
 			</Dropdown>

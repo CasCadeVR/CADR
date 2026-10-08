@@ -1,0 +1,146 @@
+﻿@attribute [Route(Routes.Administration.Organization.UserProfile)]
+@implements IDisposable
+
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Enums.Font;
+@using CADR.Portal.Components.Controls.Adrs;
+@using System.Collections.ObjectModel
+
+@inject IPortalIdentity PortalIdentity
+@inject IPortalCadrApiClient ApiClient
+
+<PageTitle>Профиль пользователя</PageTitle>
+
+@if (isLoaded)
+{
+	@if (profile == null)
+	{
+		<Container Size="Containers.Default" Padding="4 5">
+			<Alert Color="ThemeColors.Danger" Header="Профиль недоступен">
+				<BodyContent>
+					<Paragraph>@errorMessage</Paragraph>
+				</BodyContent>
+			</Alert>
+		</Container>
+	}
+	else
+	{
+		<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+			<Row FlexDirection="FlexDirections.RowLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+				<Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
+					<Image Src="/images/default-profile.jpg" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
+				</Panel>
+				<Panel ColumnLarge="Columns.Template6">
+					<Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
+						@profile.Name
+					</Header>
+					<Paragraph IsLead="true">
+						Логин: @profile.Login
+					</Paragraph>
+					<Paragraph IsLead="true">
+						Email: @profile.Email
+					</Paragraph>
+					<Paragraph IsLead="true">
+						Роль в организации: @GetRoleCaption(profile.Role)
+					</Paragraph>
+				</Panel>
+				@if (authorAdrs?.Count != 0)
+				{
+					<Column>
+						<Container Margin="0 0 0 3">
+							<Container Padding="4" Size="Containers.Default"
+									   Background="ThemeColors.Light"
+									   RoundedSize="RoundedSizes.Rounded3" Border="1">
+								<Header Level="5">Автор этих ADR: </Header>
+							</Container>
+						</Container>
+
+						<Row Gutter="3">
+							<Row Gutter="3">
+								@foreach (var adr in authorAdrs!)
+								{
+									<Column Column="Columns.Template12" ColumnMedium="Columns.Template6"
+											ColumnExtraExtraLarge="Columns.Template4">
+										<AdrCard Model="adr" />
+									</Column>
+								}
+							</Row>
+						</Row>
+					</Column>
+				}
+			</Row>
+		</Container>
+	}
+}
+
+@code {
+	private bool isLoaded;
+	private string? errorMessage;
+	private UserOrganizationApiModel? profile;
+	private ReadOnlyCollection<AdrApiModel>? authorAdrs;
+	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Идентификатор пользователя
+	/// </summary>
+	[Parameter]
+	public Guid UserId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		await LoadProfileAsync();
+		await LoadAuthorAdrsAsync();
+		isLoaded = true;
+		StateHasChanged();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadProfileAsync()
+	{
+		try
+		{
+			profile = await ApiClient.OrganizationUserProfileAsync(OrganizationId, UserId, cancellationTokenSource.Token);
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			profile = null;
+			errorMessage = exception.Message;
+		}
+	}
+
+	private async Task LoadAuthorAdrsAsync()
+	{
+		if (profile == null)
+		{
+			return;
+		}
+
+		var authorAdrsCollection = await ApiClient.AdrGetByAuthorAsync(OrganizationId, UserId, cancellationTokenSource.Token);
+		authorAdrs = new ReadOnlyCollection<AdrApiModel>(authorAdrsCollection.ToList());
+	}
+
+	private static string GetRoleCaption(UserRoleApi role)
+		=> role switch
+		{
+			UserRoleApi.Architect => "Архитектор",
+			UserRoleApi.Admin => "Администратор",
+			_ => "Пользователь",
+		};
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+	}
+}

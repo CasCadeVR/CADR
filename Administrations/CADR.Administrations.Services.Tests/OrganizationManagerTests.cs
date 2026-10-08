@@ -105,9 +105,9 @@ public class OrganizationManagerTests : CadrContextInMemory
             .NotBeEmpty()
             .And.HaveCount(2)
             .And.ContainSingle(x => x.Id == organization1.Id &&
-                                    x.UserIsAdmin)
+                                    x.RequestingUserRole == UserRole.Admin)
             .And.ContainSingle(x => x.Id == organization4.Id &&
-                                    !x.UserIsAdmin);
+                                    x.RequestingUserRole != UserRole.Admin);
     }
 
     /// <summary>
@@ -736,6 +736,106 @@ public class OrganizationManagerTests : CadrContextInMemory
 
         // Assert
         await act.Should().ThrowAsync<AdministrationAccessException>();
+    }
+
+    /// <summary>
+    /// Получение профиля пользователя организации работает
+    /// </summary>
+    [Fact]
+    public async Task GetUserProfileShouldWork()
+    {
+        // Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>(x => x.Id = Guid.NewGuid());
+        var requester = TestEntityProvider.Shared.Create<User>(x => x.Id = Guid.NewGuid());
+        var targetUser = TestEntityProvider.Shared.Create<User>(x => x.Id = Guid.NewGuid());
+        var requesterOrganization = TestEntityProvider.Shared.Create<UserOrganization>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.UserId = requester.Id;
+            x.Role = Role.User;
+        });
+        var targetUserOrganization = TestEntityProvider.Shared.Create<UserOrganization>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.UserId = targetUser.Id;
+            x.Role = Role.Architect;
+        });
+        Context.AddRange(organization, requester, targetUser, requesterOrganization, targetUserOrganization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await organizationManager.GetUserProfileAsync(
+            organization.Id,
+            targetUserOrganization.UserId,
+            requester.Id,
+            CancellationToken.None);
+
+        // Assert
+        result.Should().BeEquivalentTo(new
+        {
+            targetUser.Id,
+            targetUser.Name,
+            targetUser.Login,
+            targetUser.Email,
+            Role = Role.Architect,
+        });
+    }
+
+    /// <summary>
+    /// Получение профиля пользователя организации бросает исключение, если запрашивающий не состоит в организации
+    /// </summary>
+    [Fact]
+    public async Task GetUserProfileShouldThrowForNonMemberRequester()
+    {
+        // Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>(x => x.Id = Guid.NewGuid());
+        var targetUser = TestEntityProvider.Shared.Create<User>(x => x.Id = Guid.NewGuid());
+        var targetUserOrganization = TestEntityProvider.Shared.Create<UserOrganization>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.UserId = targetUser.Id;
+        });
+        Context.AddRange(organization, targetUser, targetUserOrganization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var act = () => organizationManager.GetUserProfileAsync(
+            organization.Id,
+            targetUser.Id,
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdministrationEntityNotFoundException<Organization>>()
+            .WithMessage($"*{organization.Id}*");
+    }
+
+    /// <summary>
+    /// Получение профиля пользователя организации бросает исключение, если профиль принадлежит пользователю не из организации
+    /// </summary>
+    [Fact]
+    public async Task GetUserProfileShouldThrowForOutsider()
+    {
+        // Arrange
+        var organization = TestEntityProvider.Shared.Create<Organization>(x => x.Id = Guid.NewGuid());
+        var requester = TestEntityProvider.Shared.Create<User>(x => x.Id = Guid.NewGuid());
+        var requesterOrganization = TestEntityProvider.Shared.Create<UserOrganization>(x =>
+        {
+            x.OrganizationId = organization.Id;
+            x.UserId = requester.Id;
+        });
+        Context.AddRange(organization, requester, requesterOrganization);
+        await UnitOfWork.SaveChangesAsync();
+
+        // Act
+        var act = () => organizationManager.GetUserProfileAsync(
+            organization.Id,
+            Guid.NewGuid(),
+            requester.Id,
+            CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdministrationEntityNotFoundException<User>>();
     }
 
     /// <summary>

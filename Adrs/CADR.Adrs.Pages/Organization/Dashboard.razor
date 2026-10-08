@@ -1,0 +1,153 @@
+﻿@attribute [Route(Routes.Administration.Organization.Dashboard)]
+
+@using CADR.Portal.Components.Controls.Adrs
+@using CADR.Portal.Contracts.Interfaces
+@using AutoMapper
+@using Portal.Components.Enums.Font
+@using System.Collections.ObjectModel
+@using System.Net
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IRecentOrganizationsProvider RecentOrganizationsProvider
+@inject IPortalIdentity PortalIdentity
+@inject IMapper Mapper
+@inject NavigationManager NavigationManager
+
+<PageTitle>@currentOrganization?.Name</PageTitle>
+@if (isLoaded)
+{
+	<Container Size="Containers.Default" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+		<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+			<Paragraph FlexContentGrow="FlexGrow.Grow1" Column="Columns.TemplateAuto" FontSize="FontSizes.Size2">
+				@currentOrganization?.Name
+			</Paragraph>
+
+			@if (recentAdrs?.Count > 0)
+			{
+				@if (currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
+				{
+					<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+							Color="ThemeColors.Success"
+							Url="@string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)">
+						<Icon IconType=IconTypes.Plus></Icon> Создать ADR
+					</Button>
+				}
+
+				<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+						Url="@string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId)">
+					<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
+				</Button>
+			}
+		</Row>
+
+		@if (recentAdrs?.Count > 0)
+		{
+			<Column>
+				<Container Margin="0 0 0 3">
+					<Container Padding="4" Size="Containers.Default" Background="ThemeColors.Light"
+						RoundedSize="RoundedSizes.Rounded3" Border="1">
+						<Header Level="5">Последние изменения ADR</Header>
+					</Container>
+				</Container>
+
+				<Row Gutter="3">
+					@foreach (var adr in recentAdrs!)
+					{
+						<AdrCard Model="adr" />
+					}
+				</Row>
+			</Column>
+		}
+		else
+		{
+			<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+				<Alert Color="ThemeColors.Primary" Header="Пока нету ни одного ADR :(">
+					<BodyContent>
+						<Paragraph>
+							Ждите появления новых ADR
+						</Paragraph>
+					</BodyContent>
+					<FooterContent>
+						@if (currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect)
+						{
+							<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+									Color="ThemeColors.Success"
+									Url="@string.Format(Routes.Adrs.Organization.AdrFormFormat, OrganizationId)">
+								<Icon IconType=IconTypes.Plus></Icon> Создать ADR
+							</Button>
+
+						}
+						<Button Margin="2 0 0 0" Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+								Url="@string.Format(Routes.Adrs.Organization.ListFormat, OrganizationId)">
+							<Icon IconType=IconTypes.Folder></Icon> Все ADR организации
+						</Button>
+					</FooterContent>
+				</Alert>
+			</Container>
+		}
+	</Container>
+}
+
+@code {
+	private bool isLoaded;
+	private ReadOnlyCollection<AdrApiModel>? recentAdrs;
+	private OrganizationApiModel? currentOrganization;
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Страница списка ADR
+	/// </summary>
+	[Parameter]
+	public int RecentAdrsPage { get; set; } = 1;
+
+	/// <summary>
+	/// Размер страницы списка ADR
+	/// </summary>
+	[Parameter]
+	public int RecentAdrsSize { get; set; } = 10;
+
+	/// <inheritdoc/>
+	protected override async Task OnParametersSetAsync()
+	{
+		RecentOrganizationsProvider.CheckOrganizations(OrganizationId);
+
+		try
+		{
+			isLoaded = false;
+			StateHasChanged();
+			await LoadOrganizationAsync();
+			if (currentOrganization != null)
+			{
+				await LoadRecentAdrsAsync();
+			}
+			isLoaded = true;
+			StateHasChanged();
+			await base.OnInitializedAsync();
+		}
+		catch (ApiException<ApiExceptionDetail> ex)
+			when (ex.StatusCode == (int)HttpStatusCode.Forbidden
+			   || ex.StatusCode == (int)HttpStatusCode.NotFound)
+		{
+			NavigationManager.NavigateTo(Routes.InvitesDashboard);
+		}
+
+		await base.OnParametersSetAsync();
+	}
+
+	private async Task LoadOrganizationAsync()
+	{
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+	}
+
+	private async Task LoadRecentAdrsAsync()
+	{
+		var recentAdrsCollection = await ApiClient.AdrGetRecentAsync(currentOrganization!.Id, RecentAdrsSize);
+		recentAdrs = new ReadOnlyCollection<AdrApiModel>(recentAdrsCollection.ToList());
+	}
+}

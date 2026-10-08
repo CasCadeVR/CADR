@@ -52,7 +52,7 @@
 				break;
 
 			case ApiException<ApiValidationExceptionDetail> ex:
-				TryAddToast(new Toast(ToastTypes.Light, string.Join(Environment.NewLine, ex.Result.Errors)));
+				TryAddToast(new Toast(ToastTypes.Light, string.Join(Environment.NewLine, ex.Result.Errors.Select(x => x.Message))));
 				break;
 
 			case ApiException ex:

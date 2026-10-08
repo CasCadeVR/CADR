@@ -1,0 +1,185 @@
+﻿@attribute [Route(Routes.Administration.Organization.Settings)]
+
+@using CADR.Portal.Components.Models
+@using AutoMapper
+@using CADR.Portal.Contracts.Interfaces
+
+@inherits DisposableComponentBase
+
+@inject IPortalCadrApiClient ApiClient
+@inject NavigationManager NavigationManager
+@inject IMapper Mapper
+
+<PageTitle>Настройка ADR организации</PageTitle>
+
+<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template12" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+	<Row>
+		<Breadcrumb Items="breadcrumbItems" Caption="@(organization?.Name ?? string.Empty)"
+					FlexItemsAlign="FlexAlign.Center" />
+	</Row>
+	<Header Level="3">Настройка ADR организации</Header>
+	@if (!isLoaded)
+	{
+		<Paragraph TextAlignment="TextAlignments.Center">
+			<Spinner />
+		</Paragraph>
+	}
+	else
+	{
+		@if (errorMessage != null)
+		{
+			<Alert Color="ThemeColors.Danger" Header="Ошибка">
+				<BodyContent>
+					<Paragraph>@errorMessage</Paragraph>
+				</BodyContent>
+			</Alert>
+		}
+
+		<CommonEditForm Model="adrSettings"
+						Handler="FormHandler"
+						SubmitText="Сохранить">
+			<ChildContent>
+				<FormRow IsHorizontal="true" Label="Сколько лайков нужно ADR, чтобы признать его одобренным" LabelAreaWidth="Columns.Template6">
+					<CadrInputNumber @bind-Value="adrSettings.LikesRequiredForApproval" class="form-control" id="inputLikes" />
+					<FormInvalidFeedback>
+						<ValidationMessage For="() => adrSettings.LikesRequiredForApproval" />
+					</FormInvalidFeedback>
+				</FormRow>
+			</ChildContent>
+		</CommonEditForm>
+
+		<Row FlexItemsAlign="FlexAlign.Center" Margin="0 3 0 0">
+			<Header Level="3" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Шаблоны ADR</Header>
+			<Button Color="ThemeColors.Success" AsLink="true"
+					Url="@string.Format(Routes.Administration.Organization.TemplateFormFormat, OrganizationId)">
+				<Icon IconType="IconTypes.Plus" /> Создать шаблон
+			</Button>
+		</Row>
+
+		<Table TItem="AdrTemplateApiModel" Items="templates" HoverRows="true" EmptyMessage="Шаблоны не созданы" Margin="2 0 0 0">
+			<TableHeader>
+				<th>Название</th>
+				<th style="width: 15%">Секций</th>
+				<th style="width: 15%">Тип</th>
+				<th style="width: 10%">Действие</th>
+			</TableHeader>
+			<RowTemplate Context="template">
+				<td>
+					@if (template.OrganizationId == OrganizationId)
+					{
+						<a href="@string.Format(Routes.Administration.Organization.TemplateFormUpdateFormat, OrganizationId, template.Id)">@template.Name</a>
+					}
+					else
+					{
+						<span class="text-muted">@template.Name</span>
+					}
+				</td>
+				<td>@template.Sections.Count</td>
+				<td>
+					@if (template.IsBuiltIn)
+					{
+						<Badge Background="ThemeColors.Info" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">Встроенный</Badge>
+					}
+					else
+					{
+						<Badge Background="ThemeColors.Secondary" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">Свой</Badge>
+					}
+				</td>
+				<td>
+					@if (!template.IsBuiltIn && template.OrganizationId == OrganizationId)
+					{
+						<Button Size="ButtonSize.Small" IsOutline="true" Color="ThemeColors.Danger"
+								Click="() => RequestTemplateDelete(template)">
+							<Icon IconType="IconTypes.Trash" />
+						</Button>
+					}
+				</td>
+			</RowTemplate>
+		</Table>
+	}
+</Container>
+
+<ContextModalDialog @ref="deleteTemplateDialog" TItem="AdrTemplateApiModel" Title="Подтверждение удаления">
+	<ModalBody Context="template">
+		<Paragraph>Вы уверены, что хотите удалить шаблон «@(template?.Name)»? Действие необратимо.</Paragraph>
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Danger" Click="DeleteTemplateAsync">Удалить</Button>
+		<Button Color="ThemeColors.Secondary" Click="() => deleteTemplateDialog?.Close()">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
+@code {
+	private readonly IReadOnlyCollection<LinkedItem> breadcrumbItems =
+	[
+		new() { IconType = IconTypes.Home, Caption = "Список организаций", Url = Routes.Administration.Organization.List, }
+	];
+
+	private AdrOrganizationSettingsApiModel adrSettings = new();
+	private OrganizationApiModel? organization { get; set; }
+	private bool isLoaded;
+	private string? errorMessage;
+
+	private IReadOnlyCollection<AdrTemplateApiModel> templates = [];
+	private ContextModalDialog<AdrTemplateApiModel>? deleteTemplateDialog;
+	private AdrTemplateApiModel? deleteTemplateTarget;
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadItemsAsync();
+		await base.OnInitializedAsync();
+	}
+
+	private async Task LoadItemsAsync()
+	{
+		isLoaded = false;
+		StateHasChanged();
+		organization = await ApiClient.OrganizationGetByIdAsync(OrganizationId, TokenSource.Token);
+		templates = (await ApiClient.AdrTemplateGetAvailableForOrganizationAsync(OrganizationId, TokenSource.Token)).ToList();
+		errorMessage = null;
+		isLoaded = true;
+		StateHasChanged();
+	}
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		var result = await ApiClient.AdrOrganizationSettingsGetByOrganizationIdAsync(OrganizationId, TokenSource.Token);
+		if (result != null)
+		{
+			adrSettings = Mapper.Map<AdrOrganizationSettingsApiModel>(result);
+		}
+	}
+
+	private async Task FormHandler(CancellationToken cancellationToken)
+	{
+		var request = Mapper.Map<UpdateAdrOrganizationSettingsApiModel>(adrSettings);
+		await ApiClient.AdrOrganizationSettingsSaveAsync(request, cancellationToken);
+	}
+
+	private void RequestTemplateDelete(AdrTemplateApiModel template)
+	{
+		deleteTemplateTarget = template;
+		deleteTemplateDialog?.Open(template);
+	}
+
+	private async Task DeleteTemplateAsync()
+	{
+		if (deleteTemplateTarget == null)
+		{
+			return;
+		}
+
+		await ApiClient.AdrTemplateDeleteAsync(deleteTemplateTarget.Id, TokenSource.Token);
+		deleteTemplateDialog?.Close();
+		templates = templates.Where(x => x.Id != deleteTemplateTarget.Id).ToList();
+		errorMessage = null;
+	}
+}

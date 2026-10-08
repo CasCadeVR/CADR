@@ -1,4 +1,6 @@
-﻿namespace CADR.Administrations.Api.Models.Organizations;
+﻿using CADR.Administrations.Api.Models.Enums;
+
+namespace CADR.Administrations.Api.Models.Organizations;
 
 /// <summary>
 /// Api модель организации
@@ -21,8 +23,7 @@ public class OrganizationApiModel
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Флаг, указывающий, является ли пользователь, запрашиваемый организацию
-    /// её администратором
+    /// Роль запрашивающего пользователя
     /// </summary>
-    public bool UserIsAdmin { get; set; }
+    public UserRoleApi RequestingUserRole { get; set; }
 }

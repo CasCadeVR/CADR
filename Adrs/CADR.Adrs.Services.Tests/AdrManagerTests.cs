@@ -130,50 +130,6 @@ public class AdrManagerTests : CadrContextInMemory
     }
 
     /// <summary>
-    /// Создание ADR создаёт разделы по шаблону
-    /// </summary>
-    [Fact]
-    public async Task CreateShouldInstantiateSectionsFromTemplate()
-    {
-        //Arrange
-        var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
-        var template = TestEntityProvider.Shared.Create<AdrTemplate>(x => x.OrganizationId = null);
-        var templateSection1 = TestEntityProvider.Shared.Create<AdrTemplateSection>(x =>
-        {
-            x.TemplateId = template.Id;
-            x.Position = 1;
-            x.Placeholder = $"Placeholder{Guid.NewGuid()}";
-        });
-        var templateSection2 = TestEntityProvider.Shared.Create<AdrTemplateSection>(x =>
-        {
-            x.TemplateId = template.Id;
-            x.Position = 2;
-            x.Placeholder = $"Placeholder{Guid.NewGuid()}";
-        });
-        await Context.AddRangeAsync(template, templateSection1, templateSection2);
-        await UnitOfWork.SaveChangesAsync();
-        var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.AuthorId = architect.Id;
-            x.Status = ContractEnums.AdrStatus.Draft;
-            x.TemplateId = template.Id;
-        });
-
-        // Act
-        var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
-
-        // Assert
-        result.Sections.Should()
-            .HaveCount(2)
-            .And.BeEquivalentTo(new[]
-            {
-                new { Position = 1, templateSection1.Title, templateSection1.Hint, templateSection1.Placeholder, },
-                new { Position = 2, templateSection2.Title, templateSection2.Hint, templateSection2.Placeholder, },
-            });
-    }
-
-    /// <summary>
     /// Создание ADR выдаёт ошибку: шаблон из другой организации
     /// </summary>
     [Fact]
@@ -355,6 +311,54 @@ public class AdrManagerTests : CadrContextInMemory
 
         // Act
         Func<Task> act = () => adrManager.UpdateAdrAsync(model, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<AdrAccessException>();
+    }
+
+    /// <summary>
+    /// Обновление ADR архитектором работает и заменяет разделы
+    /// </summary>
+    [Fact]
+    public async Task MoveShouldWork()
+    {
+        //Arrange
+        var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
+        var adr = await SeedAdrAsync(organization, architect.Id, EntityEnums.AdrStatus.Draft);
+        var newFolder = TestEntityProvider.Shared.Create<AdrFolder>();
+        await Context.AddAsync(newFolder);
+        await UnitOfWork.SaveChangesAsync();
+        var model = TestEntityProvider.Shared.Create<MoveAdrModel>(x =>
+        {
+            x.ParentAdrFolderId = newFolder.Id;
+            x.UserId = architect.Id;
+        });
+
+        // Act
+        Func<Task> act = () => adrManager.MoveAdrAsync(adr.Id, model, CancellationToken.None);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+        Context.Set<Adr>().First(x => x.Id == adr.Id).ParentAdrFolderId.Should().Be(newFolder.Id);
+    }
+
+    /// <summary>
+    /// Обновление ADR выдаёт ошибку: не хватает прав
+    /// </summary>
+    [Fact]
+    public async Task MoveShouldThrowDeny()
+    {
+        //Arrange
+        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+        var adr = await SeedAdrAsync(organization, Guid.NewGuid(), EntityEnums.AdrStatus.Draft);
+        var model = TestEntityProvider.Shared.Create<MoveAdrModel>(x =>
+        {
+            x.UserId = user.Id;
+            x.ParentAdrFolderId = Guid.NewGuid();
+        });
+
+        // Act
+        Func<Task> act = () => adrManager.MoveAdrAsync(adr.Id, model, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<AdrAccessException>();
@@ -632,37 +636,6 @@ public class AdrManagerTests : CadrContextInMemory
 
         // Assert
         await act.Should().ThrowAsync<AdrInvalidOperationException>();
-    }
-
-    /// <summary>
-    /// Голосование выдаёт ошибку: не хватает прав
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldThrowDeny()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var user = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = user.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.User;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = user.Id,
-            Vote = ContractEnums.AdrVoteType.Like,
-        };
-
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<AdrAccessException>();
     }
 
     /// <summary>

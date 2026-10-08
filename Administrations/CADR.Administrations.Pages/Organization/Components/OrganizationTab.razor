@@ -15,6 +15,21 @@
             TableItems="FilteredItems"
             EmptyTableMessage="@EmptyTableMessage">
     <TabHeader>
+		<Row>
+            <Breadcrumb Items="breadcrumbItems" Caption="@(Organization?.Name ?? string.Empty)"
+                        FlexItemsAlign="FlexAlign.Center">
+                <CaptionAdditional>
+                    @if (Organization != null && Organization.RequestingUserRole == UserRoleApi.Admin)
+                    {
+                        <CadrLink Url="@string.Format(Routes.Administration.Organization.SettingsFormat, Organization.Id)"
+									  DisableLinkStyles="true"
+									  Margin="1 0 0 0">
+                            <Icon IconType="IconTypes.Cog"/>
+                        </CadrLink>
+                    }
+                </CaptionAdditional>
+            </Breadcrumb>
+        </Row>
         <Row>
             <FormPillsToolBar Totals="ItemsSource?.Count" Current="FilteredItems?.Count">
                 <PillsContent>

@@ -19,6 +19,7 @@ builder.Services.AddCadrApiClient(builder.Configuration);
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddIdentity();
+builder.Services.AddRecentOrganizationsProvider();
 builder.Services.AddJsEventHandlers();
 builder.Services.AddDependencyInjection();
 

@@ -92,21 +92,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             {
                 throw new AdrInvalidOperationException(ErrorMessages.TemplateNotAvailable);
             }
-
-            var templateSections = await adrTemplateSectionReadRepository.GetByTemplateIdAsync(template.Id, cancellationToken);
-            foreach (var templateSection in templateSections.OrderBy(x => x.Position))
-            {
-                var section = new AdrSection
-                {
-                    Id = Guid.NewGuid(),
-                    Position = templateSection.Position,
-                    Title = templateSection.Title,
-                    AdrId = adr.Id,
-                };
-
-                adr.Sections.Add(section);
-                adrSectionWriteRepository.Add(section);
-            }
         }
 
         adrWriteRepository.Add(adr);
@@ -215,6 +200,22 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         return result;
     }
 
+    async Task IAdrManager.MoveAdrAsync(Guid id, MoveAdrModel model, CancellationToken cancellationToken)
+    {
+        var adr = await GetAdrOrThrowAsync(id, cancellationToken);
+        await userOrganizationReadRepository.ThrowIfNotAdminOrArchitectureAsync<AdrAccessException>(model.UserId, adr.OrganizationId, cancellationToken);
+
+        adr.ParentAdrFolderId = model.ParentAdrFolderId;
+
+        if (adr.ParentAdrFolderId != model.ParentAdrFolderId && model.ParentAdrFolderId.HasValue)
+        {
+            await EnsureFolderAsync(adr.OrganizationId, model.ParentAdrFolderId.Value, cancellationToken);
+        }
+
+        adrWriteRepository.Update(adr);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     async Task IAdrManager.DeleteAdrAsync(DeleteAdrModel model, CancellationToken cancellationToken)
     {
         var adr = await GetAdrOrThrowAsync(model.AdrId, cancellationToken);
@@ -251,7 +252,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     async Task IAdrManager.VoteAsync(VoteAdrModel model, CancellationToken cancellationToken)
     {
         var adr = await GetAdrOrThrowAsync(model.AdrId, cancellationToken);
-        await userOrganizationReadRepository.ThrowIfNotAdminOrArchitectureAsync<AdrAccessException>(model.UserId, adr.OrganizationId, cancellationToken);
         if (adr.AuthorId == model.UserId)
         {
             throw new AdrInvalidOperationException(ErrorMessages.CannotVoteOwnAdr);
@@ -286,8 +286,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     async Task IAdrManager.WithdrawVoteAsync(WithdrawVoteAdrModel model, CancellationToken cancellationToken)
     {
         var adr = await GetAdrOrThrowAsync(model.AdrId, cancellationToken);
-        await userOrganizationReadRepository.ThrowIfNotAdminOrArchitectureAsync<AdrAccessException>(model.UserId, adr!.OrganizationId, cancellationToken);
-
         var vote = await adrVoteReadRepository.GetByAdrAndUserIdAsync(adr.Id, model.UserId, cancellationToken)
             .OrThrowIfNull(() => new AdrEntityNotFoundException<AdrVote>(adr.Id));
 

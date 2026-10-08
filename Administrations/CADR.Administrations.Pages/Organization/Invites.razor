@@ -39,7 +39,7 @@
             <Dropdown IconType="IconTypes.Wrench" Color="ThemeColors.Secondary" Size="ButtonSize.Small">
                 <DropDownItem IconType="IconTypes.Trash"
                               Click="@(() => DeleteInvitePrompt(context))"
-                              Disabled="!currentOrganization?.UserIsAdmin is true">
+                              Disabled="currentOrganization?.RequestingUserRole != UserRoleApi.Admin">
                     Удалить
                 </DropDownItem>
             </Dropdown>

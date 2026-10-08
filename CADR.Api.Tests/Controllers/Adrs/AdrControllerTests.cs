@@ -135,54 +135,6 @@ public class AdrControllerTests
     }
 
     /// <summary>
-    /// Создаёт ADR по шаблону и проверяет копирование разделов шаблона
-    /// </summary>
-    [Fact]
-    public async Task AdrCreateFromTemplateShouldCopySections()
-    {
-        // Arrange
-        var organization = await apiClient.OrganizationCreateAsync(new CreateOrganizationApiModel
-        {
-            Name = $"Name{Guid.NewGuid():N}",
-            Description = $"Description{Guid.NewGuid():N}",
-        });
-        var template = await apiClient.AdrTemplateCreateAsync(new CreateAdrTemplateApiModel
-        {
-            Name = $"Template{Guid.NewGuid():N}",
-            OrganizationId = organization.Id,
-            Sections = new List<CreateAdrTemplateSectionApiModel>
-            {
-                new() { Position = 1, Title = "Context", Hint = "ContextHint", Placeholder = "ContextPlaceholder" },
-                new() { Position = 2, Title = "Decision", Hint = "DecisionHint", Placeholder = "DecisionPlaceholder" },
-            },
-        });
-        var createModel = new CreateAdrApiModel
-        {
-            Title = $"Title{Guid.NewGuid():N}",
-            Status = AdrStatusApi.Draft,
-            OrganizationId = organization.Id,
-            TemplateId = template.Id,
-        };
-
-        // Act
-        var createResult = await apiClient.AdrCreateAsync(createModel);
-        var getResult = await apiClient.AdrGetAsync(createResult.Id);
-
-        // Assert
-        createResult.TemplateId.Should().Be(template.Id);
-        createResult.Sections.Should().HaveCount(2);
-        createResult.Sections.Should().BeEquivalentTo(template.Sections, options => options
-            .Excluding(x => x.Id)
-            .Excluding(x => x.TemplateId)
-            .WithStrictOrdering());
-        createResult.Sections.Should().OnlyContain(x => x.Content == string.Empty);
-        getResult.Sections.Should().BeEquivalentTo(template.Sections, options => options
-            .Excluding(x => x.Id)
-            .Excluding(x => x.TemplateId)
-            .WithStrictOrdering());
-    }
-
-    /// <summary>
     /// Меняет статус ADR с черновика на предложенный
     /// </summary>
     [Fact]

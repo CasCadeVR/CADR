@@ -1,51 +1,166 @@
 ﻿@attribute [Route(Routes.Administration.Account.Profile)]
+@attribute [Route(Routes.Administration.Account.ProfileWithOrganization)]
 @implements IDisposable
 
 @using CADR.Portal.Contracts.Interfaces
-@using CADR.Portal.Components.Enums.Font;
+@using CADR.Portal.Components.Enums.Font
+@using CADR.Portal.Components.Controls.Adrs
+@using System.Collections.ObjectModel
 
 @inject IPortalIdentity PortalIdentity
 @inject IPortalCadrApiClient ApiClient
 
 <PageTitle>Профиль пользователя</PageTitle>
-<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
-	<Row FlexDirection="FlexDirections.RowLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
-		<Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
-			<Image Src="/images/architecture-solution.png" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
-		</Panel>
-		<Panel ColumnLarge="Columns.Template6">
-			<Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
-				@PortalIdentity.Name
-			</Header>
-			<Paragraph IsLead="true">
-				Логин: @PortalIdentity.Login
-			</Paragraph>
-			<Paragraph IsLead="true">
-				Email: @PortalIdentity.Email
-			</Paragraph>
-		</Panel>
-	</Row>
-</Container>
+
+@if (isLoaded)
+{
+	<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template10" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
+		<Row FlexDirection="FlexDirections.RowLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+			<Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
+				<Image Src="/images/default-profile.jpg" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
+			</Panel>
+			<Panel ColumnLarge="Columns.Template6">
+				<Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
+					@PortalIdentity.Name
+				</Header>
+				<Paragraph IsLead="true">
+					Логин: @PortalIdentity.Login
+				</Paragraph>
+				<Paragraph IsLead="true">
+					Email: @PortalIdentity.Email
+				</Paragraph>
+			</Panel>
+		</Row>
+
+		@if (organizations.Count != 0)
+		{
+			<Pills>
+				@foreach (var organization in organizations)
+				{
+					<PillItem IsActive="@(organization.Id == selectedOrganizationId)"
+							  Url="@string.Format(Routes.Administration.Account.ProfileWithOrganizationFormat, organization.Id)">
+						@organization.Name
+					</PillItem>
+				}
+			</Pills>
+
+			@if (errorMessage != null)
+			{
+				<Alert Color="ThemeColors.Danger" Header="Ошибка">
+					<BodyContent>
+						<Paragraph>@errorMessage</Paragraph>
+					</BodyContent>
+				</Alert>
+			}
+			else if (authorAdrs?.Count != 0)
+			{
+				<Column>
+					<Container Margin="0 0 0 3">
+						<Container Padding="4" Size="Containers.Default"
+								   Background="ThemeColors.Light"
+								   RoundedSize="RoundedSizes.Rounded3" Border="1">
+							<Header Level="5">Ваши ADR в организации «@selectedOrganizationName»:</Header>
+						</Container>
+					</Container>
+
+					<Row Gutter="3">
+						<Row Gutter="3">
+							@foreach (var adr in authorAdrs!)
+							{
+								<Column Column="Columns.Template12" ColumnMedium="Columns.Template6"
+										ColumnExtraExtraLarge="Columns.Template4">
+									<AdrCard Model="adr" />
+								</Column>
+							}
+						</Row>
+					</Row>
+				</Column>
+			}
+			else
+			{
+				<Paragraph>Вы пока не создали ни одного ADR в этой организации</Paragraph>
+			}
+		}
+		else
+		{
+			<Paragraph>Вы не состоите ни в одной организации</Paragraph>
+		}
+	</Container>
+}
 
 @code {
+	private bool isLoaded;
+	private string? errorMessage;
+	private string selectedOrganizationName = string.Empty;
+	private IReadOnlyCollection<OrganizationApiModel> organizations = [];
 	private readonly CancellationTokenSource cancellationTokenSource = new();
+	private ReadOnlyCollection<AdrApiModel>? authorAdrs;
+	private Guid selectedOrganizationId;
+	private Guid loadedOrganizationId;
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
-		await LoadItemsAsync();
+		isLoaded = false;
+		StateHasChanged();
+		var organizationsCollection = await ApiClient.OrganizationGetAsync(cancellationTokenSource.Token);
+		organizations = organizationsCollection.ToList();
+		if (OrganizationId == Guid.Empty && organizations.Count > 0)
+		{
+			OrganizationId = organizations.First().Id;
+		}
+		await LoadAdrsAsync();
+		isLoaded = true;
+		StateHasChanged();
 		await base.OnInitializedAsync();
 	}
 
-	private async Task LoadItemsAsync()
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
 	{
-		StateHasChanged();
+		if (isLoaded && OrganizationId != Guid.Empty && OrganizationId != loadedOrganizationId)
+		{
+			isLoaded = false;
+			await LoadAdrsAsync();
+			isLoaded = true;
+		}
+		await base.OnParametersSetAsync();
 	}
 
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        cancellationTokenSource.Cancel();
-        cancellationTokenSource.Dispose();
-    }
+	private async Task LoadAdrsAsync()
+	{
+		selectedOrganizationId = OrganizationId;
+		selectedOrganizationName = organizations.FirstOrDefault(x => x.Id == OrganizationId)?.Name ?? string.Empty;
+		loadedOrganizationId = OrganizationId;
+		if (OrganizationId == Guid.Empty)
+		{
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>([]);
+			return;
+		}
+
+		try
+		{
+			var authorAdrsCollection = await ApiClient.AdrGetByAuthorAsync(OrganizationId, PortalIdentity.UserId, cancellationTokenSource.Token);
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>(authorAdrsCollection.ToList());
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			authorAdrs = new ReadOnlyCollection<AdrApiModel>([]);
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+	}
 }

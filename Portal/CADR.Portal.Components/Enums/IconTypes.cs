@@ -189,6 +189,12 @@ public enum IconTypes
     Reload,
 
     /// <summary>
+    /// Загрузить
+    /// </summary>
+    [CssClass("oi oi-data-transfer-download")]
+    Download,
+
+    /// <summary>
     /// Кусочек пазла
     /// </summary>
     [CssClass("oi oi-puzzle-piece")]
@@ -233,4 +239,28 @@ public enum IconTypes
     /// </summary>
     [CssClass("oi oi-briefcase")]
     Briefcase,
+
+    /// <summary>
+    /// Лайк
+    /// </summary>
+    [CssClass("oi oi-thumb-up")]
+    Like,
+
+    /// <summary>
+    /// Дизлайк
+    /// </summary>
+    [CssClass("oi oi-thumb-down")]
+    Dislike,
+
+    /// <summary>
+    /// Стрелка вверх
+    /// </summary>
+    [CssClass("oi oi-arrow-thick-top")]
+    ArrowUp,
+
+    /// <summary>
+    /// Стрелка вниз
+    /// </summary>
+    [CssClass("oi oi-arrow-thick-bottom")]
+    ArrowDown,
 }

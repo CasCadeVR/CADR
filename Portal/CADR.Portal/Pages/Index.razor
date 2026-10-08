@@ -3,48 +3,87 @@
 @layout AnonymousLayout
 @inject IPortalIdentity PortalIdentity
 
-<PageTitle>Главная</PageTitle>
+<PageTitle>CADR — архитектурные решения вашей команды</PageTitle>
 <Container Size="Containers.Default" ColumnExtraExtraLarge="Columns.Template8" Padding="4 5">
-    <Row FlexDirection="FlexDirections.RowReverseLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
-        <Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
-            <Image Src="/images/architecture-solution.png" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Bootstrap Themes" width="700" height="500" />
-        </Panel>
-        <Panel ColumnLarge="Columns.Template6">
-            <Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
-                Lorem ipsum dolor
-            </Header>
-            <Paragraph IsLead="true">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer venenatis augue elit. Duis iaculis sed ante in rhoncus. Nam a tellus id massa malesuada fringilla et sit amet arcu. Praesent lacinia, metus sed hendrerit viverra, mi nunc viverra risus, dignissim porttitor nisl leo a sapien. In tellus est, elementum quis vehicula vel, sollicitudin auctor lorem.
-            </Paragraph>
-            <Panel Display="Displays.Grid" DisplayMedium="Displays.Flex" FlexContentJustify="FlexJustify.StartMedium" Gap="2">
-                <Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *" Margin="md:* * 2 *" AsLink="true" Url="@Routes.Administration.Account.Login">Войти</Button>
-                <Button Color="ThemeColors.Secondary" IsOutline="true" Size="ButtonSize.Large" Padding="4 *" AsLink="true" Url="@Routes.Administration.Account.Registration">Регистрация</Button>
-            </Panel>
-        </Panel>
-    </Row>
+	<Row FlexDirection="FlexDirections.RowReverseLarge" FlexItemsAlign="FlexAlign.Center" Gutter="5" Padding="* 5">
+		<Panel Column="Columns.Template10" ColumnSmall="Columns.Template8" ColumnLarge="Columns.Template6">
+			<Image Src="/images/architecture-solution.png" Display="Displays.Block" Loading="ImageLoading.Lazy" Appearances="ImageAppearances.Fluid" Margin="lg:a *" alt="Архитектурное решение" width="700" height="500" />
+		</Panel>
+		<Panel ColumnLarge="Columns.Template6">
+			<Header Level="1" FontHeader="FontDisplays.Display5" FontStyle="FontStyles.Bold" LineHeight="LineHeights.Minimal" Margin="0 0 0 3">
+				Архитектурные решения вашей команды — в одном месте
+			</Header>
+			<Paragraph IsLead="true">
+				CADR — коллекция архитектурных решений (ADR) для организаций. Предлагайте, обсуждайте
+				и утверждайте решения так же удобно, как issues на GitHub: комментарии, голоса, статусы.
+				Храните их в древовидных папках и экспортируйте для людей и AI-агентов одним кликом.
+			</Paragraph>
+			<Panel Display="Displays.Grid" DisplayMedium="Displays.Flex" FlexContentJustify="FlexJustify.StartMedium" Gap="2">
+				<Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *" Margin="md:* * 2 *" AsLink="true" Url="@Routes.Administration.Account.Login">Войти</Button>
+				<Button Color="ThemeColors.Secondary" IsOutline="true" Size="ButtonSize.Large" Padding="4 *" AsLink="true" Url="@Routes.Administration.Account.Registration">Регистрация</Button>
+			</Panel>
+		</Panel>
+	</Row>
 </Container>
+
+<Container Size="Containers.Default" Padding="4 5">
+	<Row Gutter="3">
+		@foreach (var feature in features)
+		{
+			<Column Column="Columns.Template12" ColumnMedium="Columns.Template4">
+				<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" style="height: 100%">
+					<Header Level="4">
+						<Icon IconType="@feature.Icon" /> @feature.Title
+					</Header>
+					<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 0">
+						@feature.Description
+					</Paragraph>
+				</Panel>
+			</Column>
+		}
+	</Row>
+</Container>
+
 <Panel Background="ThemeColors.Light" Display="Displays.Block" Border="* 1" Shadow="Shadows.Small" style="height: 3rem"></Panel>
 <Panel Padding="4 5 4 *" Margin="* 5" TextAlignment="TextAlignments.Center" Border="* * * 1">
-    <Header Level="1" FontHeader="FontDisplays.Display4" FontStyle="FontStyles.Bold" Foreground="ThemeColors.BodyEmphasis">
-        Lorem ipsum dolor sit amet
-    </Header>
-    <Panel ColumnLarge="Columns.Template6" Margin="a *">
-        <Paragraph IsLead="true" Margin="* * * 4">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer venenatis augue elit. Duis iaculis sed ante in rhoncus. Nam a tellus id massa malesuada fringilla et sit amet arcu. Praesent lacinia, metus sed hendrerit viverra, mi nunc viverra risus, dignissim porttitor nisl leo a sapien. In tellus est, elementum quis vehicula vel, sollicitudin auctor lorem.
-        </Paragraph>
-        <Panel Display="Displays.Grid" Gap="2" DisplaySmall="Displays.Flex" FlexContentJustify="FlexJustify.CenterSmall" Margin="* * * 5">
-            <Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *">Узнать больше</Button>
-        </Panel>
-    </Panel>
-    <Panel Overflow="Overflows.Hidden" style="max-height: 30vh;">
-        <Container Padding="5 *" Size="Containers.Default">
-            <Image Src="/images/cadr-extend.png" Appearances="ImageAppearances.Fluid" Border="1" RoundedSize="RoundedSizes.Rounded3" Shadow="Shadows.Large" Margin="* * * 4" Loading="ImageLoading.Lazy" alt="Example image" width="700" height="500" />
-        </Container>
-    </Panel>
+	<Header Level="1" FontHeader="FontDisplays.Display4" FontStyle="FontStyles.Bold" Foreground="ThemeColors.BodyEmphasis">
+		Решения, которые не теряются
+	</Header>
+	<Panel ColumnLarge="Columns.Template6" Margin="a *">
+		<Paragraph IsLead="true" Margin="* * * 4">
+			Вместо созвонов и чатов, где решения растворяются в истории — формализованные ADR:
+			что решили, почему и какие альтернативы рассматривали. Новичок читает архив и понимает
+			систему за день, а не за месяц. Скачайте сводку одобренных решений и отдайте её AI-агенту —
+			он будет писать код в ваших правилах.
+		</Paragraph>
+		<Panel Display="Displays.Grid" Gap="2" DisplaySmall="Displays.Flex" FlexContentJustify="FlexJustify.CenterSmall" Margin="* * * 5">
+			<Button Color="ThemeColors.Primary" Size="ButtonSize.Large" Padding="4 *" AsLink="true" Url="@Routes.Administration.Account.Registration">Узнать больше</Button>
+		</Panel>
+	</Panel>
+	<Panel Overflow="Overflows.Hidden" style="max-height: 30vh;">
+		<Container Padding="5 *" Size="Containers.Default">
+			<Image Src="/images/cadr-extend.png" Appearances="ImageAppearances.Fluid" Border="1" RoundedSize="RoundedSizes.Rounded3" Shadow="Shadows.Large" Margin="* * * 4" Loading="ImageLoading.Lazy" alt="Пример ADR" width="700" height="500" />
+		</Container>
+	</Panel>
 </Panel>
 
 @code {
 	private readonly CancellationTokenSource cancellationTokenSource = new();
+
+	private sealed record Feature(IconTypes Icon, string Title, string Description);
+
+	private static IReadOnlyCollection<Feature> features { get; } =
+	[
+		new(IconTypes.Folder,
+			"Организации и папки",
+			"Древовидные каталоги как в файловом проводнике: команды ведут свои наборы ADR, каждый — с понятным контекстом и историей."),
+		new(IconTypes.Refresh,
+			"Прозрачный жизненный цикл",
+			"Предложен → обсуждение в комментариях → голосование → одобрен или отклонён. Порог автоодобрения настраивается под организацию."),
+		new(IconTypes.Download,
+			"Экспорт для агентов",
+			"Любой ADR или весь набор одобренных решений — в аккуратный markdown-документ, готовый для человека и AI-агента."),
+	];
 
 	protected override async Task OnInitializedAsync()
 	{

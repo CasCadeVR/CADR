@@ -99,6 +99,23 @@ public class AdrController : ControllerBase
     }
 
     /// <summary>
+    /// Перемещает существующий ADR в другую папку
+    /// </summary>
+    [HttpPut("move/{id:guid}")]
+    [ApiNoContent]
+    [ApiUnauthorized]
+    [ApiForbidden]
+    [ApiNotFound]
+    [SwaggerOperation(OperationId = "AdrMove")]
+    public async Task<IActionResult> Move(Guid id, MoveAdrApiModel request, CancellationToken cancellationToken)
+    {
+        var model = mapper.Map<MoveAdrModel>(request);
+        model.UserId = identityProvider.Id;
+        await adrManager.MoveAdrAsync(id, model, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
     /// Удаляет существующий ADR
     /// </summary>
     [HttpDelete("{id:guid}")]
@@ -267,7 +284,7 @@ public class AdrController : ControllerBase
     public async Task<IActionResult> Export(Guid id, CancellationToken cancellationToken)
     {
         var result = await adrExportService.ExportToMarkdownAsync(id, identityProvider.Id, cancellationToken);
-        return Content(result, "text/markdown");
+        return new JsonResult(result);
     }
 
     /// <summary>
@@ -281,6 +298,6 @@ public class AdrController : ControllerBase
     public async Task<IActionResult> ExportApproved(Guid organizationId, CancellationToken cancellationToken)
     {
         var result = await adrExportService.ExportApprovedToMarkdownAsync(organizationId, identityProvider.Id, cancellationToken);
-        return Content(result, "text/markdown");
+        return new JsonResult(result);
     }
 }

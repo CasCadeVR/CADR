@@ -1,0 +1,606 @@
+﻿@attribute [Route(Routes.Adrs.Organization.AdrDetails)]
+
+@using CADR.Portal.Components.Models
+@using CADR.Portal.Contracts.Interfaces
+@using CADR.Portal.Components.Enums.Font;
+@using CADR.Portal.Components.Infrastructures;
+@using System.Net
+@using Microsoft.JSInterop
+
+@inherits DisposableComponentBase
+@inject IPortalCadrApiClient ApiClient
+@inject IPortalIdentity PortalIdentity
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<PageTitle>@pageTitle</PageTitle>
+
+@if (isLoaded)
+{
+	@if (adr == null)
+	{
+		<Container Size="Containers.Default" Padding="4 5">
+			<Alert Color="ThemeColors.Danger" Header="ADR недоступен">
+				<BodyContent>
+					<Paragraph>@errorMessage</Paragraph>
+				</BodyContent>
+			</Alert>
+		</Container>
+	}
+	else
+	{
+		<Container Size="Containers.Default" ColumnExtraLarge="Columns.Template12" Padding="4 5">
+			<Breadcrumb Items="breadcrumbItems" Caption="@pageTitle" Margin="0 0 0 3"/>
+
+			@* Заголовок ADR *@
+			<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 3 3 3">
+				<Row FlexItemsAlign="FlexAlign.Center" Gap="2" Gutter="0">
+
+					<Header Column="Columns.TemplateAuto" Level="2" Margin="0 0 0 3">@adr.Number. @adr.Title</Header>
+
+					@if (PortalIdentity.UserId == adr.AuthorId)
+					{
+						<Button Padding="2" Column="Columns.TemplateAuto" AsLink="true"
+								Color="ThemeColors.Success"
+								Url="@string.Format(Routes.Adrs.Organization.AdrFormUpdateFormat, OrganizationId, adr.Id)">
+							<Icon IconType=IconTypes.Pencil></Icon> Обновить ADR
+						</Button>
+					}
+				</Row>
+
+				@if (adr.UpdatedAt != null)
+				{
+					<Paragraph Foreground="ThemeColors.Muted">
+						Последнее изменение: @adr.UpdatedAt?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
+					</Paragraph>
+				}
+				else
+				{
+					<Paragraph Foreground="ThemeColors.Muted">
+						Создан: @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")
+					</Paragraph>
+				}
+			</Panel>
+
+			<Row Gutter="3">
+				@* Левая колонка: секции, голоса, комментарии *@
+				<Column Column="Columns.Template8">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
+						@foreach (var section in adr.Sections.OrderBy(x => x.Position))
+						{
+							<Header Level="4">@section.Title</Header>
+							<Paragraph>@section.Content</Paragraph>
+						}
+
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="3">
+							@if (adr.AuthorId != PortalIdentity.UserId)
+							{
+								<Button Column="Columns.TemplateAuto"
+										Color="@(adr.UserVote == AdrVoteTypeApi.Like ? ThemeColors.Success : ThemeColors.Secondary)"
+										IsOutline="@(adr.UserVote != AdrVoteTypeApi.Like)"
+										Click="() => VoteAsync(AdrVoteTypeApi.Like)">
+									<Icon Margin="2 0" IconType="IconTypes.Like"></Icon>
+								</Button>
+
+								<Button Column="Columns.TemplateAuto"
+										Color="@(adr.UserVote == AdrVoteTypeApi.Dislike ? ThemeColors.Danger : ThemeColors.Secondary)"
+										IsOutline="@(adr.UserVote != AdrVoteTypeApi.Dislike)"
+										Click="() => VoteAsync(AdrVoteTypeApi.Dislike)">
+									<Icon Margin="2 0" IconType="IconTypes.Dislike"></Icon>
+								</Button>
+							}
+
+							<Container Background="ThemeColors.Primary" Border="* 1"></Container>
+
+							@if (adr.AuthorId == PortalIdentity.UserId)
+							{
+								<Paragraph Column="Columns.TemplateAuto"
+									FontSize="FontSizes.Size5">
+									Репутация:
+								</Paragraph>
+							}
+
+							<Paragraph
+								Foreground="@AdrsHelper.GetScoreColor(adr.Score)"
+								Column="Columns.TemplateAuto"
+								FontSize="FontSizes.Size2">
+								@(adr.Score > 0 ? $"+{adr.Score}" : $"{adr.Score}")
+							</Paragraph>
+						</Row>
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
+						<Header Level="4" Margin="0 0 0 3">Комментарии (@comments.Count)</Header>
+
+						@foreach (var comment in comments)
+						{
+							<Row FlexItemsAlign="FlexAlign.Start" Gutter="0" Gap="2" Margin="3 0 0 0">
+								<Column Column="Columns.TemplateAuto">
+									<div class="rounded-circle bg-secondary text-center" style="width: 32px; height: 32px;">
+										<span class="text-light align-middle"><Icon IconType="IconTypes.Person" /></span>
+									</div>
+								</Column>
+								<Column Column="Columns.Template12" FlexContentGrow="FlexGrow.Grow1">
+									<Paragraph Margin="0 0 0 0">
+										<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, OrganizationId, comment.AuthorId)">
+											@comment.AuthorName (@@@comment.AuthorLogin)
+										</a>
+										<span class="text-muted">
+											<small>@comment.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</small>
+										</span>
+										@if (comment.AuthorId == PortalIdentity.UserId)
+										{
+											<a href="@string.Empty" class="text-danger ms-2"
+											   @onclick="() => DeleteCommentAsync(comment.Id)" @onclick:preventDefault>удалить</a>
+										}
+									</Paragraph>
+									<Paragraph>@comment.Text</Paragraph>
+								</Column>
+							</Row>
+						}
+
+						<Paragraph Margin="0 0 0 3">
+							<textarea class="form-control" rows="3" placeholder="Оставьте комментарий..."
+									  @bind="newCommentText"></textarea>
+						</Paragraph>
+
+						<Button Color="ThemeColors.Primary"
+								IsDisabled="@string.IsNullOrWhiteSpace(newCommentText)"
+								IsSpinner="isCommentSending"
+								Click="CreateCommentAsync">
+							Отправить
+						</Button>
+					</Panel>
+				</Column>
+
+				@* Правая колонка: метаданные и связи *@
+				<Column Column="Columns.Template4">
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
+						<Paragraph><strong>Статус:</strong>
+							<Badge Background="@AdrsHelper.GetStatusColor(adr.Status)" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+								@AdrsHelper.GetStatusCaption(adr.Status)
+							</Badge>
+							@if (allowedStatuses.Count != 0)
+							{
+								<select @key="statusSelectVersion" class="form-select mt-2" value="@selectedStatus" @onchange="ChangeStatusAsync">
+									<option value="" selected disabled>Перевести в статус…</option>
+									@foreach (var status in allowedStatuses)
+									{
+										<option value="@status.ToString()">@AdrsHelper.GetStatusCaption(status)</option>
+									}
+								</select>
+							}
+						</Paragraph>
+						<Paragraph><strong>Автор:</strong>
+							<a href="@string.Format(Routes.Administration.Organization.UserProfileFormat, adr.OrganizationId, adr.AuthorId)">
+								@adr.AuthorName (@@@adr.AuthorLogin)
+							</a>
+						</Paragraph>
+						<Paragraph><strong>Создан:</strong> @adr.CreatedAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</Paragraph>
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4" Margin="0 0 0 3">
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2">
+							<Header Level="5" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Связи</Header>
+							@if (IsManageAllowed)
+							{
+								<Button Size="ButtonSize.Small" Color="ThemeColors.Primary" IsOutline="true"
+									Margin="0 0 0 3"
+									Click="() => isLinkTypeSelectVisible = !isLinkTypeSelectVisible">
+									<Icon IconType="IconTypes.Plus" />
+								</Button>
+							}
+						</Row>
+
+						@if (isLinkTypeSelectVisible && IsManageAllowed)
+						{
+							<select @key="linkSelectVersion" class="form-select form-select-sm mt-2"
+									value="@selectedLinkType" @onchange="OpenLinkDialogAsync">
+								<option value="" selected disabled>Тип связи…</option>
+								@foreach (var type in Enum.GetValues<AdrLinkTypeApi>())
+								{
+									<option value="@type.ToString()">@AdrsHelper.GetLinkTypeCaption(type)</option>
+								}
+							</select>
+						}
+
+						@if (links.Count == 0)
+						{
+							<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 3">Связанных ADR нет</Paragraph>
+						}
+						else
+						{
+							@foreach (var link in links)
+							{
+								<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2" Margin="2 0 0 0">
+									<Paragraph Column="Columns.Template10" FlexContentGrow="FlexGrow.Grow1" Margin="0">
+										@AdrsHelper.GetLinkTypeCaption(link.Type, link.SourceAdrId == adr.Id):
+										<a href="@string.Format(Routes.Adrs.Organization.AdrDetailsFormat, adr!.OrganizationId, link.TargetAdrId)">
+											#@link.TargetAdrNumber @link.TargetAdrName
+										</a>
+									</Paragraph>
+									@if (IsManageAllowed)
+									{
+										<Button Column="Columns.TemplateAuto" Padding="2" Color="ThemeColors.Danger" IsOutline="true"
+												Click="() => DeleteLinkAsync(link.Id)">
+											<Icon IconType="IconTypes.Trash" />
+										</Button>
+									}
+								</Row>
+							}
+						}
+					</Panel>
+
+					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4">
+						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="2">
+							<Header Level="5" FlexContentGrow="FlexGrow.Grow1" Margin="0 0 0 3">Экспорт</Header>
+							<Button Size="ButtonSize.Small" Color="ThemeColors.Info"
+								Foreground="ThemeColors.White"
+								Click="() => ExportAdr()">
+								<Icon IconType="IconTypes.Download" /> Экспортировать в MD
+							</Button>
+						</Row>
+					</Panel>
+				</Column>
+			</Row>
+		</Container>
+	}
+}
+else
+{
+	<Container Size="Containers.Default" Padding="4 5">
+		<Paragraph TextAlignment="TextAlignments.Center" Padding="5">
+			<Spinner />
+		</Paragraph>
+	</Container>
+}
+
+<ContextModalDialog @ref="linkDialog" TItem="AdrLinkTypeApi" Title="Добавление связи">
+	<ModalBody Context="linkType">
+		<input class="form-control" placeholder="Поиск по названию или номеру…"
+			   @bind="linkSearchText" @bind:event="oninput" />
+		@if (linkSearchResults.Count == 0)
+		{
+			<Paragraph Foreground="ThemeColors.Muted" Margin="2 0 0 0">Ничего не найдено</Paragraph>
+		}
+		else
+		{
+			@foreach (var candidate in linkSearchResults)
+			{
+				<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="4" Margin="2 0 0 0">
+					<Paragraph FlexContentGrow="FlexGrow.Grow1" Column="Columns.Template8" Margin="0">
+						#@candidate.Number @candidate.Title
+					</Paragraph>
+					<Badge Column="Columns.TemplateAuto" Background="@AdrsHelper.GetStatusColor(candidate.Status)"
+						Padding="2"
+						Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
+						@AdrsHelper.GetStatusCaption(candidate.Status)
+					</Badge>
+					<Button Column="Columns.TemplateAuto" Color="ThemeColors.Primary" IsOutline="true"
+							Padding="2"
+							IsSpinner="isLinkSaving"
+							Click="() => CreateLinkAsync(linkType, candidate)">
+						Связать
+					</Button>
+				</Row>
+			}
+		}
+	</ModalBody>
+	<ModalFooter>
+		<Button Color="ThemeColors.Secondary" Click="() => linkDialog?.Close()">Отмена</Button>
+	</ModalFooter>
+</ContextModalDialog>
+
+@code {
+	private bool isLoaded;
+	private string? errorMessage;
+	private Guid loadedAdrId;
+	private string? newCommentText;
+	private bool isCommentSending;
+	private string selectedStatus = string.Empty;
+	private int statusSelectVersion;
+
+	private bool isLinkTypeSelectVisible;
+	private string selectedLinkType = string.Empty;
+	private int linkSelectVersion;
+	private ContextModalDialog<AdrLinkTypeApi>? linkDialog;
+	private IReadOnlyCollection<AdrApiModel>? linkCandidates;
+	private string linkSearchText = string.Empty;
+	private bool isLinkSaving;
+
+	private AdrApiModel? adr;
+	private IReadOnlyCollection<AdrCommentApiModel> comments = [];
+	private IReadOnlyCollection<AdrLinkApiModel> links = [];
+	private IReadOnlyCollection<LinkedItem> breadcrumbItems = [];
+	private OrganizationApiModel? currentOrganization;
+
+	/// <summary>
+	/// Разрешено ли управление ADR (создание связей, удаление)
+	/// </summary>
+	private bool IsManageAllowed
+		=> currentOrganization?.RequestingUserRole is UserRoleApi.Admin or UserRoleApi.Architect;
+
+	private IReadOnlyCollection<AdrStatusApi> allowedStatuses
+		=> adr == null
+			? []
+			: AdrsHelper.GetAllowedTargetStatuses(adr.Status,
+				currentOrganization?.RequestingUserRole ?? UserRoleApi.User,
+				adr.AuthorId == PortalIdentity.UserId);
+
+	/// <summary>
+	/// Результаты поиска ADR в модальном окне связей
+	/// </summary>
+	private IReadOnlyCollection<AdrApiModel> linkSearchResults
+	{
+		get
+		{
+			if (linkCandidates == null)
+			{
+				return [];
+			}
+
+			var query = linkSearchText.Trim();
+			if (query.Length == 0)
+			{
+				return linkCandidates;
+			}
+
+			return linkCandidates
+				.Where(x => x.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+							|| x.Number.ToString().StartsWith(query, StringComparison.Ordinal))
+				.ToList();
+		}
+	}
+
+	private string pageTitle
+		=> adr == null ? "ADR" : $"#{adr.Number} {adr.Title}";
+
+	/// <summary>
+	/// Идентификатор организации
+	/// </summary>
+	[Parameter]
+	public Guid OrganizationId { get; set; }
+
+	/// <summary>
+	/// Идентификатор ADR
+	/// </summary>
+	[Parameter]
+	public Guid AdrId { get; set; }
+
+	/// <inheritdoc />
+	protected override async Task OnParametersSetAsync()
+	{
+		if (AdrId == Guid.Empty || AdrId == loadedAdrId)
+		{
+			return;
+		}
+
+		loadedAdrId = AdrId;
+		isLoaded = false;
+		StateHasChanged();
+		try
+		{
+			await LoadAdrAsync();
+			errorMessage = null;
+		}
+		catch (ApiException<ApiExceptionDetail> exception)
+			when (exception.StatusCode == (int)HttpStatusCode.Forbidden
+						|| exception.StatusCode == (int)HttpStatusCode.NotFound)
+		{
+			NavigationManager.NavigateTo(Routes.InvitesDashboard);
+			return;
+		}
+		isLoaded = true;
+		StateHasChanged();
+		await base.OnParametersSetAsync();
+	}
+
+	/// <summary>
+	/// Загружает ADR, комментарии и связи
+	/// </summary>
+	private async Task LoadAdrAsync()
+	{
+		adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		currentOrganization = await ApiClient.OrganizationGetByIdAsync(adr!.OrganizationId, TokenSource.Token);
+		comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
+			.OrderBy(x => x.CreatedAt)
+			.ToList();
+		links = (await ApiClient.AdrLinkGetByAdrAsync(AdrId, TokenSource.Token)).ToList();
+
+		breadcrumbItems =
+		[
+			new LinkedItem
+			{
+				IconType = IconTypes.Home,
+				Url = string.Format(Routes.Adrs.Organization.ListFormat, adr.OrganizationId),
+			},
+	];
+		foreach (var folder in adr.FolderPath)
+		{
+			breadcrumbItems = breadcrumbItems.Append(new LinkedItem
+			{
+				Caption = folder.Name,
+				Url = string.Format(Routes.Adrs.Organization.ListWithFolderFormat, adr.OrganizationId, folder.Id),
+			}).ToList();
+		}
+	}
+
+	/// <summary>
+	/// Открывает модальное окно выбора ADR для связи выбранного типа
+	/// </summary>
+	private async Task OpenLinkDialogAsync(ChangeEventArgs args)
+	{
+		var type = Enum.Parse<AdrLinkTypeApi>((string?)args.Value ?? string.Empty);
+		if (adr == null)
+		{
+			return;
+		}
+
+		linkSelectVersion++;
+		linkSearchText = string.Empty;
+		linkCandidates = (await ApiClient.AdrGetByOrganizationAsync(adr.OrganizationId, TokenSource.Token))
+			.Where(x => x.Id != AdrId)
+			.Where(x => !links.Any(l => l.Type == type && l.TargetAdrId == x.Id))
+			.OrderBy(x => x.Number)
+			.ToList();
+
+		linkDialog?.Open(type);
+	}
+
+	/// <summary>
+	/// Создаёт связь с выбранным ADR
+	/// </summary>
+	private async Task CreateLinkAsync(AdrLinkTypeApi type, AdrApiModel target)
+	{
+		if (adr == null || isLinkSaving)
+		{
+			return;
+		}
+
+		isLinkSaving = true;
+		await ApiClient.AdrLinkCreateAsync(new CreateAdrLinkApiModel
+		{
+			Type = type,
+			SourceAdrId = AdrId,
+			TargetAdrId = target.Id,
+			UserId = PortalIdentity.UserId,
+		}, TokenSource.Token);
+		linkDialog?.Close();
+		links = (await ApiClient.AdrLinkGetByAdrAsync(AdrId, TokenSource.Token)).ToList();
+		errorMessage = null;
+		isLinkSaving = false;
+	}
+
+	/// <summary>
+	/// Удаляет связь
+	/// </summary>
+	private async Task DeleteLinkAsync(Guid linkId)
+	{
+		await ApiClient.AdrLinkDeleteAsync(linkId, TokenSource.Token);
+		links = links.Where(x => x.Id != linkId).ToList();
+		errorMessage = null;
+	}
+
+	/// <summary>
+	/// Голосует или отзывает голос при повторном нажатии
+	/// </summary>
+	private async Task VoteAsync(AdrVoteTypeApi vote)
+	{
+		if (adr == null)
+		{
+			return;
+		}
+
+		try
+		{
+			if (adr.UserVote == vote)
+			{
+				await ApiClient.AdrWithdrawVoteAsync(AdrId, TokenSource.Token);
+			}
+			else
+			{
+				await ApiClient.AdrVoteAsync(AdrId, new VoteAdrApiModel
+				{
+					Vote = vote,
+					UserId = PortalIdentity.UserId,
+					AdrId = AdrId,
+				}, TokenSource.Token);
+			}
+			adr = await ApiClient.AdrGetAsync(AdrId, TokenSource.Token);
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <summary>
+	/// Меняет статус
+	/// </summary>
+	private async Task ChangeStatusAsync(ChangeEventArgs args)
+	{
+		var target = Enum.Parse<AdrStatusApi>((string)args.Value!);
+		try
+		{
+			await ApiClient.AdrChangeStatusAsync(AdrId, new ChangeAdrStatusApiModel
+			{
+				AdrId = AdrId,
+				UserId = PortalIdentity.UserId,
+				Status = target,
+			}, TokenSource.Token);
+			await LoadAdrAsync();
+			selectedStatus = string.Empty;
+			statusSelectVersion++;
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <summary>
+	/// Создаёт комментарий
+	/// </summary>
+	private async Task CreateCommentAsync()
+	{
+		if (adr == null || string.IsNullOrWhiteSpace(newCommentText))
+		{
+			return;
+		}
+
+		isCommentSending = true;
+		try
+		{
+			await ApiClient.AdrCommentCreateAsync(new CreateAdrCommentApiModel
+			{
+				AdrId = AdrId,
+				UserId = PortalIdentity.UserId,
+				Text = newCommentText,
+			}, TokenSource.Token);
+			newCommentText = null;
+			comments = (await ApiClient.AdrCommentGetByAdrAsync(AdrId, TokenSource.Token))
+				.OrderBy(x => x.CreatedAt)
+				.ToList();
+			errorMessage = null;
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+		isCommentSending = false;
+	}
+
+	/// <summary>
+	/// Удаляет свой комментарий
+	/// </summary>
+	private async Task DeleteCommentAsync(Guid commentId)
+	{
+		try
+		{
+			await ApiClient.AdrCommentDeleteAsync(commentId, TokenSource.Token);
+			comments = comments.Where(x => x.Id != commentId).ToList();
+		}
+		catch (Exception exception)
+		{
+			errorMessage = exception.Message;
+		}
+	}
+
+	/// <summary>
+	/// Экспортирует ADR в markdown-файл
+	/// </summary>
+	private async Task ExportAdr()
+	{
+		if (adr == null)
+		{
+			return;
+		}
+
+		var markdown = await ApiClient.AdrExportAsync(AdrId, TokenSource.Token);
+		await AdrsHelper.DownloadMarkdownAsync(JS,
+			$"ADR-{adr.Number}.md",
+			markdown);
+		errorMessage = null;
+	}
+}

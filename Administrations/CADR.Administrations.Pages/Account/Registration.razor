@@ -96,7 +96,7 @@
 
 	private void RedirectAfterLogin()
 		=> NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl)
-			? Routes.Dashboard
+			? Routes.InvitesDashboard
 			: ReturnUrl);
 
     private async Task BackToPreviousPage()
