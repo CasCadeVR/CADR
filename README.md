@@ -4,6 +4,11 @@
 
 ## Содержание
 
-- [Схема базы данных](./Documentation/database-schema.md)
-- [Пользователи и организации](./Documentation/users-and-organizations.md)
-- [Требования](./Documentation/requirements.md)
+- [Схема базы данных](./docs/database-schema.md)
+- [Пользователи и организации](./docs/users-and-organizations.md)
+- [Требования](./docs/requirements.md)
+- [Руководство по созданию ADR в CADR](./docs/adr-guide.md)
+
+## Авторы
+
+- Андрей Турчанинов — Основной разработчик, создатель архитектуры
