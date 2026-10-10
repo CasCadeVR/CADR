@@ -39,6 +39,14 @@ public class CadrContext : DbContext,
             .AsNoTracking()
             .AsQueryable();
 
+    async Task<IReadOnlyCollection<TResult>> IReader.SqlQueryAsync<TResult>(
+        FormattableString sql, CancellationToken cancellationToken)
+        where TResult : class
+    {
+        var rows = await base.Database.SqlQuery<TResult>(sql).ToListAsync(cancellationToken);
+        return rows.AsReadOnly();
+    }
+
     void IWriter.Add<TEntity>([NotNull] TEntity entity)
         => base.Entry(entity).State = EntityState.Added;
 
@@ -58,4 +66,7 @@ public class CadrContext : DbContext,
 
         return count;
     }
+
+    Task<int> IUnitOfWork.ExecuteSqlAsync(FormattableString sql, CancellationToken cancellationToken)
+        => base.Database.ExecuteSqlAsync(sql, cancellationToken);
 }

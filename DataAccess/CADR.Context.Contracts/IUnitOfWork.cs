@@ -9,4 +9,9 @@ public interface IUnitOfWork
     /// Асинхронно сохраняет все изменения контекста
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Выполнить SQL комманду (процедуру)
+    /// </summary>
+    Task<int> ExecuteSqlAsync(FormattableString sql, CancellationToken cancellationToken = default);
 }

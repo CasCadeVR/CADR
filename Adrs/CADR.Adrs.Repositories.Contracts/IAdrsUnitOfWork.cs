@@ -37,6 +37,12 @@ public interface IAdrsUnitOfWork : IUnitOfWork
     /// <inheritdoc cref="IAdrWriteRepository"/>
     IAdrWriteRepository AdrWriteRepository { get; }
 
+    /// <inheritdoc cref="IAdrDbProcedureRepository"/>
+    IAdrDbProcedureRepository AdrDbProcedureRepository { get; }
+
+    /// <inheritdoc cref="IAdrSummaryViewReadRepository"/>
+    IAdrSummaryViewReadRepository AdrSummaryViewReadRepository { get; }
+
     /// <inheritdoc cref="IAdrSectionReadRepository"/>
     IAdrSectionReadRepository AdrSectionReadRepository { get; }
 

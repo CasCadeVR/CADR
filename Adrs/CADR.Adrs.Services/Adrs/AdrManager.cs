@@ -24,6 +24,8 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     private readonly IAdrsUnitOfWork unitOfWork;
     private readonly IAdrReadRepository adrReadRepository;
     private readonly IAdrWriteRepository adrWriteRepository;
+    private readonly IAdrSummaryViewReadRepository adrSummaryViewReadRepository;
+    private readonly IAdrDbProcedureRepository adrDbProcedureRepository;
     private readonly IAdrSectionReadRepository adrSectionReadRepository;
     private readonly IAdrSectionWriteRepository adrSectionWriteRepository;
     private readonly IAdrVoteReadRepository adrVoteReadRepository;
@@ -44,6 +46,8 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         unitOfWork = adrUnitOfWork;
         adrReadRepository = adrUnitOfWork.AdrReadRepository;
         adrWriteRepository = adrUnitOfWork.AdrWriteRepository;
+        adrDbProcedureRepository = adrUnitOfWork.AdrDbProcedureRepository;
+        adrSummaryViewReadRepository = adrUnitOfWork.AdrSummaryViewReadRepository;
         adrSectionReadRepository = adrUnitOfWork.AdrSectionReadRepository;
         adrSectionWriteRepository = adrUnitOfWork.AdrSectionWriteRepository;
         adrVoteReadRepository = adrUnitOfWork.AdrVoteReadRepository;
@@ -65,25 +69,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             await EnsureFolderAsync(model.OrganizationId, model.ParentAdrFolderId.Value, cancellationToken);
         }
 
-        var status = mapper.Map<AdrStatus>(model.Status);
-        if (status == AdrStatus.Proposed
-            && await GetApprovalThresholdAsync(model.OrganizationId, cancellationToken) == 0)
-        {
-            status = AdrStatus.Approved;
-        }
-
-        var adr = new Adr
-        {
-            Id = Guid.NewGuid(),
-            Number = await adrReadRepository.GetMaxNumberAsync(model.OrganizationId, cancellationToken) + 1,
-            Title = model.Title,
-            Status = status,
-            OrganizationId = model.OrganizationId,
-            AuthorId = model.AuthorId,
-            ParentAdrFolderId = model.ParentAdrFolderId,
-            TemplateId = model.TemplateId,
-        };
-
         if (model.TemplateId.HasValue)
         {
             var template = await adrTemplateReadRepository.GetActiveByIdAsync(model.TemplateId.Value, cancellationToken)
@@ -94,13 +79,12 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             }
         }
 
-        adrWriteRepository.Add(adr);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        var dbResult = await adrDbProcedureRepository.CreateAdrAsync(
+            model.OrganizationId, model.AuthorId, model.ParentAdrFolderId, model.Title, cancellationToken);
 
-        var result = mapper.Map<AdrModel>(adr);
-        await FillSectionsAsync(result, cancellationToken);
-        await FillFolderPathAsync(result, cancellationToken);
-        await FillComputedAsync(result, model.AuthorId, cancellationToken);
+        var result = mapper.Map<AdrModel>(await adrReadRepository.GetActiveByIdAsync(dbResult.Id, cancellationToken)
+            ?? throw new InvalidOperationException("ADR was not created"));
+
         return result;
     }
 
@@ -257,30 +241,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             throw new AdrInvalidOperationException(ErrorMessages.CannotVoteOwnAdr);
         }
 
-        var vote = await adrVoteReadRepository.GetByAdrAndUserIdAsync(adr.Id, model.UserId, cancellationToken);
-        if (vote == null)
-        {
-            vote = new AdrVote
-            {
-                Id = Guid.NewGuid(),
-                AdrId = adr.Id,
-                UserId = model.UserId,
-                Value = mapper.Map<AdrVoteType>(model.Vote),
-            };
-            adr.Votes.Add(vote);
-            adrVoteWriteRepository.Add(vote);
-        }
-        else
-        {
-            vote.Value = mapper.Map<AdrVoteType>(model.Vote);
-            adr.Votes = (await adrVoteReadRepository.GetByAdrIdAsync(adr.Id, cancellationToken)).ToList();
-            adr.Votes.First(x => x.Id == vote.Id).Value = mapper.Map<AdrVoteType>(model.Vote);
-            adrVoteWriteRepository.Update(vote);
-        }
-
-        await ApplyVoteStatusAsync(adr, cancellationToken);
-        adrWriteRepository.Update(adr);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await adrDbProcedureRepository.VoteAsync(model.AdrId, model.UserId, mapper.Map<AdrVoteType>(model.Vote), cancellationToken);
     }
 
     async Task IAdrManager.WithdrawVoteAsync(WithdrawVoteAdrModel model, CancellationToken cancellationToken)
@@ -292,9 +253,7 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         adr.Votes.Remove(vote!);
         adrVoteWriteRepository.Delete(vote!);
 
-        await ApplyVoteStatusAsync(adr, cancellationToken);
-        adrWriteRepository.Update(adr);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await adrDbProcedureRepository.WithdrawVoteAsync(model.AdrId, model.UserId, cancellationToken);
     }
 
     private async Task<Adr> GetAdrOrThrowAsync(Guid adrId, CancellationToken cancellationToken)
@@ -347,14 +306,29 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
     private async Task<int> ComputeScoreAsync(Adr adr, CancellationToken cancellationToken)
         => adr.Votes.Sum(x => x.Value == AdrVoteType.Like ? 1 : -1);
 
-    private async Task<IReadOnlyCollection<AdrModel>> MapListAsync(IReadOnlyCollection<Adr> adrs, Guid userId, CancellationToken cancellationToken)
+    private async Task<IReadOnlyCollection<AdrModel>> MapListAsync(
+        IReadOnlyCollection<Adr> adrs, Guid userId, CancellationToken cancellationToken)
     {
-        var result = mapper.Map<IEnumerable<AdrModel>>(adrs).ToReadOnlyCollection();
+        var adrIds = adrs.Select(x => x.Id).ToReadOnlyCollection();
+        var summaries = await adrSummaryViewReadRepository.GetByIdsAsync(adrIds, cancellationToken);
+        var summariesById = summaries.ToDictionary(x => x.Id);
+
+        var userVotes = (await adrVoteReadRepository.GetByAdrIdsAndUserIdAsync(adrIds, userId, cancellationToken))
+            .ToDictionary(x => x.AdrId);
+
+        var result = mapper.Map<IReadOnlyCollection<AdrModel>>(adrs);
         foreach (var model in result)
         {
-            await FillComputedAsync(model, userId, cancellationToken);
+            if (summariesById.TryGetValue(model.Id, out var s))
+            {
+                model.Score = s.Score;
+                model.AuthorName = s.AuthorName;
+                model.AuthorLogin = s.AuthorLogin;
+            }
+            model.UserVote = userVotes.TryGetValue(model.Id, out var v)
+                ? mapper.Map<ContractEnums.AdrVoteType>(v.Value)
+                : null;
         }
-
         return result;
     }
 
