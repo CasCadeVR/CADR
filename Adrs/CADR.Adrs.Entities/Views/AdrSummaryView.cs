@@ -61,7 +61,7 @@ public class AdrSummaryView : IEntity, IEntityAuditDeletedAt
     /// <summary>
     /// Идентификатор родителя (папки)
     /// </summary>
-    public Guid? FolderId { get; set; }
+    public Guid? ParentAdrFolderId { get; set; }
 
     /// <summary>
     /// Дата создания

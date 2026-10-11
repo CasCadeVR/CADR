@@ -17,6 +17,7 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
     private readonly IOrganizationWriteRepository organizationWriteRepository;
     private readonly IUserOrganizationReadRepository userOrganizationReadRepository;
     private readonly IUserOrganizationWriteRepository userOrganizationWriteRepository;
+    private readonly IOrganizationMemberViewReadRepository organizationMemberViewReadRepository;
     private readonly IUserReadRepository userReadRepository;
     private readonly IAdministrationUnitOfWork unitOfWork;
     private readonly IUserInviteReadRepository userInviteReadRepository;
@@ -32,6 +33,7 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
         organizationWriteRepository = administrationUnitOfWork.OrganizationWriteRepository;
         userOrganizationReadRepository = administrationUnitOfWork.UserOrganizationReadRepository;
         userOrganizationWriteRepository = administrationUnitOfWork.UserOrganizationWriteRepository;
+        organizationMemberViewReadRepository = administrationUnitOfWork.OrganizationMemberViewReadRepository;
         userReadRepository = administrationUnitOfWork.UserReadRepository;
         userInviteReadRepository = administrationUnitOfWork.UserInviteReadRepository;
         userInviteWriteRepository = administrationUnitOfWork.UserInviteWriteRepository;
@@ -148,24 +150,17 @@ internal sealed class OrganizationManager : IOrganizationManager, IAdministratio
         CancellationToken cancellationToken)
     {
         var organization = await GetOrganization(id, userId, cancellationToken);
-        var userOrganizations = await userOrganizationReadRepository.GetByOrganizationIdAsync(organization.Id, cancellationToken);
-        var users = await userReadRepository.GetByOrganizationIdAsync(organization.Id, cancellationToken);
-        var result = (from uo in userOrganizations
-                      join u in users on uo.UserId equals u.Id
-                      select new UserOrganizationModel
-                      {
-                          Id = u.Id,
-                          Name = u.Name,
-                          Email = u.Email,
-                          Login = u.Login,
-                          Blocked = u.Blocked,
-                          BlockedAt = u.BlockedAt,
-                          Role = mapper.Map<UserRole>(uo.Role),
-                      }
-            )
-            .OrderBy(x => x.Name.ToLower())
-            .ToList();
-        return result;
+        var members = await organizationMemberViewReadRepository.GetByOrganizationIdAsync(organization.Id, cancellationToken);
+        return members.Select(x => new UserOrganizationModel
+        {
+            Id = x.UserId,
+            Name = x.UserName,
+            Email = x.UserEmail,
+            Login = x.UserLogin,
+            Blocked = x.UserBlocked,
+            BlockedAt = x.UserBlockedAt,
+            Role = mapper.Map<UserRole>(x.Role),
+        }).ToList();
     }
 
     async Task IOrganizationManager.ChangeUserRoleAsync(ChangeUserRoleModel model, CancellationToken cancellationToken)

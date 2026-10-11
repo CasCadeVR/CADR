@@ -85,6 +85,8 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
         var result = mapper.Map<AdrModel>(await adrReadRepository.GetActiveByIdAsync(dbResult.Id, cancellationToken)
             ?? throw new InvalidOperationException("ADR was not created"));
 
+        await FillComputedAsync(result, model.AuthorId, cancellationToken);
+        await FillFolderPathAsync(result, cancellationToken);
         return result;
     }
 
@@ -279,32 +281,6 @@ internal sealed class AdrManager : IAdrManager, IAdrsServiceAnchor
             setStatus(AdrStatus.Approved);
         }
     }
-
-    private async Task ApplyVoteStatusAsync(Adr adr, CancellationToken cancellationToken)
-    {
-        var score = await ComputeScoreAsync(adr, cancellationToken);
-        if (score < 0 && adr.Status is AdrStatus.Approved or AdrStatus.NeedsRevision)
-        {
-            adr.Status = AdrStatus.NeedsRevision;
-        }
-        else if (adr.Status == AdrStatus.NeedsRevision && score >= 0)
-        {
-            adr.Status = AdrStatus.Approved;
-        }
-        else if (adr.Status == AdrStatus.Proposed && score >= await GetApprovalThresholdAsync(adr.OrganizationId, cancellationToken))
-        {
-            adr.Status = AdrStatus.Approved;
-        }
-    }
-
-    private async Task<int> GetApprovalThresholdAsync(Guid organizationId, CancellationToken cancellationToken)
-    {
-        var settings = await adrOrganizationSettingsReadRepository.GetByOrganizationIdAsync(organizationId, cancellationToken);
-        return settings?.LikesRequiredForApproval ?? DefaultLikesRequiredForApproval;
-    }
-
-    private async Task<int> ComputeScoreAsync(Adr adr, CancellationToken cancellationToken)
-        => adr.Votes.Sum(x => x.Value == AdrVoteType.Like ? 1 : -1);
 
     private async Task<IReadOnlyCollection<AdrModel>> MapListAsync(
         IReadOnlyCollection<Adr> adrs, Guid userId, CancellationToken cancellationToken)

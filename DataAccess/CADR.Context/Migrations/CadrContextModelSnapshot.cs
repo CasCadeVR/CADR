@@ -270,6 +270,49 @@ namespace CADR.Context.Migrations
                     b.ToTable("UserOrganizations", (string)null);
                 });
 
+            modelBuilder.Entity("CADR.Administrations.Entities.Views.OrganizationMemberView", b =>
+                {
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("UserBlocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("UserBlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserLogin")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("organization_members", (string)null);
+                });
+
             modelBuilder.Entity("CADR.Adrs.Entities.Adr", b =>
                 {
                     b.Property<Guid>("Id")
@@ -861,9 +904,6 @@ namespace CADR.Context.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<Guid?>("FolderId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
@@ -874,6 +914,9 @@ namespace CADR.Context.Migrations
                         .HasColumnType("integer");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentAdrFolderId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Score")

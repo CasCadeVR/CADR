@@ -20,11 +20,11 @@ namespace CADR.Context.Migrations
                     a."Status",
                     a."OrganizationId",
                     a."AuthorId",
-                    u."Name"  AS author_name,
-                    u."Login" AS author_login,
-                    COALESCE(v.score, 0) AS score,
-                    COALESCE(s."LikesRequiredForApproval", 1) AS likes_required_for_approval,
-                    a."ParentAdrFolderId" AS folder_id,
+                    u."Name"  AS "AuthorName",
+                    u."Login" AS "AuthorLogin",
+                    COALESCE(v.score, 0) AS "Score",
+                    COALESCE(s."LikesRequiredForApproval", 1) AS "LikesRequiredForApproval",
+                    a."ParentAdrFolderId" AS "ParentAdrFolderId",
                     a."CreatedAt",
                     a."UpdatedAt",
                     a."DeletedAt"
@@ -44,13 +44,18 @@ namespace CADR.Context.Migrations
             migrationBuilder.Sql("""
                 CREATE VIEW organization_members AS
                 SELECT
-                    uo."UserId"      AS user_id,
-                    uo."OrganizationId" AS organization_id,
-                    uo."Role"        AS role,
-                    u."Name"         AS user_name,
-                    u."Login"        AS user_login,
-                    u."Email"        AS user_email,
-                    u."Blocked"      AS user_blocked
+                    uo."Id"                     AS "Id",
+                    uo."UserId"                 AS "UserId",
+                    uo."OrganizationId"         AS "OrganizationId",
+                    uo."Role"                   AS "Role",
+                    u."Name"                    AS "UserName",
+                    u."Login"                   AS "UserLogin",
+                    u."Email"                   AS "UserEmail",
+                    u."Blocked"                 AS "UserBlocked",
+                    u."BlockedAt"               AS "UserBlockedAt",
+                    uo."CreatedAt"              AS "CreatedAt",
+                    uo."UpdatedAt"              AS "UpdatedAt",
+                    uo."DeletedAt"              AS "DeletedAt"
                 FROM "UserOrganizations" uo
                 JOIN "Users" u ON u."Id" = uo."UserId"
                 WHERE uo."DeletedAt" IS NULL AND u."DeletedAt" IS NULL AND uo."OrganizationId" IS NOT NULL;
@@ -151,38 +156,6 @@ namespace CADR.Context.Migrations
                 END; $$;
                 """);
 
-            // ---------- FUNCTION: change_adr_status ----------
-            migrationBuilder.Sql("""
-                CREATE FUNCTION change_adr_status(p_adr_id uuid, p_actor_role int, p_new_status int)
-                RETURNS void
-                LANGUAGE plpgsql AS $$
-                DECLARE
-                    v_current int;
-                BEGIN
-                    SELECT "Status" INTO v_current FROM "Adrs"
-                    WHERE "Id" = p_adr_id AND "DeletedAt" IS NULL;
-                    IF NOT FOUND THEN
-                        RAISE EXCEPTION 'ADR not found';
-                    END IF;
-
-                    IF NOT (
-                        (v_current = 0 AND p_new_status = 1) OR
-                        (v_current = 1 AND p_new_status IN (2, 3) AND p_actor_role >= 2) OR
-                        (v_current = 2 AND p_new_status IN (4, 5)) OR
-                        (v_current = 3 AND p_new_status = 1 AND p_actor_role >= 2) OR
-                        (v_current = 4 AND p_new_status IN (1, 5))
-                    ) THEN
-                        RAISE EXCEPTION 'Transition % -> % not allowed for role %', v_current, p_new_status, p_actor_role;
-                    END IF;
-
-                    UPDATE "Adrs"
-                    SET "Status" = p_new_status, "UpdatedAt" = now(),
-                        "UpdatedBy" = COALESCE((SELECT "Login" FROM "Users"
-                                                WHERE "Id" = (SELECT "AuthorId" FROM "Adrs" WHERE "Id" = p_adr_id)), 'system')
-                    WHERE "Id" = p_adr_id;
-                END; $$;
-                """);
-
             // ---------- TRIGGER: auto-approval ----------
             migrationBuilder.Sql("""
                 CREATE FUNCTION fn_adr_votes_recalc() RETURNS trigger AS $$
@@ -230,7 +203,6 @@ namespace CADR.Context.Migrations
         {
             migrationBuilder.Sql("DROP TRIGGER IF EXISTS trg_adr_votes_recalc ON \"AdrVotes\";");
             migrationBuilder.Sql("DROP FUNCTION IF EXISTS fn_adr_votes_recalc();");
-            migrationBuilder.Sql("DROP FUNCTION IF EXISTS change_adr_status(uuid, int, int);");
             migrationBuilder.Sql("DROP FUNCTION IF EXISTS withdraw_vote_adr(uuid, uuid);");
             migrationBuilder.Sql("DROP FUNCTION IF EXISTS vote_adr(uuid, uuid, int);");
             migrationBuilder.Sql("DROP FUNCTION IF EXISTS create_adr(uuid, uuid, uuid, text, jsonb);");

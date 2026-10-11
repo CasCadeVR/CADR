@@ -43,6 +43,9 @@ internal class AdministrationUnitOfWork : IAdministrationUnitOfWork, IAdministra
     IUserOrganizationWriteRepository IAdministrationUnitOfWork.UserOrganizationWriteRepository
         => serviceProvider.GetRequiredService<IUserOrganizationWriteRepository>();
 
+    IOrganizationMemberViewReadRepository IAdministrationUnitOfWork.OrganizationMemberViewReadRepository
+        => serviceProvider.GetRequiredService<IOrganizationMemberViewReadRepository>();
+
     IUserReadRepository IAdministrationUnitOfWork.UserReadRepository
         => serviceProvider.GetRequiredService<IUserReadRepository>();
 
