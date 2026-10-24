@@ -10,7 +10,7 @@
 @inherits DisposableComponentBase
 @inject IPortalCadrApiClient ApiClient
 @inject IPortalIdentity PortalIdentity
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject NavigationManager NavigationManager
 
 <PageTitle>@currentFolderCaption</PageTitle>
@@ -105,7 +105,7 @@
 			</Row>
 		}
 
-		<Table TItem="ExplorerItem" Items="explorerItems" HoverRows="true" EmptyMessage="@emptyMessage" Margin="3 0 0 0">
+		<Table TItem="ExplorerItem" Items="ExplorerItems" HoverRows="true" EmptyMessage="@EmptyMessage" Margin="3 0 0 0">
 			<TableHeader>
 				<th>Название</th>
 				<th style="width: 15%">Статус</th>
@@ -294,13 +294,20 @@ else
 	[Parameter]
 	public Guid FolderId { get; set; }
 
+    /// <summary>
+    /// Вид из строки запроса
+    /// </summary>
 	[SupplyParameterFromQuery(Name = "view")] public string? ViewQuery { get; set; }
+
+    /// <summary>
+    /// Статус из строки запроса
+    /// </summary>
 	[SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
 
 	/// <summary>
 	/// Строки проводника: папки, затем ADR; либо отфильтрованные ADR
 	/// </summary>
-	private IReadOnlyCollection<ExplorerItem> explorerItems
+	private IReadOnlyCollection<ExplorerItem> ExplorerItems
 		=> isFiltersView
 			? (filterAdrs.GetValueOrDefault(activeStatus) ?? []).Select(ToExplorerItem).ToList()
 			: subfolders.Select(ToFolderItem).Concat(folderAdrs.Select(ToExplorerItem)).ToList();
@@ -308,7 +315,7 @@ else
 	/// <summary>
 	/// Сообщение для пустой таблицы
 	/// </summary>
-	private string emptyMessage
+	private string EmptyMessage
 		=> isFiltersView
 			? $"Нет ADR со статусом «{AdrsHelper.GetStatusCaption(activeStatus)}»"
 			: FolderId == Guid.Empty
@@ -712,7 +719,7 @@ else
 		{
 			isExporting = true;
 			var markdown = await ApiClient.AdrExportApprovedAsync(OrganizationId, TokenSource.Token);
-			await AdrsHelper.DownloadMarkdownAsync(JS,
+			await AdrsHelper.DownloadMarkdownAsync(Js,
 				$"ADR-{currentOrganization?.Name ?? "approved"}.md",
 				markdown);
 			errorMessage = null;

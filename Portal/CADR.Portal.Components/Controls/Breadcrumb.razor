@@ -40,8 +40,14 @@
 	/// <inheritdoc cref="RenderFragment"/>
 	[Parameter] public RenderFragment? CaptionAdditional { get; set; }
 
+    /// <summary>
+    /// Включить логику drag-and-drop
+    /// </summary>
 	[Parameter] public bool EnableDrop { get; set; }
 
+    /// <summary>
+    /// Событие по drop
+    /// </summary>
 	[Parameter] public EventCallback<LinkedItem> OnItemDrop { get; set; }
 
 	/// <summary>
