@@ -25,7 +25,7 @@ public class CadrDesignTimeContextFactory : IDesignTimeDbContextFactory<CadrCont
     /// </remarks>
     public CadrContext CreateDbContext(string[] args)
     {
-        var connectionString = "Host=localhost;Port=5432;Database=cadr;Username=postgres;Password=Qwerty123456!";
+        var connectionString = "Host=localhost;Port=5432;Database=cadr;Username=postgres;Password=postgres";
         if (args.Length > 1)
         {
             var index = Array.FindIndex(args, row => row.Contains(MigrateDatabaseKey, StringComparison.InvariantCulture));
