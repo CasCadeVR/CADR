@@ -13,6 +13,11 @@ public interface IAdrVoteReadRepository
     Task<AdrVote?> GetByAdrAndUserIdAsync(Guid adrId, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Получает список <see cref="AdrVote"/> по идентификаторам Adr и идентификатору пользователя
+    /// </summary>
+    Task<IReadOnlyCollection<AdrVote>> GetByAdrIdsAndUserIdAsync(IReadOnlyCollection<Guid> adrIds, Guid usedId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Получает список всех голосов одной ADR
     /// </summary>
     Task<IReadOnlyCollection<AdrVote>> GetByAdrIdAsync(Guid adrId, CancellationToken cancellationToken);

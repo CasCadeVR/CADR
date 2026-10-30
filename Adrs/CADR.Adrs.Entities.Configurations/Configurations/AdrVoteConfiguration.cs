@@ -10,7 +10,7 @@ public class AdrVoteConfiguration : IEntityTypeConfiguration<AdrVote>
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<AdrVote> builder)
     {
-        builder.ToTable("AdrVotes");
+        builder.ToTable("AdrVotes", tb => tb.HasTrigger("trg_adr_votes_recalc"));
         builder.HasIdAsKey();
         builder.PropertyAuditConfiguration();
 

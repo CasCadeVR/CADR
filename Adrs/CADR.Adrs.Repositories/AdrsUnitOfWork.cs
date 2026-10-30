@@ -19,6 +19,9 @@ internal class AdrsUnitOfWork : IAdrsUnitOfWork, IAdrsRepositoryAnchor
     Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken)
         => unitOfWork.SaveChangesAsync(cancellationToken);
 
+    Task<int> IUnitOfWork.ExecuteSqlAsync(FormattableString sql, CancellationToken cancellationToken)
+        => unitOfWork.ExecuteSqlAsync(sql, cancellationToken);
+
     IAdrCommentReadRepository IAdrsUnitOfWork.AdrCommentReadRepository
         => serviceProvider.GetRequiredService<IAdrCommentReadRepository>();
 
@@ -48,6 +51,12 @@ internal class AdrsUnitOfWork : IAdrsUnitOfWork, IAdrsRepositoryAnchor
 
     IAdrWriteRepository IAdrsUnitOfWork.AdrWriteRepository
         => serviceProvider.GetRequiredService<IAdrWriteRepository>();
+
+    IAdrDbProcedureRepository IAdrsUnitOfWork.AdrDbProcedureRepository
+        => serviceProvider.GetRequiredService<IAdrDbProcedureRepository>();
+
+    IAdrSummaryViewReadRepository IAdrsUnitOfWork.AdrSummaryViewReadRepository
+        => serviceProvider.GetRequiredService<IAdrSummaryViewReadRepository>();
 
     IAdrSectionReadRepository IAdrsUnitOfWork.AdrSectionReadRepository
         => serviceProvider.GetRequiredService<IAdrSectionReadRepository>();
