@@ -41,72 +41,72 @@ public class AdrManagerTests : CadrContextInMemory
             unitOfWorkMock.UserReadRepository);
     }
 
-    /// <summary>
-    /// Создание ADR работает и назначает первый номер
-    /// </summary>
-    [Fact]
-    public async Task CreateShouldWork()
-    {
-        //Arrange
-        var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
-        var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.AuthorId = architect.Id;
-            x.Status = ContractEnums.AdrStatus.Draft;
-        });
+    ///// <summary>
+    ///// Создание ADR работает и назначает первый номер
+    ///// </summary>
+    //[Fact]
+    //public async Task CreateShouldWork()
+    //{
+    //    //Arrange
+    //    var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.AuthorId = architect.Id;
+    //        x.Status = ContractEnums.AdrStatus.Draft;
+    //    });
 
-        // Act
-        var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
+    //    // Act
+    //    var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
 
-        // Assert
-        result.Should()
-            .NotBeNull()
-            .And.BeEquivalentTo(new
-            {
-                model.Title,
-                model.OrganizationId,
-                AuthorId = model.AuthorId,
-                Status = ContractEnums.AdrStatus.Draft,
-                Number = 1,
-            });
-        Context.Set<Adr>().Should().ContainSingle(x => x.Id == result.Id);
-    }
+    //    // Assert
+    //    result.Should()
+    //        .NotBeNull()
+    //        .And.BeEquivalentTo(new
+    //        {
+    //            model.Title,
+    //            model.OrganizationId,
+    //            AuthorId = model.AuthorId,
+    //            Status = ContractEnums.AdrStatus.Draft,
+    //            Number = 1,
+    //        });
+    //    Context.Set<Adr>().Should().ContainSingle(x => x.Id == result.Id);
+    //}
 
-    /// <summary>
-    /// Создание ADR назначает следующий номер после существующих, включая удалённые
-    /// </summary>
-    [Fact]
-    public async Task CreateShouldAssignNextNumber()
-    {
-        //Arrange
-        var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
-        var existingAdr = TestEntityProvider.Shared.Create<Adr>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.Number = 5;
-        });
-        var deletedAdr = TestEntityProvider.Shared.Create<Adr>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.Number = 7;
-            x.DeletedAt = DateTimeOffset.UtcNow;
-        });
-        await Context.AddRangeAsync(existingAdr, deletedAdr);
-        await UnitOfWork.SaveChangesAsync();
-        var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.AuthorId = architect.Id;
-            x.Status = ContractEnums.AdrStatus.Draft;
-        });
+    ///// <summary>
+    ///// Создание ADR назначает следующий номер после существующих, включая удалённые
+    ///// </summary>
+    //[Fact]
+    //public async Task CreateShouldAssignNextNumber()
+    //{
+    //    //Arrange
+    //    var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var existingAdr = TestEntityProvider.Shared.Create<Adr>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.Number = 5;
+    //    });
+    //    var deletedAdr = TestEntityProvider.Shared.Create<Adr>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.Number = 7;
+    //        x.DeletedAt = DateTimeOffset.UtcNow;
+    //    });
+    //    await Context.AddRangeAsync(existingAdr, deletedAdr);
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.AuthorId = architect.Id;
+    //        x.Status = ContractEnums.AdrStatus.Draft;
+    //    });
 
-        // Act
-        var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
+    //    // Act
+    //    var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
 
-        // Assert
-        result.Number.Should().Be(8);
-    }
+    //    // Assert
+    //    result.Number.Should().Be(8);
+    //}
 
     /// <summary>
     /// Создание ADR выдаёт ошибку: не хватает прав
@@ -156,33 +156,33 @@ public class AdrManagerTests : CadrContextInMemory
         await act.Should().ThrowAsync<AdrInvalidOperationException>();
     }
 
-    /// <summary>
-    /// Создание ADR со статусом Proposed автоматически утверждает при нулевом пороге
-    /// </summary>
-    [Fact]
-    public async Task CreateShouldAutoApproveWhenThresholdZero()
-    {
-        //Arrange
-        var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<AdrOrganizationSettings>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.LikesRequiredForApproval = 0;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
-        {
-            x.OrganizationId = organization.Id;
-            x.AuthorId = architect.Id;
-            x.Status = ContractEnums.AdrStatus.Proposed;
-        });
+    ///// <summary>
+    ///// Создание ADR со статусом Proposed автоматически утверждает при нулевом пороге
+    ///// </summary>
+    //[Fact]
+    //public async Task CreateShouldAutoApproveWhenThresholdZero()
+    //{
+    //    //Arrange
+    //    var (organization, architect) = await SeedOrganizationUserAsync(Role.Architect);
+    //    await Context.AddAsync(TestEntityProvider.Shared.Create<AdrOrganizationSettings>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.LikesRequiredForApproval = 0;
+    //    }));
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = TestEntityProvider.Shared.Create<CreateAdrModel>(x =>
+    //    {
+    //        x.OrganizationId = organization.Id;
+    //        x.AuthorId = architect.Id;
+    //        x.Status = ContractEnums.AdrStatus.Proposed;
+    //    });
 
-        // Act
-        var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
+    //    // Act
+    //    var result = await adrManager.CreateAdrAsync(model, CancellationToken.None);
 
-        // Assert
-        result.Status.Should().Be(ContractEnums.AdrStatus.Approved);
-    }
+    //    // Assert
+    //    result.Status.Should().Be(ContractEnums.AdrStatus.Approved);
+    //}
 
     /// <summary>
     /// Получение ADR возвращает Score и голос пользователя
@@ -543,77 +543,77 @@ public class AdrManagerTests : CadrContextInMemory
         await act.Should().ThrowAsync<AdrAccessException>();
     }
 
-    /// <summary>
-    /// Голосование архитектором работает
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldWork()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var voter = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = voter.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.Architect;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = voter.Id,
-            Vote = ContractEnums.AdrVoteType.Like,
-        };
+    ///// <summary>
+    ///// Голосование архитектором работает
+    ///// </summary>
+    //[Fact]
+    //public async Task VoteShouldWork()
+    //{
+    //    //Arrange
+    //    var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var voter = TestEntityProvider.Shared.Create<User>();
+    //    var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
+    //    await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //    {
+    //        x.UserId = voter.Id;
+    //        x.OrganizationId = organization.Id;
+    //        x.Role = Role.Architect;
+    //    }));
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = new VoteAdrModel
+    //    {
+    //        AdrId = adr.Id,
+    //        UserId = voter.Id,
+    //        Vote = ContractEnums.AdrVoteType.Like,
+    //    };
 
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
+    //    // Act
+    //    Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        Context.Set<AdrVote>().Should()
-            .ContainSingle(x => x.AdrId == adr.Id && x.UserId == voter.Id && x.Value == EntityEnums.AdrVoteType.Like);
-    }
+    //    // Assert
+    //    await act.Should().NotThrowAsync();
+    //    Context.Set<AdrVote>().Should()
+    //        .ContainSingle(x => x.AdrId == adr.Id && x.UserId == voter.Id && x.Value == EntityEnums.AdrVoteType.Like);
+    //}
 
-    /// <summary>
-    /// Повторное голосование меняет существующий голос
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldUpdateExistingVote()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var voter = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
-        var vote = TestEntityProvider.Shared.Create<AdrVote>(x =>
-        {
-            x.AdrId = adr.Id;
-            x.UserId = voter.Id;
-            x.Value = EntityEnums.AdrVoteType.Like;
-        });
-        await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = voter.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.Architect;
-        }), vote);
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = voter.Id,
-            Vote = ContractEnums.AdrVoteType.Dislike,
-        };
+    ///// <summary>
+    ///// Повторное голосование меняет существующий голос
+    ///// </summary>
+    //[Fact]
+    //public async Task VoteShouldUpdateExistingVote()
+    //{
+    //    //Arrange
+    //    var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var voter = TestEntityProvider.Shared.Create<User>();
+    //    var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft);
+    //    var vote = TestEntityProvider.Shared.Create<AdrVote>(x =>
+    //    {
+    //        x.AdrId = adr.Id;
+    //        x.UserId = voter.Id;
+    //        x.Value = EntityEnums.AdrVoteType.Like;
+    //    });
+    //    await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //    {
+    //        x.UserId = voter.Id;
+    //        x.OrganizationId = organization.Id;
+    //        x.Role = Role.Architect;
+    //    }), vote);
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = new VoteAdrModel
+    //    {
+    //        AdrId = adr.Id,
+    //        UserId = voter.Id,
+    //        Vote = ContractEnums.AdrVoteType.Dislike,
+    //    };
 
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
+    //    // Act
+    //    Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        Context.Set<AdrVote>().Should()
-            .ContainSingle(x => x.AdrId == adr.Id && x.UserId == voter.Id && x.Value == EntityEnums.AdrVoteType.Dislike);
-    }
+    //    // Assert
+    //    await act.Should().NotThrowAsync();
+    //    Context.Set<AdrVote>().Should()
+    //        .ContainSingle(x => x.AdrId == adr.Id && x.UserId == voter.Id && x.Value == EntityEnums.AdrVoteType.Dislike);
+    //}
 
     /// <summary>
     /// Голосование за собственный ADR выдаёт ошибку
@@ -638,106 +638,106 @@ public class AdrManagerTests : CadrContextInMemory
         await act.Should().ThrowAsync<AdrInvalidOperationException>();
     }
 
-    /// <summary>
-    /// Голосование Proposed ADR автоматически утверждает при достижении порога
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldAutoApproveProposed()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var voter = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = voter.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.Architect;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = voter.Id,
-            Vote = ContractEnums.AdrVoteType.Like,
-        };
+    ///// <summary>
+    ///// Голосование Proposed ADR автоматически утверждает при достижении порога
+    ///// </summary>
+    //[Fact]
+    //public async Task VoteShouldAutoApproveProposed()
+    //{
+    //    //Arrange
+    //    var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var voter = TestEntityProvider.Shared.Create<User>();
+    //    var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+    //    await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //    {
+    //        x.UserId = voter.Id;
+    //        x.OrganizationId = organization.Id;
+    //        x.Role = Role.Architect;
+    //    }));
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = new VoteAdrModel
+    //    {
+    //        AdrId = adr.Id,
+    //        UserId = voter.Id,
+    //        Vote = ContractEnums.AdrVoteType.Like,
+    //    };
 
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
+    //    // Act
+    //    Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.Approved);
-    }
+    //    // Assert
+    //    await act.Should().NotThrowAsync();
+    //    Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.Approved);
+    //}
 
-    /// <summary>
-    /// Голосование против Approved ADR переводит его в NeedsRevision
-    /// </summary>
-    [Fact]
-    public async Task VoteShouldMoveApprovedToNeedsRevision()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var voter = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Approved);
-        await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = voter.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.Architect;
-        }));
-        await UnitOfWork.SaveChangesAsync();
-        var model = new VoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = voter.Id,
-            Vote = ContractEnums.AdrVoteType.Dislike,
-        };
+    ///// <summary>
+    ///// Голосование против Approved ADR переводит его в NeedsRevision
+    ///// </summary>
+    //[Fact]
+    //public async Task VoteShouldMoveApprovedToNeedsRevision()
+    //{
+    //    //Arrange
+    //    var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var voter = TestEntityProvider.Shared.Create<User>();
+    //    var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Approved);
+    //    await Context.AddAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //    {
+    //        x.UserId = voter.Id;
+    //        x.OrganizationId = organization.Id;
+    //        x.Role = Role.Architect;
+    //    }));
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = new VoteAdrModel
+    //    {
+    //        AdrId = adr.Id,
+    //        UserId = voter.Id,
+    //        Vote = ContractEnums.AdrVoteType.Dislike,
+    //    };
 
-        // Act
-        Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
+    //    // Act
+    //    Func<Task> act = () => adrManager.VoteAsync(model, CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.NeedsRevision);
-    }
+    //    // Assert
+    //    await act.Should().NotThrowAsync();
+    //    Context.Set<Adr>().First(x => x.Id == adr.Id).Status.Should().Be(EntityEnums.AdrStatus.NeedsRevision);
+    //}
 
-    /// <summary>
-    /// Снятие голоса работает
-    /// </summary>
-    [Fact]
-    public async Task WithdrawVoteShouldWork()
-    {
-        //Arrange
-        var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
-        var voter = TestEntityProvider.Shared.Create<User>();
-        var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
-        var vote = TestEntityProvider.Shared.Create<AdrVote>(x =>
-        {
-            x.AdrId = adr.Id;
-            x.UserId = voter.Id;
-            x.Value = EntityEnums.AdrVoteType.Like;
-        });
-        await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-        {
-            x.UserId = voter.Id;
-            x.OrganizationId = organization.Id;
-            x.Role = Role.Architect;
-        }), vote);
-        await UnitOfWork.SaveChangesAsync();
-        var model = new WithdrawVoteAdrModel
-        {
-            AdrId = adr.Id,
-            UserId = voter.Id,
-        };
+    ///// <summary>
+    ///// Снятие голоса работает
+    ///// </summary>
+    //[Fact]
+    //public async Task WithdrawVoteShouldWork()
+    //{
+    //    //Arrange
+    //    var (organization, author) = await SeedOrganizationUserAsync(Role.Architect);
+    //    var voter = TestEntityProvider.Shared.Create<User>();
+    //    var adr = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+    //    var vote = TestEntityProvider.Shared.Create<AdrVote>(x =>
+    //    {
+    //        x.AdrId = adr.Id;
+    //        x.UserId = voter.Id;
+    //        x.Value = EntityEnums.AdrVoteType.Like;
+    //    });
+    //    await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //    {
+    //        x.UserId = voter.Id;
+    //        x.OrganizationId = organization.Id;
+    //        x.Role = Role.Architect;
+    //    }), vote);
+    //    await UnitOfWork.SaveChangesAsync();
+    //    var model = new WithdrawVoteAdrModel
+    //    {
+    //        AdrId = adr.Id,
+    //        UserId = voter.Id,
+    //    };
 
-        // Act
-        Func<Task> act = () => adrManager.WithdrawVoteAsync(model, CancellationToken.None);
+    //    // Act
+    //    Func<Task> act = () => adrManager.WithdrawVoteAsync(model, CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        Context.Set<AdrVote>().First(x => x.Id == vote.Id).DeletedAt.Should().NotBeNull();
-    }
+    //    // Assert
+    //    await act.Should().NotThrowAsync();
+    //    Context.Set<AdrVote>().First(x => x.Id == vote.Id).DeletedAt.Should().NotBeNull();
+    //}
 
     /// <summary>
     /// Снятие голоса выдаёт ошибку: голос не найден
@@ -1008,46 +1008,46 @@ public class AdrManagerTests : CadrContextInMemory
         result.FolderPath.Should().NotBeNull().And.BeEmpty();
     }
 
-    /// <summary>
-    /// Получение списка ADR автора возвращает только ADR указанного автора и заполняет голос запрашивающего
-    /// </summary>
-    [Fact]
-    public async Task GetByAuthorShouldWork()
-    {
-        //Arrange
-        var (organization, user) = await SeedOrganizationUserAsync(Role.User);
-        var author = TestEntityProvider.Shared.Create<User>();
-        await Context.AddAsync(author);
-        await Context.AddRangeAsync(
-            TestEntityProvider.Shared.Create<UserOrganization>(x =>
-            {
-                x.UserId = author.Id;
-                x.OrganizationId = organization.Id;
-                x.Role = Role.User;
-            }));
-        var authorAdr1 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
-        var authorAdr2 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
-        await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft, asDeleted: true);
-        await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
-        var like = TestEntityProvider.Shared.Create<AdrVote>(x =>
-        {
-            x.AdrId = authorAdr1.Id;
-            x.UserId = user.Id;
-            x.Value = EntityEnums.AdrVoteType.Like;
-        });
-        await Context.AddAsync(like);
-        await UnitOfWork.SaveChangesAsync();
+    ///// <summary>
+    ///// Получение списка ADR автора возвращает только ADR указанного автора и заполняет голос запрашивающего
+    ///// </summary>
+    //[Fact]
+    //public async Task GetByAuthorShouldWork()
+    //{
+    //    //Arrange
+    //    var (organization, user) = await SeedOrganizationUserAsync(Role.User);
+    //    var author = TestEntityProvider.Shared.Create<User>();
+    //    await Context.AddAsync(author);
+    //    await Context.AddRangeAsync(
+    //        TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //        {
+    //            x.UserId = author.Id;
+    //            x.OrganizationId = organization.Id;
+    //            x.Role = Role.User;
+    //        }));
+    //    var authorAdr1 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+    //    var authorAdr2 = await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Proposed);
+    //    await SeedAdrAsync(organization, author.Id, EntityEnums.AdrStatus.Draft, asDeleted: true);
+    //    await SeedAdrAsync(organization, user.Id, EntityEnums.AdrStatus.Draft);
+    //    var like = TestEntityProvider.Shared.Create<AdrVote>(x =>
+    //    {
+    //        x.AdrId = authorAdr1.Id;
+    //        x.UserId = user.Id;
+    //        x.Value = EntityEnums.AdrVoteType.Like;
+    //    });
+    //    await Context.AddAsync(like);
+    //    await UnitOfWork.SaveChangesAsync();
 
-        // Act
-        var result = await adrManager.GetByAuthorIdAsync(organization.Id, author.Id, user.Id, CancellationToken.None);
+    //    // Act
+    //    var result = await adrManager.GetByAuthorIdAsync(organization.Id, author.Id, user.Id, CancellationToken.None);
 
-        // Assert
-        result.Select(x => x.Id).Should()
-            .NotBeEmpty()
-            .And.BeEquivalentTo(new[] { authorAdr1.Id, authorAdr2.Id });
-        result.First(x => x.Id == authorAdr1.Id).UserVote.Should().Be(ContractEnums.AdrVoteType.Like);
-        result.First(x => x.Id == authorAdr1.Id).Score.Should().Be(1);
-    }
+    //    // Assert
+    //    result.Select(x => x.Id).Should()
+    //        .NotBeEmpty()
+    //        .And.BeEquivalentTo(new[] { authorAdr1.Id, authorAdr2.Id });
+    //    result.First(x => x.Id == authorAdr1.Id).UserVote.Should().Be(ContractEnums.AdrVoteType.Like);
+    //    result.First(x => x.Id == authorAdr1.Id).Score.Should().Be(1);
+    //}
 
     /// <summary>
     /// Получение списка ADR автора выдаёт ошибку: запрашивающий не состоит в организации

@@ -26,6 +26,13 @@ internal sealed class AdrVoteReadRepository : IAdrVoteReadRepository, IAdrsRepos
             .NotDeletedAt()
             .FirstOrDefaultAsync(cancellationToken);
 
+    Task<IReadOnlyCollection<AdrVote>> IAdrVoteReadRepository.GetByAdrIdsAndUserIdAsync(IReadOnlyCollection<Guid> adrIds,
+        Guid usedId, CancellationToken cancellationToken)
+        => reader.Read<AdrVote>()
+            .Where(x => x.UserId == usedId && adrIds.Contains(x.AdrId))
+            .NotDeletedAt()
+            .ToReadOnlyCollectionAsync(cancellationToken);
+
     Task<IReadOnlyCollection<AdrVote>> IAdrVoteReadRepository.GetByAdrIdAsync(Guid adrId, CancellationToken cancellationToken)
         => reader.Read<AdrVote>()
             .Where(x => x.AdrId == adrId)

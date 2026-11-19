@@ -22,6 +22,9 @@ internal class AdministrationUnitOfWork : IAdministrationUnitOfWork, IAdministra
     Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken)
         => unitOfWork.SaveChangesAsync(cancellationToken);
 
+    Task<int> IUnitOfWork.ExecuteSqlAsync(FormattableString sql, CancellationToken cancellationToken)
+        => unitOfWork.ExecuteSqlAsync(sql, cancellationToken);
+
     IOrganizationReadRepository IAdministrationUnitOfWork.OrganizationReadRepository
         => serviceProvider.GetRequiredService<IOrganizationReadRepository>();
 
@@ -39,6 +42,9 @@ internal class AdministrationUnitOfWork : IAdministrationUnitOfWork, IAdministra
 
     IUserOrganizationWriteRepository IAdministrationUnitOfWork.UserOrganizationWriteRepository
         => serviceProvider.GetRequiredService<IUserOrganizationWriteRepository>();
+
+    IOrganizationMemberViewReadRepository IAdministrationUnitOfWork.OrganizationMemberViewReadRepository
+        => serviceProvider.GetRequiredService<IOrganizationMemberViewReadRepository>();
 
     IUserReadRepository IAdministrationUnitOfWork.UserReadRepository
         => serviceProvider.GetRequiredService<IUserReadRepository>();

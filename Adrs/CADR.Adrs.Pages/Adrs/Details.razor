@@ -66,11 +66,11 @@
 				@* Левая колонка: секции, голоса, комментарии *@
 				<Column Column="Columns.Template8">
 					<Panel Border="1" RoundedSize="RoundedSizes.Rounded3" Padding="4 4 4 0" Margin="0 0 0 3">
-						@foreach (var section in adr.Sections.OrderBy(x => x.Position))
+						@foreach (var adrSection in adr.Sections.OrderBy(x => x.Position))
 						{
-							<Header Level="4">@section.Title</Header>
-							<Paragraph>@section.Content</Paragraph>
-						}
+							<Header Level="4">@adrSection.Title</Header>
+                            <Paragraph style="white-space: pre-wrap;">@adrSection.Content</Paragraph>
+                        }
 
 						<Row FlexItemsAlign="FlexAlign.Center" Gutter="0" Gap="3">
 							@if (adr.AuthorId != PortalIdentity.UserId)
@@ -134,7 +134,7 @@
 											   @onclick="() => DeleteCommentAsync(comment.Id)" @onclick:preventDefault>удалить</a>
 										}
 									</Paragraph>
-									<Paragraph>@comment.Text</Paragraph>
+                                    <Paragraph style="white-space: pre-wrap;">@comment.Text</Paragraph>
 								</Column>
 							</Row>
 						}

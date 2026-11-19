@@ -27,6 +27,7 @@ public class TestUnitOfWork
         administrationUnitOfWorkMock.Setup(x => x.RefreshTokenWriteRepository).Returns(new RefreshTokenWriteRepository(writerContext));
         administrationUnitOfWorkMock.Setup(x => x.UserOrganizationReadRepository).Returns(new UserOrganizationReadRepository(reader));
         administrationUnitOfWorkMock.Setup(x => x.UserOrganizationWriteRepository).Returns(new UserOrganizationWriteRepository(writerContext));
+        administrationUnitOfWorkMock.Setup(x => x.OrganizationMemberViewReadRepository).Returns(new OrganizationMemberViewReadRepository(reader));
         administrationUnitOfWorkMock.Setup(x => x.UserReadRepository).Returns(new UserReadRepository(reader));
         administrationUnitOfWorkMock.Setup(x => x.UserWriteRepository).Returns(new UserWriteRepository(writerContext));
         administrationUnitOfWorkMock.Setup(x => x.UserReadRepository).Returns(new UserReadRepository(reader));

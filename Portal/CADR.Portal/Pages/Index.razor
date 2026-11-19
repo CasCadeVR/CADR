@@ -85,6 +85,7 @@
 			"Любой ADR или весь набор одобренных решений — в аккуратный markdown-документ, готовый для человека и AI-агента."),
 	];
 
+    /// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
 		await PortalIdentity.TryAuthenticate(cancellationTokenSource.Token);

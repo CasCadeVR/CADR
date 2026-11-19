@@ -25,6 +25,9 @@ public interface IAdministrationUnitOfWork : IUnitOfWork
     /// <inheritdoc cref="IUserOrganizationWriteRepository"/>
     IUserOrganizationWriteRepository UserOrganizationWriteRepository { get; }
 
+    /// <inheritdoc cref="IOrganizationMemberViewReadRepository"/>
+    IOrganizationMemberViewReadRepository OrganizationMemberViewReadRepository { get; }
+
     /// <inheritdoc cref="IUserReadRepository"/>
     IUserReadRepository UserReadRepository { get; }
 

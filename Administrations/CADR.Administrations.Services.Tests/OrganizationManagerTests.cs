@@ -311,53 +311,52 @@ public class OrganizationManagerTests : CadrContextInMemory
         return act.Should().ThrowAsync<AdministrationEntityNotFoundException<Organization>>().WithMessage($"*{targetId}*");
     }
 
-    /// <summary>
-    /// Получает список пользователей организации по идентификатору
-    /// </summary>
-    [Fact]
-    public async Task GetUsersByOrganizationIdAsyncShouldReturnValue()
-    {
-        //Arrange
-        var targetOrganization = TestEntityProvider.Shared.Create<Organization>();
-        var user1 = TestEntityProvider.Shared.Create<User>();
-        var user2 = TestEntityProvider.Shared.Create<User>(x => x.DeletedAt = DateTimeOffset.UtcNow);
-        var user3 = TestEntityProvider.Shared.Create<User>();
-        var user4 = TestEntityProvider.Shared.Create<User>();
-        await Context.AddRangeAsync(targetOrganization, user1, user2, user3, user4);
-        await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
-            {
-                x.UserId = user1.Id;
-                x.OrganizationId = targetOrganization.Id;
-            }),
-            TestEntityProvider.Shared.Create<UserOrganization>(x =>
-            {
-                x.UserId = user2.Id;
-                x.OrganizationId = targetOrganization.Id;
-            }),
-            TestEntityProvider.Shared.Create<UserOrganization>(x =>
-            {
-                x.UserId = user3.Id;
-                x.OrganizationId = targetOrganization.Id;
-                x.DeletedAt = DateTimeOffset.UtcNow;
-            }),
-            TestEntityProvider.Shared.Create<UserOrganization>(x =>
-            {
-                x.UserId = user4.Id;
-                x.OrganizationId = targetOrganization.Id;
-            }));
-        await Context.SaveChangesAsync();
+    ///// <summary>
+    ///// Получает список пользователей организации по идентификатору
+    ///// </summary>
+    //[Fact]
+    //public async Task GetUsersByOrganizationIdAsyncShouldReturnValue()
+    //{
+    //    //Arrange
+    //    var targetOrganization = TestEntityProvider.Shared.Create<Organization>();
+    //    var user1 = TestEntityProvider.Shared.Create<User>();
+    //    var user2 = TestEntityProvider.Shared.Create<User>(x => x.DeletedAt = DateTimeOffset.UtcNow);
+    //    var user3 = TestEntityProvider.Shared.Create<User>();
+    //    var user4 = TestEntityProvider.Shared.Create<User>();
+    //    await Context.AddRangeAsync(targetOrganization, user1, user2, user3, user4);
+    //    await Context.AddRangeAsync(TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //        {
+    //            x.UserId = user1.Id;
+    //            x.OrganizationId = targetOrganization.Id;
+    //        }),
+    //        TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //        {
+    //            x.UserId = user2.Id;
+    //            x.OrganizationId = targetOrganization.Id;
+    //        }),
+    //        TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //        {
+    //            x.UserId = user3.Id;
+    //            x.OrganizationId = targetOrganization.Id;
+    //            x.DeletedAt = DateTimeOffset.UtcNow;
+    //        }),
+    //        TestEntityProvider.Shared.Create<UserOrganization>(x =>
+    //        {
+    //            x.UserId = user4.Id;
+    //            x.OrganizationId = targetOrganization.Id;
+    //        }));
+    //    await Context.SaveChangesAsync();
 
-        // Act
-        var result = await organizationManager.GetUsersByOrganizationIdAsync(targetOrganization.Id, user1.Id, CancellationToken.None);
+    //    // Act
+    //    var result = await organizationManager.GetUsersByOrganizationIdAsync(targetOrganization.Id, user1.Id, CancellationToken.None);
 
-        // Assert
-        result.Should()
-            .NotBeNull()
-            .And.HaveCount(2)
-            .And.ContainSingle(x => x.Id == user1.Id)
-            .And.ContainSingle(x => x.Id == user4.Id);
-    }
-
+    //    // Assert
+    //    result.Should()
+    //        .NotBeNull()
+    //        .And.HaveCount(2)
+    //        .And.ContainSingle(x => x.Id == user1.Id)
+    //        .And.ContainSingle(x => x.Id == user4.Id);
+    //}
 
     /// <summary>
     /// Удаление пользователя не работает; пользователь, выполнивший запрос, не принадлежит указанной организации

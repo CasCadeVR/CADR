@@ -62,6 +62,7 @@
 	/// </summary>
 	[Parameter, SupplyParameterFromQuery] public string ReturnUrl { get; set; } = string.Empty;
 
+    /// <inheritdoc />
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();

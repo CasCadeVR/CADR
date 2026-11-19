@@ -19,7 +19,7 @@
 						У вас есть <Badge Background="ThemeColors.Secondary" Foreground="ThemeColors.White" RoundedSize="RoundedSizes.Rounded3">
 							@invites.Count</Badge> приглашений в организацию.
 						Для того, что бы узнать детали приглашений необходимо перейти в раздел "Организации". Там же можно принять
-						или оклонить приглашение. Что бы запретить отправлять вам приглашения, установите запрет в своём профиле
+						или отклонить приглашение. Что бы запретить отправлять вам приглашения, установите запрет в своём профиле
 					</Paragraph>
 				</BodyContent>
 				<FooterContent>
@@ -52,7 +52,7 @@
 		await LoadItemsAsync();
 		if (invites?.FirstOrDefault() is null)
 		{
-			await TryRedirectToOrganizationDashboard();
+            TryRedirectToOrganizationDashboard();
 		}
 		await base.OnInitializedAsync();
 	}
@@ -70,14 +70,15 @@
 		StateHasChanged();
 	}
 
-	private async Task TryRedirectToOrganizationDashboard()
-	{
-		if (organizations?.Count != 0)
-		{
-			var organizationId = organizations!.Count > 0 ? organizations[0].Id : organizations[0].Id;
-			NavigationManager.NavigateTo(string.Format(Routes.Administration.Organization.DashboardFormat, organizationId));
-		}
-	}
+	private void TryRedirectToOrganizationDashboard()
+    {
+        if (organizations?.Count == 0)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo(string.Format(Routes.Administration.Organization.DashboardFormat, organizations![0].Id));
+    }
 
 	/// <inheritdoc />
 	public void Dispose()

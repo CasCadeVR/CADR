@@ -39,6 +39,8 @@ public class TestUnitOfWork
         adrUnitOfWorkMock.Setup(x => x.AdrFolderWriteRepository).Returns(new AdrFolderWriteRepository(writerContext));
         adrUnitOfWorkMock.Setup(x => x.AdrLinkReadRepository).Returns(new AdrLinkReadRepository(reader));
         adrUnitOfWorkMock.Setup(x => x.AdrLinkWriteRepository).Returns(new AdrLinkWriteRepository(writerContext));
+        adrUnitOfWorkMock.Setup(x => x.AdrDbProcedureRepository).Returns(new AdrDbProcedureRepository(reader, unitOfWork));
+        adrUnitOfWorkMock.Setup(x => x.AdrSummaryViewReadRepository).Returns(new AdrSummaryViewReadRepository(reader));
         adrUnitOfWorkMock.Setup(x => x.AdrOrganizationSettingsReadRepository).Returns(new AdrOrganizationSettingsReadRepository(reader));
         adrUnitOfWorkMock.Setup(x => x.AdrOrganizationSettingsWriteRepository).Returns(new AdrOrganizationSettingsWriteRepository(writerContext));
         adrUnitOfWorkMock.Setup(x => x.AdrReadRepository).Returns(new AdrReadRepository(reader));
